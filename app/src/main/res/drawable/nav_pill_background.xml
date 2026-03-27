@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Senior Programmer Tip:
+      Using ?attr/navBarBackground allows the system to look at
+      your themes.xml files to decide the color automatically.
+    -->
+    <solid android:color="?attr/navBarBackground" />
+
+    <!-- Highly rounded corners to create the floating "Pill" effect -->
+    <corners android:radius="100dp" />
+</shape>

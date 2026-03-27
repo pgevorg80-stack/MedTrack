@@ -1,0 +1,49 @@
+plugins {alias(libs.plugins.android.application)
+    alias(libs.plugins.google.gms.google.services) // Change this line
+}
+android {
+    namespace 'com.example.gevorgpetrosyan'
+
+    // UPDATED TO 36 to fix the AAR Metadata errors
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.example.gevorgpetrosyan"
+        minSdk 24
+
+        // UPDATED TO 36 to match compileSdk
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.activity
+    implementation libs.constraintlayout
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.auth
+
+    // Local ROOM Database (This saves your medicines on the phone)
+    implementation "androidx.room:room-runtime:2.6.1"
+    annotationProcessor "androidx.room:room-compiler:2.6.1"
+
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+}
