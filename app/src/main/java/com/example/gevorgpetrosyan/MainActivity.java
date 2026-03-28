@@ -49,6 +49,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -86,12 +88,22 @@ public class MainActivity extends AppCompatActivity {
     private boolean isRussian = false;
 
     private SectionsPagerAdapter sectionsPagerAdapter;
+    private String currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         applySavedTheme();
         loadLanguagePreference();
         super.onCreate(savedInstanceState);
+        
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+        currentUserId = user.getUid();
+        
         setContentView(R.layout.activity_main);
 
         db = AppDatabase.getInstance(this);
@@ -164,9 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_logout).setOnClickListener(v -> {
             drawerLayout.closeDrawers();
-            try {
-                com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
-            } catch (Exception ignored) {}
+            FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -236,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
     private void refreshPageContent(ScrollView scrollView, int position) {
         scrollView.removeAllViews();
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<Medicine> meds = db.medicineDao().getAll();
+            List<Medicine> meds = db.medicineDao().getAllByUserId(currentUserId);
             runOnUiThread(() -> {
                 LinearLayout layout = createBaseLayout();
                 switch (position) {
@@ -523,7 +533,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void saveToWarehouse(String name, int stock, String exp, int warn) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            Medicine existing = db.medicineDao().getByName(name);
+            Medicine existing = db.medicineDao().getByNameAndUserId(name, currentUserId);
             String batch = stock + " pills (Exp: " + exp + ")";
             if (existing != null) {
                 existing.batches = (existing.batches == null || existing.batches.isEmpty()) ? batch : existing.batches + "|" + batch;
@@ -531,7 +541,7 @@ public class MainActivity extends AppCompatActivity {
                 existing.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(existing);
             } else {
-                Medicine m = new Medicine(name, "");
+                Medicine m = new Medicine(currentUserId, name, "");
                 m.batches = batch; m.expiryWarningDays = warn;
                 db.medicineDao().insert(m);
             }
@@ -627,7 +637,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void processVoiceCommand(List<String> matches) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<Medicine> meds = db.medicineDao().getAll();
+            List<Medicine> meds = db.medicineDao().getAllByUserId(currentUserId);
             boolean addedNew = false;
 
             for (String result : matches) {
@@ -857,7 +867,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showScheduleDoseDialog() {
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<Medicine> warehouseMeds = db.medicineDao().getAll();
+            List<Medicine> warehouseMeds = db.medicineDao().getAllByUserId(currentUserId);
             runOnUiThread(() -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(tr("Schedule New Dose", "Новое назначение"));

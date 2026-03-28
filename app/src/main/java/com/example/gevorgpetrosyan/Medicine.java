@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey;
 public class Medicine {
     @PrimaryKey(autoGenerate = true)
     public int id;
+    public String userId; // Added to separate accounts
     public String name;
     public String times;
     public int dosage;
@@ -17,7 +18,8 @@ public class Medicine {
     public String history = "";
     public long lastUpdated;
 
-    public Medicine(String name, String times) {
+    public Medicine(String userId, String name, String times) {
+        this.userId = userId;
         this.name = name;
         this.times = times;
         this.dosage = 1;

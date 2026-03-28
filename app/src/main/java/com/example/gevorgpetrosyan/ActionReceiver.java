@@ -18,6 +18,7 @@ public class ActionReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String medName = intent.getStringExtra("med_name");
         String status = intent.getStringExtra("status");
+        String userId = intent.getStringExtra("user_id");
         int notificationId = intent.getIntExtra("notification_id", -1);
 
         // 1. Dismiss the reminder notification immediately
@@ -26,31 +27,29 @@ public class ActionReceiver extends BroadcastReceiver {
             manager.cancel(notificationId);
         }
 
+        if (userId == null) return;
+
         // 2. Update Database in Background
         AppDatabase db = AppDatabase.getInstance(context);
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<Medicine> meds = db.medicineDao().getAll();
-            for (Medicine m : meds) {
-                if (m.name.equals(medName)) {
+            Medicine m = db.medicineDao().getByNameAndUserId(medName, userId);
+            if (m != null) {
+                String timeStamp = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(new Date());
+                if (m.history == null) m.history = "";
+                m.history += timeStamp + " - " + status + ",";
 
-                    String timeStamp = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(new Date());
-                    if (m.history == null) m.history = "";
-                    m.history += timeStamp + " - " + status + ",";
+                if ("Taken".equals(status) && m.batches != null && !m.batches.isEmpty()) {
+                    m.batches = subtractFromBatches(m.batches, m.dosage);
 
-                    if ("Taken".equals(status) && m.batches != null && !m.batches.isEmpty()) {
-                        m.batches = subtractFromBatches(m.batches, m.dosage);
-
-                        if (calculateTotalStock(m.batches) <= 0) {
-                            sendOutOfStockNotification(context, m.name);
-                        }
+                    if (calculateTotalStock(m.batches) <= 0) {
+                        sendOutOfStockNotification(context, m.name);
                     }
-
-                    db.medicineDao().update(m);
-                    
-                    // Trigger Widget Update after DB change
-                    updateWidget(context);
-                    break;
                 }
+
+                db.medicineDao().update(m);
+                
+                // Trigger Widget Update after DB change
+                updateWidget(context);
             }
         });
 

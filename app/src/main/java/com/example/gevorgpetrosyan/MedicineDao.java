@@ -11,7 +11,10 @@ import java.util.List;
 @Dao
 public interface MedicineDao {
 
-    @Query("SELECT * FROM medicines ORDER BY lastUpdated DESC, id DESC")
+    @Query("SELECT * FROM medicines WHERE userId = :userId ORDER BY lastUpdated DESC, id DESC")
+    List<Medicine> getAllByUserId(String userId);
+
+    @Query("SELECT * FROM medicines")
     List<Medicine> getAll();
 
     @Insert
@@ -23,6 +26,6 @@ public interface MedicineDao {
     @Delete
     void delete(Medicine medicine);
 
-    @Query("SELECT * FROM medicines WHERE name = :medicineName LIMIT 1")
-    Medicine getByName(String medicineName);
+    @Query("SELECT * FROM medicines WHERE name = :medicineName AND userId = :userId LIMIT 1")
+    Medicine getByNameAndUserId(String medicineName, String userId);
 }
