@@ -8,6 +8,7 @@
     android:background="?android:attr/windowBackground">
 
     <TextView
+        android:id="@+id/tv_voice_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Listening for Medicine Names..."
@@ -24,6 +25,7 @@
         android:layout_marginBottom="20dp" />
 
     <TextView
+        android:id="@+id/tv_detected_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Detected Medicines:"

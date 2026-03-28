@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
             int tint = (total <= 0) ? Color.parseColor("#FFCDD2") : Color.parseColor(BLUE_COLOR);
             MaterialButton btn = createCardButton(m.name + " (" + total + " " + tr("left", "осталось") + ")", "#" + Integer.toHexString(tint).substring(2));
             btn.setTextColor(Color.WHITE);
-            btn.setBackgroundTintList(ColorStateList.valueOf(tint));
+            btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#" + Integer.toHexString(tint).substring(2))));
             btn.setOnClickListener(v -> showBatchEditMenu(m));
             layout.addView(btn);
         }
@@ -483,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : Locale.getDefault().toString());
                 intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
                 speechRecognizer.startListening(intent);
             } catch (Exception ignored) {}
@@ -507,9 +507,7 @@ public class MainActivity extends AppCompatActivity {
         final EditText stockIn = new EditText(this); stockIn.setHint(tr("Initial Stock", "Начальный запас")); stockIn.setInputType(2);
         final EditText warnIn = new EditText(this); warnIn.setHint(tr("Warning Days (Expiry)", "Предупредить за (дней до конца срока)")); warnIn.setInputType(2);
 
-        final Button expBtn = new Button(this);
-        tempExpiryInternal = "Not Set";
-        expBtn.setText(tr("Set Expiry Date", "Установить срок годности"));
+        final MaterialButton expBtn = createActionButton(tr("Set Expiry Date", "Установить срок годности"));
         expBtn.setOnClickListener(v -> {
             Calendar c = Calendar.getInstance();
             new DatePickerDialog(this, (view, y, m, d) -> {
@@ -517,6 +515,9 @@ public class MainActivity extends AppCompatActivity {
                 expBtn.setText(tr("Exp: ", "Срок: ") + tempExpiryInternal);
             }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
         });
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 20, 0, 20);
+        nameIn.setLayoutParams(lp); stockIn.setLayoutParams(lp); warnIn.setLayoutParams(lp); expBtn.setLayoutParams(lp);
 
         layout.addView(nameIn); layout.addView(stockIn); layout.addView(warnIn); layout.addView(expBtn);
         builder.setView(layout);
@@ -591,7 +592,11 @@ public class MainActivity extends AppCompatActivity {
         detectedMedsContainer = v.findViewById(R.id.detected_meds_container);
         MaterialButton btnCancel = v.findViewById(R.id.btn_voice_cancel);
         MaterialButton btnOk = v.findViewById(R.id.btn_voice_ok);
+        TextView tvStatus = v.findViewById(R.id.tv_voice_status);
+        TextView tvDetectedTitle = v.findViewById(R.id.tv_detected_title);
         
+        if (tvStatus != null) tvStatus.setText(tr("Listening for Medicine Names...", "Слушаю названия лекарств..."));
+        if (tvDetectedTitle != null) tvDetectedTitle.setText(tr("Detected Medicines:", "Обнаруженные лекарства:"));
         btnCancel.setText(tr("Cancel", "Отмена"));
         btnOk.setText(tr("OK", "Готово"));
 
@@ -872,10 +877,11 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(tr("Schedule New Dose", "Новое назначение"));
                 LinearLayout layout = new LinearLayout(this); layout.setOrientation(LinearLayout.VERTICAL); layout.setPadding(50, 40, 50, 20);
+                
                 layout.addView(createSectionLabel(tr("1. Intake Times", "1. Время приема")));
                 LinearLayout timePreview = new LinearLayout(this); timePreview.setOrientation(LinearLayout.VERTICAL);
                 layout.addView(timePreview); refreshTimePreview(timePreview);
-                Button btnTime = createActionButton(tr("+ Add Time", "+ Добавить время"));
+                MaterialButton btnTime = createActionButton(tr("+ Add Time", "+ Добавить время"));
                 btnTime.setOnClickListener(v -> {
                     Calendar c = Calendar.getInstance();
                     new TimePickerDialog(this, (view, h, m) -> {
@@ -884,16 +890,18 @@ public class MainActivity extends AppCompatActivity {
                     }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true).show();
                 });
                 layout.addView(btnTime);
+                
                 layout.addView(createSectionLabel("\n" + tr("2. Select Pills", "2. Выбор лекарств")));
                 LinearLayout medPreview = new LinearLayout(this); medPreview.setOrientation(LinearLayout.VERTICAL);
                 layout.addView(medPreview); refreshMedPreview(medPreview);
-                Button btnPick = createActionButton(tr("+ Pick from Warehouse", "+ Выбрать со склада"));
+                MaterialButton btnPick = createActionButton(tr("+ Pick from Warehouse", "+ Выбрать со склада"));
                 btnPick.setOnClickListener(v -> {
                     String[] names = new String[warehouseMeds.size()];
                     for(int i=0; i<warehouseMeds.size(); i++) names[i] = warehouseMeds.get(i).name;
                     new AlertDialog.Builder(this).setItems(names, (d, which) -> showDoseConfig(warehouseMeds.get(which), medPreview)).show();
                 });
                 layout.addView(btnPick);
+                
                 ScrollView sc = new ScrollView(this); sc.addView(layout);
                 builder.setView(sc);
                 builder.setPositiveButton(tr("Save All", "Сохранить все"), (d, w) -> saveScheduledDoses());
@@ -964,6 +972,9 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
         p.setMargins(0, 40, 0, 0);
         btnDeleteMed.setLayoutParams(p);
+
+        final AlertDialog parentDialog = b.create();
+
         btnDeleteMed.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
                 .setTitle(tr("Delete Medicine", "Удалить лекарство"))
@@ -974,6 +985,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             refreshCurrentTab();
                             updateWidget();
+                            parentDialog.dismiss();
                         }); 
                     });
                 })
@@ -982,9 +994,9 @@ public class MainActivity extends AppCompatActivity {
         });
         l.addView(btnDeleteMed);
 
-        b.setView(l);
-        b.setNegativeButton(tr("Close", "Закрыть"), null);
-        b.show();
+        parentDialog.setView(l);
+        parentDialog.setButton(AlertDialog.BUTTON_NEGATIVE, tr("Close", "Закрыть"), (d, w) -> parentDialog.dismiss());
+        parentDialog.show();
     }
 
     private void showSpecificBatchEdit(Medicine m, int index) {
@@ -1218,10 +1230,12 @@ public class MainActivity extends AppCompatActivity {
         container.removeAllViews();
         for (String t : tempTimes) {
             MaterialButton btn = new MaterialButton(this);
-            btn.setText(t); btn.setAllCaps(false); btn.setCornerRadius(20);
+            btn.setText(t); btn.setAllCaps(false); btn.setCornerRadius(25);
             btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
             btn.setTextColor(Color.BLACK);
             btn.setOnClickListener(v -> { tempTimes.remove(t); refreshTimePreview(container); });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 5, 0, 5);
+            btn.setLayoutParams(lp);
             container.addView(btn);
         }
     }
@@ -1232,10 +1246,12 @@ public class MainActivity extends AppCompatActivity {
             MaterialButton btn = new MaterialButton(this);
             String label = m.name + " (" + m.dosage + " " + tr("pills", "таб.") + ")";
             btn.setText(label);
-            btn.setAllCaps(false); btn.setCornerRadius(20);
+            btn.setAllCaps(false); btn.setCornerRadius(25);
             btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
             btn.setTextColor(Color.BLACK);
             btn.setOnClickListener(v -> { tempMedsToSchedule.remove(m); refreshMedPreview(container); });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 5, 0, 5);
+            btn.setLayoutParams(lp);
             container.addView(btn);
         }
     }
@@ -1247,7 +1263,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private LinearLayout createBaseLayout() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(30, 20, 30, 20); return l; }
     private TextView createSectionLabel(String txt) { TextView tv = new TextView(this); tv.setText(txt); tv.setTypeface(null, Typeface.BOLD); return tv; }
-    private MaterialButton createActionButton(String text) { MaterialButton b = new MaterialButton(this); b.setText(text); b.setAllCaps(false); b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR))); b.setTextColor(Color.WHITE); b.setCornerRadius(30); return b; }
+    private MaterialButton createActionButton(String text) { MaterialButton b = new MaterialButton(this); b.setText(text); b.setAllCaps(false); b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR))); b.setTextColor(Color.WHITE); b.setCornerRadius(30); b.setPadding(40, 30, 40, 30); return b; }
 
     @Override
     protected void onDestroy() {
