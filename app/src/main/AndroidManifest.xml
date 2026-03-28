@@ -43,6 +43,15 @@
             android:exported="false"
             android:label="My Profile" />
 
+        <!-- Widget Configuration Activity -->
+        <activity
+            android:name=".WidgetConfigActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- 4. ALARM RECEIVER: Handles the background scheduling of alerts -->
         <receiver
             android:name=".AlarmReceiver"

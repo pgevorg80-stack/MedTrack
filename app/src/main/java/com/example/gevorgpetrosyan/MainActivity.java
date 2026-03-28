@@ -160,17 +160,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btn_add_widget).setOnClickListener(v -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                AppWidgetManager appWidgetManager = getSystemService(AppWidgetManager.class);
-                ComponentName myProvider = new ComponentName(this, MedWidget.class);
-                if (appWidgetManager.isRequestPinAppWidgetSupported()) {
-                    appWidgetManager.requestPinAppWidget(myProvider, null, null);
-                } else {
-                    Toast.makeText(this, "Pinned widgets not supported", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(this, "Please add widget from your home screen manually", Toast.LENGTH_SHORT).show();
-            }
+            Intent intent = new Intent(this, WidgetConfigActivity.class);
+            startActivity(intent);
             drawerLayout.closeDrawers();
         });
 

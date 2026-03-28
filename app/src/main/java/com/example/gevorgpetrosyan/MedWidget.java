@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
@@ -21,6 +22,7 @@ import java.util.concurrent.Executors;
 public class MedWidget extends AppWidgetProvider {
 
     public static final String ACTION_AUTO_UPDATE = "com.example.gevorgpetrosyan.WIDGET_UPDATE";
+    public static final String ACTION_WIDGET_PINNED = "com.example.gevorgpetrosyan.WIDGET_PINNED";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -30,14 +32,41 @@ public class MedWidget extends AppWidgetProvider {
     }
 
     @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        super.onDeleted(context, appWidgetIds);
+        SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        for (int appWidgetId : appWidgetIds) {
+            editor.remove("bg_color_" + appWidgetId);
+            editor.remove("text_color_" + appWidgetId);
+        }
+        editor.apply();
+    }
+
+    @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (ACTION_AUTO_UPDATE.equals(intent.getAction()) || 
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        
+        if (ACTION_WIDGET_PINNED.equals(intent.getAction())) {
+            int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                int bgColor = intent.getIntExtra("pending_bg", Color.parseColor("#2196F3"));
+                int textColor = intent.getIntExtra("pending_text", Color.WHITE);
+                
+                SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
+                prefs.edit()
+                    .putInt("bg_color_" + appWidgetId, bgColor)
+                    .putInt("text_color_" + appWidgetId, textColor)
+                    .apply();
+                    
+                updateAppWidget(context, appWidgetManager, appWidgetId);
+            }
+        } else if (ACTION_AUTO_UPDATE.equals(intent.getAction()) || 
             Intent.ACTION_TIME_TICK.equals(intent.getAction()) || 
             Intent.ACTION_TIME_CHANGED.equals(intent.getAction()) ||
             Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction())) {
             
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, MedWidget.class));
             for (int appWidgetId : appWidgetIds) {
                 updateAppWidget(context, appWidgetManager, appWidgetId);
@@ -48,9 +77,19 @@ public class MedWidget extends AppWidgetProvider {
     public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.med_widget);
 
+        // Load Configured Colors
+        SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
+        int bgColor = prefs.getInt("bg_color_" + appWidgetId, Color.parseColor("#2196F3"));
+        int textColor = prefs.getInt("text_color_" + appWidgetId, Color.WHITE);
+        int subTextColor = Color.argb(160, Color.red(textColor), Color.green(textColor), Color.blue(textColor));
+
+        // Apply background tint
+        views.setInt(R.id.widget_background_img, "setColorFilter", bgColor);
+
         // Update Time
         String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
         views.setTextViewText(R.id.widget_time, currentTime);
+        views.setTextColor(R.id.widget_time, textColor);
 
         // Update Week Grid
         boolean isRussian = context.getSharedPreferences("LangPrefs", Context.MODE_PRIVATE).getBoolean("IsRussian", false);
@@ -68,18 +107,19 @@ public class MedWidget extends AppWidgetProvider {
                 SpannableString ss = new SpannableString(letter);
                 ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, letter.length(), 0);
                 views.setTextViewText(tvIds[i - 1], ss);
-                views.setTextColor(tvIds[i - 1], Color.WHITE);
-                views.setInt(dotIds[i - 1], "setColorFilter", Color.WHITE);
+                views.setTextColor(tvIds[i - 1], textColor);
+                views.setInt(dotIds[i - 1], "setColorFilter", textColor);
                 views.setInt(dotIds[i - 1], "setImageAlpha", 255);
             } else {
                 views.setTextViewText(tvIds[i - 1], letter);
-                views.setTextColor(tvIds[i - 1], Color.parseColor("#A0FFFFFF"));
-                views.setInt(dotIds[i - 1], "setColorFilter", Color.WHITE);
+                views.setTextColor(tvIds[i - 1], subTextColor);
+                views.setInt(dotIds[i - 1], "setColorFilter", textColor);
                 views.setInt(dotIds[i - 1], "setImageAlpha", 64);
             }
         }
 
-        views.setInt(R.id.widget_mic_icon, "setColorFilter", Color.WHITE);
+        views.setInt(R.id.widget_mic_icon, "setColorFilter", textColor);
+        views.setTextColor(R.id.widget_next_dose, textColor);
 
         // Setup Mic Click
         Intent intent = new Intent(context, MainActivity.class);

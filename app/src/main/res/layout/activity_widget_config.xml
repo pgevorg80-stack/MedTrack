@@ -1,81 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="?android:attr/windowBackground">
+    android:fillViewport="true"
+    android:background="#FFFFFF">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Widget Preview"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Preview Container -->
-    <FrameLayout
-        android:id="@+id/preview_container"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:background="#DDDDDD">
-        <include layout="@layout/med_widget" />
-    </FrameLayout>
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_vertical">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="24dp">
+        <!-- Centered Header -->
+        <TextView
+            android:id="@+id/tv_config_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Customize Your Widget"
+            android:textColor="#424242"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tv_live_preview_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Live Preview"
+            android:textColor="#9E9E9E"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Preview Container with scaling to fit -->
+        <FrameLayout
+            android:id="@+id/preview_outer_container"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:background="#F5F5F5"
+            android:layout_marginBottom="32dp">
+
+            <!-- Scaled container to make the widget fit fully -->
+            <FrameLayout
+                android:layout_width="383dp"
+                android:layout_height="187dp"
+                android:layout_gravity="center"
+                android:scaleX="0.85"
+                android:scaleY="0.85">
+
+                <include layout="@layout/med_widget" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_bg_color_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Background Color"
+            android:textColor="#424242"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+        
+        <SeekBar
+            android:id="@+id/sb_bg_hue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:max="360"
+            android:progress="207"
+            android:layout_marginBottom="24dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Background Color (Hue)"
-                android:layout_marginBottom="8dp" />
-            <SeekBar
-                android:id="@+id/sb_bg_hue"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="360"
-                android:progress="207" />
+        <TextView
+            android:id="@+id/tv_text_color_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Text and Icons Color"
+            android:textColor="#424242"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Text/Icons Color (Hue)"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="8dp" />
-            <SeekBar
-                android:id="@+id/sb_text_hue"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="360"
-                android:progress="0" />
-            
-            <CheckBox
-                android:id="@+id/cb_text_white"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Use White Text (Overrides Hue)"
-                android:checked="true" />
+        <SeekBar
+            android:id="@+id/sb_text_hue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="360"
+            android:progress="0"
+            android:layout_marginBottom="16dp" />
 
-            <Button
-                android:id="@+id/btn_confirm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="CONFIRM"
-                android:layout_marginTop="32dp" />
+        <CheckBox
+            android:id="@+id/cb_text_white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Keep text white (Better contrast)"
+            android:textColor="#424242"
+            android:checked="true"
+            android:layout_marginBottom="40dp" />
 
-        </LinearLayout>
-    </ScrollView>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="ADD TO HOME SCREEN"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="#2196F3"
+            app:cornerRadius="30dp" />
 
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

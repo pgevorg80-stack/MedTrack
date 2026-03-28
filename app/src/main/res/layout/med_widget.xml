@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="8dp">
 
-    <LinearLayout
-        android:id="@+id/widget_banner"
+    <!-- This ImageView acts as the colored background with rounded corners -->
+    <ImageView
+        android:id="@+id/widget_background_img"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/banner_background"
+        android:src="@drawable/banner_background"
+        android:scaleType="fitXY" />
+
+    <LinearLayout
+        android:id="@+id/widget_content_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="horizontal"
         android:paddingLeft="25dp"
         android:paddingTop="20dp"
@@ -24,7 +30,6 @@
             android:gravity="center_vertical"
             android:orientation="vertical">
 
-            <!-- Using TextClock for real-time live clock updates -->
             <TextClock
                 android:id="@+id/widget_time"
                 android:layout_width="wrap_content"
@@ -42,44 +47,35 @@
                 android:layout_marginTop="15dp"
                 android:orientation="horizontal">
 
-                <!-- Day 1 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="S" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_1" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-                <!-- Day 2 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="M" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_2" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-                <!-- Day 3 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_3" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-                <!-- Day 4 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="W" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_4" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-                <!-- Day 5 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_5" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-                <!-- Day 6 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="F" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_6" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-                <!-- Day 7 -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
                     <TextView android:id="@+id/tv_day_7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="S" android:textColor="#A0FFFFFF" android:textSize="14sp" />
                     <ImageView android:id="@+id/dot_day_7" android:layout_width="14dp" android:layout_height="14dp" android:layout_marginTop="6dp" android:src="@drawable/widget_dot_rect" />
                 </LinearLayout>
-
             </LinearLayout>
-
         </LinearLayout>
 
         <!-- RIGHT PART: Next Dose and Mic -->
@@ -127,8 +123,6 @@
                     android:layout_gravity="center"
                     android:src="@android:drawable/ic_btn_speak_now" />
             </FrameLayout>
-
         </LinearLayout>
-
     </LinearLayout>
 </RelativeLayout>
