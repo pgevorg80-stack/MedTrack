@@ -32,6 +32,9 @@ public class LoginActivity extends AppCompatActivity {
         // LOGIN BUTTON
         findViewById(R.id.btn_login).setOnClickListener(v -> loginUser());
 
+        // GUEST MODE BUTTON
+        findViewById(R.id.btn_guest).setOnClickListener(v -> loginAsGuest());
+
         // SIGN UP / REGISTER LINK
         // I am using your tv_register_link to actually create an account
         findViewById(R.id.tv_register_link).setOnClickListener(v -> registerUser());
@@ -52,6 +55,17 @@ public class LoginActivity extends AppCompatActivity {
                         goToMain();
                     } else {
                         Toast.makeText(this, "Login Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void loginAsGuest() {
+        mAuth.signInAnonymously()
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        goToMain();
+                    } else {
+                        Toast.makeText(this, "Guest Login Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
