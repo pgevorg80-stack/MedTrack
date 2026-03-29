@@ -169,6 +169,48 @@
 
             </LinearLayout>
         </RelativeLayout>
+
+        <!-- SUCCESS OVERLAY (Apple Pay Style) -->
+        <FrameLayout
+            android:id="@+id/success_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#90000000"
+            android:visibility="gone"
+            android:elevation="100dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:id="@+id/success_content"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/card_background"
+                android:elevation="5dp"
+                android:padding="20dp">
+
+                <ImageView
+                    android:id="@+id/success_checkmark"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@android:drawable/checkbox_on_background"
+                    app:tint="#4CAF50" />
+
+                <TextView
+                    android:id="@+id/tv_success_msg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Logged!"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="15dp"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            </LinearLayout>
+        </FrameLayout>
+
     </RelativeLayout>
 
     <!-- SLIDING SETTINGS CURTAIN (opens from START/LEFT) -->

@@ -30,6 +30,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.OvershootInterpolator;
+import android.view.animation.ScaleAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -78,6 +80,12 @@ public class MainActivity extends AppCompatActivity {
     private SpeechRecognizer speechRecognizer;
     private ImageView micIconRef;
     
+    // Success Animation UI
+    private FrameLayout successOverlay;
+    private View successContent;
+    private ImageView successCheckmark;
+    private TextView tvSuccessMsg;
+    
     // Voice Logging Dialog UI components
     private AlertDialog voiceDialog;
     private VoiceVisualizerView visualizer;
@@ -109,6 +117,12 @@ public class MainActivity extends AppCompatActivity {
         db = AppDatabase.getInstance(this);
         viewPager = findViewById(R.id.view_pager);
         drawerLayout = findViewById(R.id.drawer_layout);
+        
+        // Init Success Overlay
+        successOverlay = findViewById(R.id.success_overlay);
+        successContent = findViewById(R.id.success_content);
+        successCheckmark = findViewById(R.id.success_checkmark);
+        tvSuccessMsg = findViewById(R.id.tv_success_msg);
 
         sectionsPagerAdapter = new SectionsPagerAdapter();
         viewPager.setAdapter(sectionsPagerAdapter);
@@ -195,6 +209,8 @@ public class MainActivity extends AppCompatActivity {
         ((MaterialButton) findViewById(R.id.btn_language)).setText(tr("Language", "Язык (RU)"));
         ((MaterialButton) findViewById(R.id.btn_add_widget)).setText(tr("Add widget", "Добавить виджет"));
         ((MaterialButton) findViewById(R.id.btn_logout)).setText(tr("Log Out", "Выйти"));
+        
+        if (tvSuccessMsg != null) tvSuccessMsg.setText(tr("Logged!", "Отмечено!"));
     }
 
     private void updateBottomNavSelection(int position) {
@@ -1019,11 +1035,36 @@ public class MainActivity extends AppCompatActivity {
             if (isMedicineExpired(m.batches)) sendStatusNotification(m.name, tr("EXPIRED!", "ПРОСРОЧЕНО!"));
             db.medicineDao().update(m);
             runOnUiThread(() -> { 
-                Toast.makeText(this, tr("Logged: ", "Отмечено: ") + m.name, Toast.LENGTH_SHORT).show(); 
+                showSuccessAnimation();
                 refreshCurrentTab();
                 updateWidget();
             });
         });
+    }
+
+    private void showSuccessAnimation() {
+        if (successOverlay == null) return;
+        
+        successOverlay.setVisibility(View.VISIBLE);
+        successOverlay.setAlpha(0f);
+        successOverlay.animate().alpha(1f).setDuration(200).start();
+
+        successContent.setScaleX(0.5f);
+        successContent.setScaleY(0.5f);
+        successContent.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(400)
+                .setInterpolator(new OvershootInterpolator())
+                .start();
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            successOverlay.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> successOverlay.setVisibility(View.GONE))
+                    .start();
+        }, 1200);
     }
 
     private void sendStatusNotification(String medName, String status) {
