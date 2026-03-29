@@ -829,21 +829,32 @@ public class MainActivity extends AppCompatActivity {
             tvTime.setTextSize(16);
             tvTime.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             
+            LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics()));
+            btnLp.setMargins(10, 0, 0, 0);
+
             MaterialButton btnTake = new MaterialButton(this);
             btnTake.setText(tr("Log", "Принять"));
-            btnTake.setTextSize(11);
-            btnTake.setCornerRadius(15);
-            btnTake.setPadding(30, 0, 30, 0);
+            btnTake.setTextSize(10);
+            btnTake.setCornerRadius(18);
+            btnTake.setPadding(25, 0, 25, 0);
             btnTake.setAllCaps(false);
+            btnTake.setIcon(getDrawable(android.R.drawable.ic_input_add));
+            btnTake.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
+            btnTake.setIconPadding(4);
+            btnTake.setLayoutParams(btnLp);
             btnTake.setOnClickListener(v -> logManualIntake(m));
             
             MaterialButton btnDel = new MaterialButton(this);
             btnDel.setText(tr("Delete", "Удалить"));
-            btnDel.setTextSize(11);
-            btnDel.setCornerRadius(15);
-            btnDel.setPadding(30, 0, 30, 0);
+            btnDel.setTextSize(10);
+            btnDel.setCornerRadius(18);
+            btnDel.setPadding(25, 0, 25, 0);
             btnDel.setAllCaps(false);
             btnDel.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF5252")));
+            btnDel.setIcon(getDrawable(android.R.drawable.ic_menu_delete));
+            btnDel.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
+            btnDel.setIconPadding(4);
+            btnDel.setLayoutParams(btnLp);
             btnDel.setOnClickListener(v -> deleteSpecific_dose(m, t));
             
             row.addView(tvTime);
