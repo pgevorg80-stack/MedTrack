@@ -36,8 +36,10 @@ public class LoginActivity extends AppCompatActivity {
         findViewById(R.id.btn_guest).setOnClickListener(v -> loginAsGuest());
 
         // SIGN UP / REGISTER LINK
-        // I am using your tv_register_link to actually create an account
-        findViewById(R.id.tv_register_link).setOnClickListener(v -> registerUser());
+        findViewById(R.id.tv_register_link).setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void loginUser() {
@@ -66,26 +68,6 @@ public class LoginActivity extends AppCompatActivity {
                         goToMain();
                     } else {
                         Toast.makeText(this, "Guest Login Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
-
-    private void registerUser() {
-        String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-
-        if (TextUtils.isEmpty(email) || password.length() < 6) {
-            Toast.makeText(this, "Email required & Password min 6 chars", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show();
-                        goToMain();
-                    } else {
-                        Toast.makeText(this, "Registration Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }

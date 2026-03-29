@@ -37,7 +37,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
 
-        <!-- 3. PROFILE ACTIVITY: Account details and editing -->
+        <!-- 3. SIGNUP ACTIVITY: For new users -->
+        <activity
+            android:name=".SignUpActivity"
+            android:exported="false" />
+
+        <!-- 4. PROFILE ACTIVITY: Account details and editing -->
         <activity
             android:name=".ProfileActivity"
             android:exported="false"
@@ -52,19 +57,19 @@
             </intent-filter>
         </activity>
 
-        <!-- 4. ALARM RECEIVER: Handles the background scheduling of alerts -->
+        <!-- 5. ALARM RECEIVER: Handles the background scheduling of alerts -->
         <receiver
             android:name=".AlarmReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- 5. ACTION RECEIVER: Handles "Taken" or "Missed" button clicks in notifications -->
+        <!-- 6. ACTION RECEIVER: Handles "Taken" or "Missed" button clicks in notifications -->
         <receiver
             android:name=".ActionReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- 6. BOOT RECEIVER: Restores alarms automatically if the phone is restarted -->
+        <!-- 7. BOOT RECEIVER: Restores alarms automatically if the phone is restarted -->
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"
@@ -74,7 +79,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- 7. MED WIDGET: Home screen widget -->
+        <!-- 8. MED WIDGET: Home screen widget -->
         <receiver
             android:name=".MedWidget"
             android:exported="true">
