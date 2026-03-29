@@ -310,15 +310,107 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateInventory(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Warehouse Stock", "Запас лекарств")));
-        for (Medicine m : meds) {
-            int total = calculateTotalStock(m.batches);
-            int tint = (total <= 0) ? Color.parseColor("#FFCDD2") : Color.parseColor(BLUE_COLOR);
-            MaterialButton btn = createCardButton(m.name + " (" + total + " " + tr("left", "осталось") + ")", "#" + Integer.toHexString(tint).substring(2));
-            btn.setTextColor(Color.WHITE);
-            btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#" + Integer.toHexString(tint).substring(2))));
-            btn.setOnClickListener(v -> showBatchEditMenu(m));
-            layout.addView(btn);
+        
+        MaterialButton btnAdd = createActionButton(tr("+ Register Medicine", "+ Добавить лекарство"));
+        btnAdd.setOnClickListener(v -> showRegisterMedicineDialog());
+        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-1, -2);
+        btnLp.setMargins(0, 0, 0, 40);
+        btnAdd.setLayoutParams(btnLp);
+        layout.addView(btnAdd);
+
+        if (meds.isEmpty()) {
+            TextView empty = new TextView(this);
+            empty.setText(tr("Your warehouse is empty.", "Ваш склад пуст."));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, 100, 0, 0);
+            empty.setAlpha(0.6f);
+            empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            layout.addView(empty);
+        } else {
+            for (Medicine m : meds) {
+                layout.addView(createInventoryCard(m));
+            }
         }
+    }
+
+    private View createInventoryCard(Medicine m) {
+        int total = calculateTotalStock(m.batches);
+        boolean isExpired = isMedicineExpired(m.batches);
+        
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setBackgroundResource(R.drawable.card_background);
+        card.setPadding(45, 40, 45, 40);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, 10, 0, 20);
+        card.setLayoutParams(lp);
+        card.setClickable(true);
+        card.setFocusable(true);
+        TypedValue outValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            card.setForeground(getDrawable(outValue.resourceId));
+        }
+
+        // Status Icon
+        ImageView ivStatus = new ImageView(this);
+        int iconRes = android.R.drawable.ic_dialog_info;
+        int iconColor = Color.parseColor(BLUE_COLOR);
+        
+        if (total <= 0) {
+            iconRes = android.R.drawable.ic_dialog_alert;
+            iconColor = Color.parseColor("#F44336");
+        } else if (isExpired) {
+            iconRes = android.R.drawable.ic_menu_today;
+            iconColor = Color.parseColor("#FF9800");
+        }
+        
+        ivStatus.setImageResource(iconRes);
+        ivStatus.setColorFilter(iconColor);
+        LinearLayout.LayoutParams iconP = new LinearLayout.LayoutParams(70, 70);
+        iconP.setMargins(0, 0, 35, 0);
+        ivStatus.setLayoutParams(iconP);
+        card.addView(ivStatus);
+
+        // Text Info
+        LinearLayout textInfo = new LinearLayout(this);
+        textInfo.setOrientation(LinearLayout.VERTICAL);
+        textInfo.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+
+        TextView tvName = new TextView(this);
+        tvName.setText(m.name);
+        tvName.setTextSize(18);
+        tvName.setTypeface(null, Typeface.BOLD);
+        tvName.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        textInfo.addView(tvName);
+
+        TextView tvStock = new TextView(this);
+        tvStock.setText(tr("Stock: ", "Запас: ") + total + " " + tr("pills", "таб."));
+        tvStock.setTextSize(14);
+        tvStock.setTextColor(getThemeColor(R.attr.secondaryTextColor));
+        textInfo.addView(tvStock);
+        
+        if (isExpired) {
+            TextView tvExp = new TextView(this);
+            tvExp.setText(tr("Some batches expired!", "Есть просроченные партии!"));
+            tvExp.setTextSize(12);
+            tvExp.setTextColor(Color.parseColor("#F44336"));
+            tvExp.setTypeface(null, Typeface.ITALIC);
+            textInfo.addView(tvExp);
+        }
+
+        card.addView(textInfo);
+
+        // Arrow
+        ImageView ivArrow = new ImageView(this);
+        ivArrow.setImageResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
+        ivArrow.setColorFilter(getThemeColor(R.attr.secondaryTextColor));
+        card.addView(ivArrow);
+
+        card.setOnClickListener(v -> showBatchEditMenu(m));
+        return card;
     }
 
     private void populateDashboard(LinearLayout layout, List<Medicine> meds) {
@@ -893,7 +985,9 @@ public class MainActivity extends AppCompatActivity {
         card.setBackgroundResource(outValue.resourceId);
         // Important: reset background after setting selectable background
         card.setBackground(getDrawable(R.drawable.card_background));
-        card.setForeground(getDrawable(outValue.resourceId));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            card.setForeground(getDrawable(outValue.resourceId));
+        }
 
         TextView tvName = new TextView(this);
         tvName.setText(m.name);
