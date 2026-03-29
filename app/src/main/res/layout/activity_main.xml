@@ -196,8 +196,7 @@
                     android:id="@+id/success_checkmark"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:src="@android:drawable/checkbox_on_background"
-                    app:tint="#4CAF50" />
+                    android:src="@drawable/ic_check_mark" />
 
                 <TextView
                     android:id="@+id/tv_success_msg"
