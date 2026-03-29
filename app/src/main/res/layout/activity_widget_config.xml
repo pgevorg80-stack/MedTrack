@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#FFFFFF">
+    android:background="?android:attr/windowBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:text="Customize Your Widget"
-            android:textColor="#424242"
+            android:textColor="?android:attr/textColorPrimary"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="32dp" />
@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Live Preview"
-            android:textColor="#9E9E9E"
+            android:textColor="?attr/secondaryTextColor"
             android:textSize="14sp"
             android:layout_marginBottom="12dp" />
 
@@ -39,7 +39,7 @@
             android:id="@+id/preview_outer_container"
             android:layout_width="match_parent"
             android:layout_height="160dp"
-            android:background="#F5F5F5"
+            android:background="?attr/cardBackgroundColor"
             android:layout_marginBottom="32dp">
 
             <!-- Scaled container to make the widget fit fully -->
@@ -59,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Background Color"
-            android:textColor="#424242"
+            android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_marginBottom="8dp" />
@@ -77,7 +77,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Text and Icons Color"
-            android:textColor="#424242"
+            android:textColor="?android:attr/textColorPrimary"
             android:textStyle="bold"
             android:textSize="16sp"
             android:layout_marginBottom="8dp" />
@@ -95,7 +95,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Keep text white (Better contrast)"
-            android:textColor="#424242"
+            android:textColor="?android:attr/textColorPrimary"
             android:checked="true"
             android:layout_marginBottom="40dp" />
 
@@ -107,7 +107,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            app:backgroundTint="#2196F3"
+            app:backgroundTint="?attr/colorPrimary"
             app:cornerRadius="30dp" />
 
     </LinearLayout>

@@ -253,28 +253,58 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateList(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Medicine Reminders", "График приема")));
+        
         MaterialButton btnAdd = createActionButton(tr("+ Schedule New Dose", "+ Добавить прием"));
         btnAdd.setOnClickListener(v -> { tempTimes.clear(); tempMedsToSchedule.clear(); showScheduleDoseDialog(); });
+        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-1, -2);
+        btnLp.setMargins(0, 0, 0, 40);
+        btnAdd.setLayoutParams(btnLp);
         layout.addView(btnAdd);
+
+        boolean hasSchedules = false;
         for (Medicine m : meds) {
             if (m.times != null && !m.times.isEmpty()) {
                 layout.addView(createExpandableMedCard(m));
+                hasSchedules = true;
             }
+        }
+
+        if (!hasSchedules) {
+            TextView empty = new TextView(this);
+            empty.setText(tr("No reminders set yet.", "Напоминания еще не установлены."));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, 100, 0, 0);
+            empty.setAlpha(0.6f);
+            empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            layout.addView(empty);
         }
     }
 
     private void populateStats(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Usage History", "История использования")));
         
+        boolean hasHistory = false;
         for (Medicine m : meds) {
             int taken = 0;
             if (m.history != null && !m.history.isEmpty()) {
                 taken = m.history.split(",").length / 2;
             }
             
-            MaterialButton btn = createStatsCard(m.name + "\n" + tr("Total intakes: ", "Всего приемов: ") + taken);
-            btn.setOnClickListener(v -> showDetailedHistory(m));
-            layout.addView(btn);
+            if (taken > 0) {
+                View card = createStatsCard(m, taken);
+                layout.addView(card);
+                hasHistory = true;
+            }
+        }
+
+        if (!hasHistory) {
+            TextView empty = new TextView(this);
+            empty.setText(tr("No usage history available.", "История использования отсутствует."));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, 100, 0, 0);
+            empty.setAlpha(0.6f);
+            empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            layout.addView(empty);
         }
     }
 
@@ -400,8 +430,10 @@ public class MainActivity extends AppCompatActivity {
                     btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
                     btn.setTextColor(Color.WHITE);
                 } else {
-                    btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-                    btn.setTextColor(Color.BLACK);
+                    btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
+                    btn.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+                    btn.setStrokeWidth(2);
+                    btn.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
                 }
                 
                 btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
@@ -413,6 +445,12 @@ public class MainActivity extends AppCompatActivity {
                 layout.addView(btn);
             }
         }
+    }
+
+    private int getThemeColor(int attr) {
+        TypedValue tv = new TypedValue();
+        getTheme().resolveAttribute(attr, tv, true);
+        return tv.data;
     }
 
     private void initSpeechRecognizer() {
@@ -743,53 +781,125 @@ public class MainActivity extends AppCompatActivity {
     private View createExpandableMedCard(Medicine m) {
         LinearLayout container = new LinearLayout(this);
         container.setOrientation(LinearLayout.VERTICAL);
-        MaterialButton headerBtn = new MaterialButton(this);
-        headerBtn.setText(m.name); headerBtn.setAllCaps(false); headerBtn.setCornerRadius(38);
-        headerBtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
-        headerBtn.setTextColor(Color.WHITE); headerBtn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        headerBtn.setPadding(50, 45, 50, 45);
-        headerBtn.setIconResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
-        headerBtn.setIconTint(ColorStateList.valueOf(Color.WHITE));
-        headerBtn.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_END); headerBtn.setIconPadding(10);
+        container.setBackgroundResource(R.drawable.card_background);
+        LinearLayout.LayoutParams containerLp = new LinearLayout.LayoutParams(-1, -2);
+        containerLp.setMargins(0, 10, 0, 20);
+        container.setLayoutParams(containerLp);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(45, 45, 45, 45);
+        header.setClickable(true);
+        header.setFocusable(true);
+        TypedValue outValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+        header.setBackgroundResource(outValue.resourceId);
+
+        TextView tvName = new TextView(this);
+        tvName.setText(m.name);
+        tvName.setTextSize(18);
+        tvName.setTypeface(null, Typeface.BOLD);
+        tvName.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        tvName.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+
+        ImageView ivArrow = new ImageView(this);
+        ivArrow.setImageResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
+        ivArrow.setColorFilter(getThemeColor(R.attr.secondaryTextColor));
+
+        header.addView(tvName);
+        header.addView(ivArrow);
+
         LinearLayout expandedView = new LinearLayout(this);
-        expandedView.setOrientation(LinearLayout.VERTICAL); expandedView.setVisibility(View.GONE);
-        expandedView.setPadding(40, 10, 40, 20);
-        String[] timesArray = m.times.split(","); Arrays.sort(timesArray);
+        expandedView.setOrientation(LinearLayout.VERTICAL);
+        expandedView.setVisibility(View.GONE);
+        expandedView.setPadding(45, 0, 45, 30);
+
+        String[] timesArray = m.times.split(",");
+        Arrays.sort(timesArray);
         for (String t : timesArray) {
             LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(0, 15, 0, 15);
-            TextView tvTime = new TextView(this); tvTime.setText(t);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, 15, 0, 15);
+
+            TextView tvTime = new TextView(this);
+            tvTime.setText(t);
             tvTime.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-            tvTime.setTextSize(18); tvTime.setTypeface(null, Typeface.BOLD);
-            TypedValue tvTheme = new TypedValue(); getTheme().resolveAttribute(android.R.attr.textColorPrimary, tvTheme, true);
-            tvTime.setTextColor(tvTheme.data);
+            tvTime.setTextSize(16);
+            tvTime.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             
             MaterialButton btnTake = new MaterialButton(this);
-            btnTake.setText(tr("Log", "Принять")); btnTake.setTextSize(11); btnTake.setCornerRadius(15);
-            btnTake.setAllCaps(false); btnTake.setTextColor(Color.WHITE);
+            btnTake.setText(tr("Log", "Принять"));
+            btnTake.setTextSize(11);
+            btnTake.setCornerRadius(15);
+            btnTake.setPadding(30, 0, 30, 0);
+            btnTake.setAllCaps(false);
             btnTake.setOnClickListener(v -> logManualIntake(m));
             
             MaterialButton btnDel = new MaterialButton(this);
-            btnDel.setText(tr("Delete", "Удалить")); btnDel.setTextSize(11); btnDel.setCornerRadius(15);
-            btnDel.setAllCaps(false); 
-            btnDel.setTextColor(Color.WHITE);
+            btnDel.setText(tr("Delete", "Удалить"));
+            btnDel.setTextSize(11);
+            btnDel.setCornerRadius(15);
+            btnDel.setPadding(30, 0, 30, 0);
+            btnDel.setAllCaps(false);
             btnDel.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF5252")));
             btnDel.setOnClickListener(v -> deleteSpecific_dose(m, t));
             
-            row.addView(tvTime); row.addView(btnTake); row.addView(btnDel);
+            row.addView(tvTime);
+            row.addView(btnTake);
+            row.addView(btnDel);
             expandedView.addView(row);
         }
-        headerBtn.setOnClickListener(v -> {
+
+        header.setOnClickListener(v -> {
             if (expandedView.getVisibility() == View.GONE) {
                 expandedView.setVisibility(View.VISIBLE);
-                headerBtn.setIconResource(androidx.appcompat.R.drawable.abc_spinner_mtrl_am_alpha);
+                ivArrow.setImageResource(androidx.appcompat.R.drawable.abc_spinner_mtrl_am_alpha);
             } else {
                 expandedView.setVisibility(View.GONE);
-                headerBtn.setIconResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
+                ivArrow.setImageResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
             }
         });
-        container.addView(headerBtn); container.addView(expandedView);
+
+        container.addView(header);
+        container.addView(expandedView);
         return container;
+    }
+
+    private View createStatsCard(Medicine m, int takenCount) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackgroundResource(R.drawable.card_background);
+        card.setPadding(45, 45, 45, 45);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, 10, 0, 20);
+        card.setLayoutParams(lp);
+        card.setClickable(true);
+        card.setFocusable(true);
+        TypedValue outValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+        card.setBackgroundResource(outValue.resourceId);
+        // Important: reset background after setting selectable background
+        card.setBackground(getDrawable(R.drawable.card_background));
+        card.setForeground(getDrawable(outValue.resourceId));
+
+        TextView tvName = new TextView(this);
+        tvName.setText(m.name);
+        tvName.setTextSize(18);
+        tvName.setTypeface(null, Typeface.BOLD);
+        tvName.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        card.addView(tvName);
+
+        TextView tvStats = new TextView(this);
+        tvStats.setText(tr("Total intakes: ", "Всего приемов: ") + takenCount);
+        tvStats.setTextSize(14);
+        tvStats.setTextColor(getThemeColor(R.attr.secondaryTextColor));
+        tvStats.setPadding(0, 5, 0, 0);
+        card.addView(tvStats);
+
+        card.setOnClickListener(v -> showDetailedHistory(m));
+        return card;
     }
 
     private void logManualIntake(Medicine m) {
@@ -1061,8 +1171,10 @@ public class MainActivity extends AppCompatActivity {
             btnDate.setText(date + " (" + dateToTimes.get(date).size() + ")");
             btnDate.setAllCaps(false);
             btnDate.setCornerRadius(25);
-            btnDate.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-            btnDate.setTextColor(Color.BLACK);
+            btnDate.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
+            btnDate.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            btnDate.setStrokeWidth(2);
+            btnDate.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
             btnDate.setOnClickListener(v -> showHistoryTimesDialog(m, date, dateToTimes.get(date)));
             
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
@@ -1102,9 +1214,8 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout item = new LinearLayout(this);
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            item.setPadding(30, 25, 30, 25);
-            item.setBackgroundResource(R.drawable.nav_pill_background);
-            item.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F9F9F9")));
+            item.setPadding(35, 30, 35, 30);
+            item.setBackgroundResource(R.drawable.card_background);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
             lp.setMargins(0, 10, 0, 10);
             item.setLayoutParams(lp);
@@ -1118,7 +1229,7 @@ public class MainActivity extends AppCompatActivity {
             tvTime.setText(time);
             tvTime.setPadding(30, 0, 0, 0);
             tvTime.setTextSize(16);
-            tvTime.setTextColor(Color.BLACK);
+            tvTime.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             item.addView(tvTime);
 
             container.addView(item);
@@ -1203,27 +1314,15 @@ public class MainActivity extends AppCompatActivity {
         return btn;
     }
 
-    private MaterialButton createStatsCard(String text) {
-        MaterialButton btn = new MaterialButton(this);
-        btn.setText(text); btn.setAllCaps(false); btn.setCornerRadius(30);
-        btn.setStrokeWidth(4); btn.setStrokeColor(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
-        btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F9FF")));
-        TypedValue tv = new TypedValue(); getTheme().resolveAttribute(android.R.attr.textColorPrimary, tv, true);
-        btn.setTextColor(tv.data);
-        btn.setPadding(40, 50, 40, 50);
-        btn.setLineSpacing(10, 1.2f);
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
-        p.setMargins(0, 15, 0, 15); btn.setLayoutParams(p);
-        return btn;
-    }
-
     private void refreshTimePreview(LinearLayout container) {
         container.removeAllViews();
         for (String t : tempTimes) {
             MaterialButton btn = new MaterialButton(this);
             btn.setText(t); btn.setAllCaps(false); btn.setCornerRadius(25);
-            btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-            btn.setTextColor(Color.BLACK);
+            btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
+            btn.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            btn.setStrokeWidth(2);
+            btn.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
             btn.setOnClickListener(v -> { tempTimes.remove(t); refreshTimePreview(container); });
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 5, 0, 5);
             btn.setLayoutParams(lp);
@@ -1238,8 +1337,10 @@ public class MainActivity extends AppCompatActivity {
             String label = m.name + " (" + m.dosage + " " + tr("pills", "таб.") + ")";
             btn.setText(label);
             btn.setAllCaps(false); btn.setCornerRadius(25);
-            btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F5F5F5")));
-            btn.setTextColor(Color.BLACK);
+            btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
+            btn.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            btn.setStrokeWidth(2);
+            btn.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
             btn.setOnClickListener(v -> { tempMedsToSchedule.remove(m); refreshMedPreview(container); });
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 5, 0, 5);
             btn.setLayoutParams(lp);
@@ -1253,8 +1354,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private LinearLayout createBaseLayout() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(30, 20, 30, 20); return l; }
-    private TextView createSectionLabel(String txt) { TextView tv = new TextView(this); tv.setText(txt); tv.setTypeface(null, Typeface.BOLD); return tv; }
-    private MaterialButton createActionButton(String text) { MaterialButton b = new MaterialButton(this); b.setText(text); b.setAllCaps(false); b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR))); b.setTextColor(Color.WHITE); b.setCornerRadius(30); b.setPadding(40, 30, 40, 30); return b; }
+    private TextView createSectionLabel(String txt) { 
+        TextView tv = new TextView(this); 
+        tv.setText(txt); 
+        tv.setTypeface(null, Typeface.BOLD); 
+        tv.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        return tv; 
+    }
+    private MaterialButton createActionButton(String text) { 
+        MaterialButton b = new MaterialButton(this); 
+        b.setText(text); 
+        b.setAllCaps(false); 
+        b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR))); 
+        b.setTextColor(Color.WHITE); 
+        b.setCornerRadius(30); 
+        b.setPadding(40, 30, 40, 30); 
+        return b; 
+    }
 
     @Override
     protected void onDestroy() {

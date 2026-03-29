@@ -1,5 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Custom attributes for better theme support -->
+    <attr name="navBarBackground" format="color" />
+    <attr name="navBarContentColor" format="color" />
+    <attr name="cardBackgroundColor" format="color" />
+    <attr name="cardStrokeColor" format="color" />
+    <attr name="secondaryTextColor" format="color" />
+
     <style name="Theme.GevorgPetrosyan" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Main Brand Colors -->
         <item name="colorPrimary">#2196F3</item>
@@ -8,6 +15,11 @@
         <!-- General UI Colors (Dark) -->
         <item name="android:windowBackground">#121212</item>
         <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="secondaryTextColor">#B0B0B0</item>
+
+        <!-- Card Colors Dark -->
+        <item name="cardBackgroundColor">#1E1E1E</item>
+        <item name="cardStrokeColor">#333333</item>
 
         <!-- NAVIGATION BAR DARK MODE LOGIC: Dark background with Blue icons -->
         <item name="navBarBackground">#1A2530</item>

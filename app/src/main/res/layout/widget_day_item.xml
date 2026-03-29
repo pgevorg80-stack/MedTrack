@@ -4,20 +4,25 @@
     android:layout_height="wrap_content"
     android:layout_weight="1"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="4dp">
 
     <TextView
         android:id="@+id/day_letter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="S"
-        android:textColor="#A0FFFFFF"
-        android:textSize="14sp"
-        android:paddingBottom="4dp" />
+        android:textColor="#CCFFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:textAllCaps="true" />
 
-    <View
+    <ImageView
         android:id="@+id/day_dot"
-        android:layout_width="12dp"
-        android:layout_height="12dp"
-        android:background="#A0FFFFFF" />
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="6dp"
+        android:src="@drawable/widget_dot_circle"
+        android:alpha="0.4" />
 </LinearLayout>

@@ -4,4 +4,11 @@
     <color name="white">#FFFFFFFF</color>
     <color name="nav_dark">#1A2530</color>
     <color name="brand_blue">#2196F3</color>
+    <color name="brand_blue_light">#E3F2FD</color>
+    <color name="brand_blue_dark">#0D47A1</color>
+    
+    <color name="card_bg_light">#F8F9FA</color>
+    <color name="card_bg_dark">#1E1E1E</color>
+    <color name="card_stroke_light">#E0E0E0</color>
+    <color name="card_stroke_dark">#333333</color>
 </resources>
