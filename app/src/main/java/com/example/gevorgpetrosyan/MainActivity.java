@@ -17,6 +17,8 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -48,6 +50,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
@@ -1043,7 +1046,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSuccessAnimation() {
+        showStatusAnimation(R.drawable.ic_check_mark, tr("Logged", "Отмечено"));
+    }
+
+    private void showDeleteAnimation() {
+        showStatusAnimation(R.drawable.ic_delete_anim, tr("Deleted", "Удалено"));
+    }
+
+    private void showStatusAnimation(int iconRes, String message) {
         if (successOverlay == null) return;
+        
+        successCheckmark.setImageResource(iconRes);
+        tvSuccessMsg.setText(message);
         
         successOverlay.setVisibility(View.VISIBLE);
         successOverlay.setAlpha(0f);
@@ -1057,6 +1071,14 @@ public class MainActivity extends AppCompatActivity {
                 .setDuration(400)
                 .setInterpolator(new OvershootInterpolator())
                 .start();
+
+        // If it's an AnimatedVectorDrawable, start it
+        Drawable d = successCheckmark.getDrawable();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && d instanceof AnimatedVectorDrawable) {
+            ((AnimatedVectorDrawable) d).start();
+        } else if (d instanceof AnimatedVectorDrawableCompat) {
+            ((AnimatedVectorDrawableCompat) d).start();
+        }
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             successOverlay.animate()
@@ -1110,6 +1132,7 @@ public class MainActivity extends AppCompatActivity {
                         m.lastUpdated = System.currentTimeMillis();
                         db.medicineDao().update(m);
                         runOnUiThread(() -> {
+                            showDeleteAnimation();
                             refreshCurrentTab();
                             updateWidget();
                         });
@@ -1230,6 +1253,7 @@ public class MainActivity extends AppCompatActivity {
                     Executors.newSingleThreadExecutor().execute(() -> { 
                         db.medicineDao().delete(m); 
                         runOnUiThread(() -> {
+                            showDeleteAnimation();
                             refreshCurrentTab();
                             updateWidget();
                             parentDialog.dismiss();
@@ -1272,6 +1296,7 @@ public class MainActivity extends AppCompatActivity {
             Executors.newSingleThreadExecutor().execute(() -> { 
                 db.medicineDao().update(m); 
                 runOnUiThread(() -> {
+                    showDeleteAnimation();
                     refreshCurrentTab();
                     updateWidget();
                 }); 
