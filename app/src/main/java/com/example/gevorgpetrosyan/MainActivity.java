@@ -53,9 +53,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuth; 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -116,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
         currentUserId = user.getUid();
         
         setContentView(R.layout.activity_main);
+
+        requestNotificationPermission();
 
         db = AppDatabase.getInstance(this);
         viewPager = findViewById(R.id.view_pager);
@@ -190,6 +192,14 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 102);
+            }
+        }
     }
 
     private void loadLanguagePreference() {
