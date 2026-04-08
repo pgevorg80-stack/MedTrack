@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
                 activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
                 inactiveColor = Color.argb(180, 255, 255, 255); // White icon (semi-trans)
             } else { // Dark Mode
-                activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
+                activeColor = Color.WHITE; // White icon
                 inactiveColor = Color.argb(160, 255, 255, 255); // White-ish icon
             }
 
@@ -603,7 +603,7 @@ public class MainActivity extends AppCompatActivity {
                 btn.setText(m.name + " (" + medNext + ") ▶");
                 btn.setAllCaps(false);
                 btn.setCornerRadius(20);
-                
+
                 boolean isNearest = medNext.equals(globalNext) && !globalNext.equals("--:--");
                 if (isNearest) {
                     btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
@@ -614,7 +614,7 @@ public class MainActivity extends AppCompatActivity {
                     btn.setStrokeWidth(2);
                     btn.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
                 }
-                
+
                 btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
                 btn.setPadding(40, 30, 40, 30);
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
