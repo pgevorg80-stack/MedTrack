@@ -7,6 +7,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,6 +26,14 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("");
+        }
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
 
@@ -34,6 +43,7 @@ public class ProfileActivity extends AppCompatActivity {
         btnSavePassword = findViewById(R.id.btn_save_profile);
 
         updateUI();
+        animateEntrance();
 
         if (user != null) {
             tvUserEmail.setText(user.getEmail());
@@ -83,5 +93,32 @@ public class ProfileActivity extends AppCompatActivity {
         etNewPassword.setHint(tr("New Password", "Новый пароль"));
         etConfirmPassword.setHint(tr("Confirm New Password", "Подтвердите пароль"));
         btnSavePassword.setText(tr("Save Changes", "Сохранить изменения"));
+        
+        TextView label = findViewById(R.id.tv_label_change_pass);
+        if (label != null) label.setText(tr("Change Password", "Сменить пароль"));
+    }
+
+    private void animateEntrance() {
+        android.view.View[] views = {
+            findViewById(R.id.iv_profile_avatar),
+            findViewById(R.id.tv_profile_email),
+            findViewById(R.id.til_password),
+            findViewById(R.id.til_password_confirm),
+            findViewById(R.id.btn_save_profile)
+        };
+        
+        for (int i = 0; i < views.length; i++) {
+            if (views[i] != null) {
+                views[i].setAlpha(0f);
+                views[i].setTranslationY(50f);
+                views[i].animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(500)
+                    .setStartDelay(100 + (i * 100))
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .start();
+            }
+        }
     }
 }
