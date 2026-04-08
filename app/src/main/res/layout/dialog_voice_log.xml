@@ -1,74 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="20dp"
-    android:background="?android:attr/windowBackground">
+    app:cardCornerRadius="28dp"
+    app:cardElevation="0dp"
+    android:backgroundTint="?android:attr/windowBackground">
 
-    <TextView
-        android:id="@+id/tv_voice_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Listening for Medicine Names..."
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_gravity="center"
-        android:layout_marginBottom="20dp"/>
-
-    <!-- Voice Visualizer -->
-    <com.example.gevorgpetrosyan.VoiceVisualizerView
-        android:id="@+id/voice_visualizer"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_marginBottom="20dp" />
-
-    <TextView
-        android:id="@+id/tv_detected_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Detected Medicines:"
-        android:textSize="14sp"
-        android:layout_marginBottom="10dp"/>
-
-    <!-- Container for medicines popping out -->
     <LinearLayout
-        android:id="@+id/detected_meds_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:minHeight="100dp">
-        <!-- Medicines will be added here dynamically -->
-    </LinearLayout>
+        android:padding="24dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="20dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_voice_cancel"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/tv_voice_status"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="CANCEL"
-            android:layout_marginEnd="10dp"
-            app:cornerRadius="30dp"
-            android:backgroundTint="#2196F3"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp"
+            android:text="Listening..."
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_voice_ok"
-            android:layout_width="0dp"
+        <!-- Animated Voice Visualizer Container -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/nav_pill_background"
+            android:backgroundTint="#0A000000">
+
+            <com.example.gevorgpetrosyan.VoiceVisualizerView
+                android:id="@+id/voice_visualizer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_detected_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="OK"
-            app:cornerRadius="30dp"
-            android:backgroundTint="#2196F3"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"/>
-    </LinearLayout>
+            android:layout_marginBottom="12dp"
+            android:alpha="0.6"
+            android:text="Detected Medicines"
+            android:textAllCaps="true"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
-</LinearLayout>
+        <!-- Scrollable Container for detected items -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="200dp">
+
+            <LinearLayout
+                android:id="@+id/detected_meds_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:orientation="vertical"></LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_voice_cancel"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#10000000"
+                android:text="Cancel"
+                android:textColor="?android:attr/textColorSecondary"
+                app:cornerRadius="28dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_voice_ok"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1.2"
+                android:backgroundTint="#2196F3"
+                android:text="Done"
+                android:textColor="#FFFFFF"
+                app:cornerRadius="28dp"
+                app:elevation="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

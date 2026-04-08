@@ -347,11 +347,16 @@ public class MainActivity extends AppCompatActivity {
         btnLp.setMargins(0, 0, 0, 40);
         btnAdd.setLayoutParams(btnLp);
         layout.addView(btnAdd);
+        animateViewIn(btnAdd, 100);
 
         boolean hasSchedules = false;
+        int delay = 200;
         for (Medicine m : meds) {
             if (m.times != null && !m.times.isEmpty()) {
-                layout.addView(createExpandableMedCard(m));
+                View card = createExpandableMedCard(m);
+                layout.addView(card);
+                animateViewIn(card, delay);
+                delay += 100;
                 hasSchedules = true;
             }
         }
@@ -364,6 +369,7 @@ public class MainActivity extends AppCompatActivity {
             empty.setAlpha(0.6f);
             empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             layout.addView(empty);
+            animateViewIn(empty, 200);
         }
     }
 
@@ -371,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
         layout.addView(createHeaderWithMenu(tr("Usage History", "История использования")));
         
         boolean hasHistory = false;
+        int delay = 100;
         for (Medicine m : meds) {
             int taken = 0;
             if (m.history != null && !m.history.isEmpty()) {
@@ -380,6 +387,8 @@ public class MainActivity extends AppCompatActivity {
             if (taken > 0) {
                 View card = createStatsCard(m, taken);
                 layout.addView(card);
+                animateViewIn(card, delay);
+                delay += 100;
                 hasHistory = true;
             }
         }
@@ -392,6 +401,7 @@ public class MainActivity extends AppCompatActivity {
             empty.setAlpha(0.6f);
             empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             layout.addView(empty);
+            animateViewIn(empty, 200);
         }
     }
 
@@ -404,6 +414,7 @@ public class MainActivity extends AppCompatActivity {
         btnLp.setMargins(0, 0, 0, 40);
         btnAdd.setLayoutParams(btnLp);
         layout.addView(btnAdd);
+        animateViewIn(btnAdd, 100);
 
         if (meds.isEmpty()) {
             TextView empty = new TextView(this);
@@ -413,9 +424,14 @@ public class MainActivity extends AppCompatActivity {
             empty.setAlpha(0.6f);
             empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             layout.addView(empty);
+            animateViewIn(empty, 200);
         } else {
+            int delay = 200;
             for (Medicine m : meds) {
-                layout.addView(createInventoryCard(m));
+                View card = createInventoryCard(m);
+                layout.addView(card);
+                animateViewIn(card, delay);
+                delay += 100;
             }
         }
     }
@@ -503,29 +519,51 @@ public class MainActivity extends AppCompatActivity {
     private void populateDashboard(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Dashboard", "Панель")));
 
-        LinearLayout dashCard = new LinearLayout(this);
-        dashCard.setOrientation(LinearLayout.HORIZONTAL);
-        dashCard.setBackgroundResource(R.drawable.banner_background);
-        dashCard.setPadding(40, 60, 40, 60);
+        // Greeting based on time
+        TextView tvGreeting = new TextView(this);
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        String greeting;
+        if (hour < 12) greeting = tr("Good Morning", "Доброе утро");
+        else if (hour < 18) greeting = tr("Good Afternoon", "Добрый день");
+        else greeting = tr("Good Evening", "Добрый вечер");
+
+        tvGreeting.setText(greeting + "!");
+        tvGreeting.setTextSize(24);
+        tvGreeting.setTypeface(null, Typeface.BOLD);
+        tvGreeting.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        tvGreeting.setPadding(10, 0, 0, 20);
+        layout.addView(tvGreeting);
+        animateViewIn(tvGreeting, 100);
+
+        com.google.android.material.card.MaterialCardView dashCard = new com.google.android.material.card.MaterialCardView(this);
+        dashCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, getResources().getDisplayMetrics()));
+        dashCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()));
+        dashCard.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
-        cardParams.setMargins(0, 0, 0, 40);
+        cardParams.setMargins(0, 10, 0, 40);
         dashCard.setLayoutParams(cardParams);
+
+        LinearLayout cardContent = new LinearLayout(this);
+        cardContent.setOrientation(LinearLayout.HORIZONTAL);
+        cardContent.setPadding(50, 60, 50, 60);
+        dashCard.addView(cardContent);
 
         LinearLayout leftPart = new LinearLayout(this);
         leftPart.setOrientation(LinearLayout.VERTICAL);
         leftPart.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1.8f));
-        leftPart.setGravity(Gravity.CENTER);
+        leftPart.setGravity(Gravity.CENTER_VERTICAL);
 
         TextView tvTime = new TextView(this);
         tvTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
-        tvTime.setTextSize(60);
+        tvTime.setTextSize(54);
         tvTime.setTextColor(Color.WHITE);
-        tvTime.setTypeface(null, Typeface.BOLD);
+        tvTime.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         leftPart.addView(tvTime);
 
         LinearLayout weekGrid = new LinearLayout(this);
         weekGrid.setOrientation(LinearLayout.HORIZONTAL);
         weekGrid.setGravity(Gravity.CENTER);
+        weekGrid.setPadding(0, 20, 0, 0);
         String[] dayLettersEn = {"S", "M", "T", "W", "T", "F", "S"};
         String[] dayLettersRu = {"В", "П", "В", "С", "Ч", "П", "С"};
         String[] dayLetters = isRussian ? dayLettersRu : dayLettersEn;
@@ -539,16 +577,16 @@ public class MainActivity extends AppCompatActivity {
 
             TextView tvLetter = new TextView(this);
             tvLetter.setText(dayLetters[i - 1]);
-            tvLetter.setTextSize(12);
+            tvLetter.setTextSize(11);
             tvLetter.setGravity(Gravity.CENTER);
-            tvLetter.setTextColor(i == currentDay ? Color.WHITE : Color.parseColor("#A0FFFFFF"));
+            tvLetter.setTextColor(i == currentDay ? Color.WHITE : Color.parseColor("#B0FFFFFF"));
             tvLetter.setTypeface(null, i == currentDay ? Typeface.BOLD : Typeface.NORMAL);
             col.addView(tvLetter);
 
             View dot = new View(this);
-            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
             LinearLayout.LayoutParams dotP = new LinearLayout.LayoutParams(size, size);
-            dotP.setMargins(0, 10, 0, 0);
+            dotP.setMargins(0, 8, 0, 0);
             dot.setLayoutParams(dotP);
             dot.setBackgroundResource(R.drawable.ok_background);
             if (i == currentDay) dot.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE));
@@ -562,68 +600,147 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout rightPart = new LinearLayout(this);
         rightPart.setOrientation(LinearLayout.VERTICAL);
         rightPart.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1f));
+        rightPart.setGravity(Gravity.CENTER);
 
         String globalNext = getNextUpcomingDose(meds);
 
-        FrameLayout topBox = new FrameLayout(this);
-        topBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1.2f));
-        topBox.setBackgroundResource(R.drawable.nav_pill_background);
-        topBox.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#40FFFFFF")));
+        TextView tvNextLabel = new TextView(this);
+        tvNextLabel.setText(tr("Next Dose", "След. доза"));
+        tvNextLabel.setTextColor(Color.parseColor("#CCFFFFFF"));
+        tvNextLabel.setTextSize(12);
+        tvNextLabel.setGravity(Gravity.CENTER);
+        rightPart.addView(tvNextLabel);
+
         TextView tvNextDose = new TextView(this);
         tvNextDose.setText(globalNext);
         tvNextDose.setTextColor(Color.WHITE);
-        tvNextDose.setTextSize(22);
+        tvNextDose.setTextSize(28);
         tvNextDose.setTypeface(null, Typeface.BOLD);
         tvNextDose.setGravity(Gravity.CENTER);
-        topBox.addView(tvNextDose);
-        rightPart.addView(topBox);
+        rightPart.addView(tvNextDose);
 
-        FrameLayout botBox = new FrameLayout(this);
-        botBox.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
-        botBox.setClickable(true);
-        botBox.setFocusable(true);
+        com.google.android.material.card.MaterialCardView micCard = new com.google.android.material.card.MaterialCardView(this);
+        micCard.setRadius(100);
+        micCard.setCardBackgroundColor(Color.parseColor("#40FFFFFF"));
+        micCard.setStrokeWidth(0);
+        LinearLayout.LayoutParams micLp = new LinearLayout.LayoutParams(110, 110);
+        micLp.setMargins(0, 30, 0, 0);
+        micCard.setLayoutParams(micLp);
+        
         ImageView mic = new ImageView(this);
         mic.setImageResource(android.R.drawable.ic_btn_speak_now);
         mic.setColorFilter(Color.WHITE);
-        FrameLayout.LayoutParams micP = new FrameLayout.LayoutParams(80, 80);
-        micP.gravity = Gravity.CENTER;
-        mic.setLayoutParams(micP);
-        botBox.addView(mic);
-        botBox.setOnClickListener(v -> startVoiceRecognition(mic));
-        rightPart.addView(botBox);
+        mic.setPadding(25, 25, 25, 25);
+        micCard.addView(mic);
+        micCard.setOnClickListener(v -> startVoiceRecognition(mic));
+        rightPart.addView(micCard);
 
-        dashCard.addView(leftPart);
-        dashCard.addView(rightPart);
+        cardContent.addView(leftPart);
+        cardContent.addView(rightPart);
         layout.addView(dashCard);
+        animateViewIn(dashCard, 200);
 
+        TextView tvSectionTitle = new TextView(this);
+        tvSectionTitle.setText(tr("Today's Schedule", "Расписание на сегодня"));
+        tvSectionTitle.setTextSize(18);
+        tvSectionTitle.setTypeface(null, Typeface.BOLD);
+        tvSectionTitle.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        tvSectionTitle.setPadding(10, 20, 0, 20);
+        layout.addView(tvSectionTitle);
+        animateViewIn(tvSectionTitle, 300);
+
+        int delay = 400;
+        boolean hasMeds = false;
         for (Medicine m : meds) {
             if (m.times != null && !m.times.isEmpty()) {
+                hasMeds = true;
                 String medNext = getNextDoseForMed(m);
-                MaterialButton btn = new MaterialButton(this);
-                btn.setText(m.name + " (" + medNext + ") ▶");
-                btn.setAllCaps(false);
-                btn.setCornerRadius(20);
-
+                
+                com.google.android.material.card.MaterialCardView itemCard = new com.google.android.material.card.MaterialCardView(this);
+                itemCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
+                itemCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()));
+                
                 boolean isNearest = medNext.equals(globalNext) && !globalNext.equals("--:--");
                 if (isNearest) {
-                    btn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
-                    btn.setTextColor(Color.WHITE);
+                    itemCard.setStrokeWidth(4);
+                    itemCard.setStrokeColor(Color.parseColor(BLUE_COLOR));
                 } else {
-                    btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
-                    btn.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
-                    btn.setStrokeWidth(2);
-                    btn.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
+                    itemCard.setStrokeWidth(2);
+                    itemCard.setStrokeColor(getThemeColor(R.attr.cardStrokeColor));
                 }
+                itemCard.setCardBackgroundColor(getThemeColor(R.attr.cardBackgroundColor));
+                
+                LinearLayout itemContent = new LinearLayout(this);
+                itemContent.setOrientation(LinearLayout.HORIZONTAL);
+                itemContent.setGravity(Gravity.CENTER_VERTICAL);
+                itemContent.setPadding(40, 35, 40, 35);
+                
+                ImageView icon = new ImageView(this);
+                icon.setImageResource(android.R.drawable.ic_menu_today);
+                icon.setColorFilter(isNearest ? Color.parseColor(BLUE_COLOR) : getThemeColor(android.R.attr.textColorSecondary));
+                itemContent.addView(icon);
 
-                btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-                btn.setPadding(40, 30, 40, 30);
+                LinearLayout textInfo = new LinearLayout(this);
+                textInfo.setOrientation(LinearLayout.VERTICAL);
+                LinearLayout.LayoutParams textLp = new LinearLayout.LayoutParams(0, -2, 1f);
+                textLp.setMargins(30, 0, 0, 0);
+                textInfo.setLayoutParams(textLp);
+
+                TextView tvName = new TextView(this);
+                tvName.setText(m.name);
+                tvName.setTextSize(17);
+                tvName.setTypeface(null, Typeface.BOLD);
+                tvName.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+                textInfo.addView(tvName);
+
+                TextView tvTimeInfo = new TextView(this);
+                tvTimeInfo.setText(tr("Next dose at ", "След. доза в ") + medNext);
+                tvTimeInfo.setTextSize(13);
+                tvTimeInfo.setTextColor(getThemeColor(android.R.attr.textColorSecondary));
+                textInfo.addView(tvTimeInfo);
+                
+                itemContent.addView(textInfo);
+
+                ImageView arrow = new ImageView(this);
+                arrow.setImageResource(android.R.drawable.ic_media_play);
+                arrow.setColorFilter(getThemeColor(android.R.attr.textColorSecondary));
+                arrow.setAlpha(0.5f);
+                itemContent.addView(arrow);
+
+                itemCard.addView(itemContent);
+                itemCard.setOnClickListener(v -> logManualIntake(m));
+                
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
-                p.setMargins(0, 10, 0, 10);
-                btn.setLayoutParams(p);
-                btn.setOnClickListener(v -> logManualIntake(m));
-                layout.addView(btn);
+                p.setMargins(0, 10, 0, 15);
+                itemCard.setLayoutParams(p);
+                
+                layout.addView(itemCard);
+                animateViewIn(itemCard, delay);
+                delay += 100;
             }
         }
+        
+        if (!hasMeds) {
+            TextView tvEmpty = new TextView(this);
+            tvEmpty.setText(tr("No medicines scheduled for today", "Нет запланированных лекарств на сегодня"));
+            tvEmpty.setTextSize(15);
+            tvEmpty.setGravity(Gravity.CENTER);
+            tvEmpty.setPadding(0, 100, 0, 0);
+            tvEmpty.setAlpha(0.6f);
+            layout.addView(tvEmpty);
+        }
+    }
+
+    private void animateViewIn(View view, int delay) {
+        view.setAlpha(0);
+        view.setTranslationY(50);
+        view.animate()
+                .alpha(1)
+                .translationY(0)
+                .setDuration(600)
+                .setStartDelay(delay)
+                .setInterpolator(new OvershootInterpolator(1.2f))
+                .start();
     }
 
     private int getThemeColor(int attr) {
