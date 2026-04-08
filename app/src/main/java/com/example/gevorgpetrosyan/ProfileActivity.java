@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +15,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class ProfileActivity extends AppCompatActivity {
 
+    private ImageView ivProfileAvatar;
     private TextView tvUserEmail;
     private EditText etNewPassword, etConfirmPassword;
     private MaterialButton btnSavePassword;
@@ -37,6 +39,7 @@ public class ProfileActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
 
+        ivProfileAvatar = findViewById(R.id.iv_profile_avatar);
         tvUserEmail = findViewById(R.id.tv_profile_email);
         etNewPassword = findViewById(R.id.edit_password);
         etConfirmPassword = findViewById(R.id.edit_password_confirm);

@@ -24,20 +24,21 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
+            android:gravity="center"
             android:orientation="vertical"
             android:padding="24dp">
 
             <!-- Profile Header -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/profile_image_container"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:layout_marginTop="20dp"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="60dp"
                 app:cardElevation="4dp"
@@ -47,10 +48,8 @@
                     android:id="@+id/iv_profile_avatar"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerInside"
-                    android:src="@android:drawable/ic_menu_report_image"
-                    android:padding="24dp"
-                    app:tint="?attr/colorPrimary" />
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_profile_placeholder" />
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
@@ -140,10 +139,6 @@
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="100dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
