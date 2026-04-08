@@ -161,6 +161,32 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // --- Settings Drawer Animation ---
+        drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+            private boolean hasAnimated = false;
+            @Override
+            public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+                if (slideOffset > 0.05f && !hasAnimated) {
+                    animateSettingsItems();
+                    hasAnimated = true;
+                }
+            }
+            @Override
+            public void onDrawerClosed(@NonNull View drawerView) {
+                hasAnimated = false;
+                // Reset items for next time
+                View[] items = {
+                    findViewById(R.id.tv_settings_header),
+                    findViewById(R.id.btn_profile),
+                    findViewById(R.id.btn_theme_toggle),
+                    findViewById(R.id.btn_language),
+                    findViewById(R.id.btn_add_widget),
+                    findViewById(R.id.btn_logout)
+                };
+                for (View v : items) if (v != null) v.setAlpha(0);
+            }
+        });
+
         // Initialize first selection
         viewPager.post(() -> updateBottomNavSelection(viewPager.getCurrentItem()));
 
@@ -731,12 +757,42 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void animateViewIn(View view, int delay) {
-        view.setAlpha(0);
-        view.setTranslationY(50);
+    private void animateSettingsItems() {
+        View[] items = {
+            findViewById(R.id.tv_settings_header),
+            findViewById(R.id.btn_profile),
+            findViewById(R.id.btn_theme_toggle),
+            findViewById(R.id.btn_language),
+            findViewById(R.id.btn_add_widget),
+            findViewById(R.id.btn_logout)
+        };
+        int delay = 50;
+        for (View v : items) {
+            if (v != null) {
+                animateViewInFromLeft(v, delay);
+                delay += 70;
+            }
+        }
+    }
+
+    private void animateViewInFromLeft(View view, int delay) {
+        view.setAlpha(0f);
+        view.setTranslationX(-150f);
         view.animate()
-                .alpha(1)
-                .translationY(0)
+                .alpha(1f)
+                .translationX(0f)
+                .setDuration(500)
+                .setStartDelay(delay)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+    }
+
+    private void animateViewIn(View view, int delay) {
+        view.setAlpha(0f);
+        view.setTranslationY(60f);
+        view.animate()
+                .alpha(1f)
+                .translationY(0f)
                 .setDuration(600)
                 .setStartDelay(delay)
                 .setInterpolator(new OvershootInterpolator(1.2f))
@@ -946,6 +1002,10 @@ public class MainActivity extends AppCompatActivity {
             }
             voiceDialog.dismiss();
         });
+        
+        if (voiceDialog.getWindow() != null) {
+            voiceDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
         
         voiceDialog.show();
         
