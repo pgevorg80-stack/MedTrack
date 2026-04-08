@@ -145,7 +145,12 @@ public class MainActivity extends AppCompatActivity {
         // --- Bottom Navigation Listeners ---
         findViewById(R.id.nav_list).setOnClickListener(v -> viewPager.setCurrentItem(0));
         findViewById(R.id.nav_stats).setOnClickListener(v -> viewPager.setCurrentItem(1));
-        findViewById(R.id.nav_add).setOnClickListener(v -> showRegisterMedicineDialog());
+        findViewById(R.id.nav_add).setOnClickListener(v -> {
+            v.animate().scaleX(0.85f).scaleY(0.85f).setDuration(100).withEndAction(() -> {
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                showRegisterMedicineDialog();
+            }).start();
+        });
         findViewById(R.id.nav_inventory).setOnClickListener(v -> viewPager.setCurrentItem(2));
         findViewById(R.id.nav_dashboard).setOnClickListener(v -> viewPager.setCurrentItem(3));
 
@@ -231,11 +236,55 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBottomNavSelection(int position) {
         int[] ids = {R.id.nav_list, R.id.nav_stats, 0, R.id.nav_inventory, R.id.nav_dashboard};
+        int activeIndex = (position < 2 ? position : position + 1);
+
+        int navBg = getThemeColor(R.attr.navBarBackground);
+        int navContent = getThemeColor(R.attr.navBarContentColor);
+        
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] == 0) continue;
             View v = findViewById(ids[i]);
-            float alpha = (i == (position < 2 ? position : position + 1)) ? 1.0f : 0.5f;
-            v.setAlpha(alpha);
+            boolean isSelected = (i == activeIndex);
+
+            // Telegram style selection background logic
+            // If background is blue (Light mode), use white selection pill.
+            // If background is dark (Dark mode), use blue selection pill.
+            int selectionBg;
+            int activeColor;
+            int inactiveColor;
+
+            if (navBg == Color.parseColor(BLUE_COLOR)) { // Light Mode
+                selectionBg = Color.argb(200, 255, 255, 255); // White pill
+                activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
+                inactiveColor = Color.argb(180, 255, 255, 255); // White icon (semi-trans)
+            } else { // Dark Mode
+                selectionBg = Color.argb(60, 33, 150, 243); // Blue translucent pill
+                activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
+                inactiveColor = Color.argb(160, 255, 255, 255); // White-ish icon
+            }
+
+            v.setBackgroundTintList(ColorStateList.valueOf(isSelected ? selectionBg : Color.TRANSPARENT));
+
+            float targetScale = isSelected ? 1.05f : 1.0f;
+            v.animate()
+                    .scaleX(targetScale)
+                    .scaleY(targetScale)
+                    .setDuration(250)
+                    .setInterpolator(new OvershootInterpolator(1.2f))
+                    .start();
+
+            if (v instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) v;
+                for (int j = 0; j < group.getChildCount(); j++) {
+                    View child = group.getChildAt(j);
+                    if (child instanceof ImageView) {
+                        ((ImageView) child).setImageTintList(ColorStateList.valueOf(isSelected ? activeColor : inactiveColor));
+                    } else if (child instanceof TextView) {
+                        ((TextView) child).setTextColor(isSelected ? activeColor : inactiveColor);
+                        ((TextView) child).setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+                    }
+                }
+            }
         }
     }
 
@@ -1261,7 +1310,7 @@ public class MainActivity extends AppCompatActivity {
         btnDeleteMed.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
                 .setTitle(tr("Delete Medicine", "Удалить лекарство"))
-                .setMessage(tr("Are you sure you want to delete ", "Вы уверены, что хотите удалить ") + m.name + tr(" and all its history?", " и всю историю?"))
+                .setMessage(tr("Are you sure you want to delete ", "Вы уверены, что хотите удалить ") + m.name + tr(" и всю историю?", " and all its history?"))
                 .setPositiveButton(tr("Delete", "Удалить"), (dialog, which) -> {
                     Executors.newSingleThreadExecutor().execute(() -> { 
                         db.medicineDao().delete(m); 

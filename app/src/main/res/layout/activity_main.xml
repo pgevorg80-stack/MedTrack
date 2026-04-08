@@ -7,12 +7,10 @@
     android:layout_height="match_parent"
     android:background="?android:attr/windowBackground">
 
-    <!-- MAIN INTERFACE -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- CONTENT AREA (ViewPager2 for swiping) -->
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
@@ -21,7 +19,6 @@
             android:padding="15dp"
             android:clipToPadding="false" />
 
-        <!-- FLOATING PILL NAVIGATION BAR CONTAINER -->
         <RelativeLayout
             android:id="@+id/nav_container"
             android:layout_width="match_parent"
@@ -36,141 +33,145 @@
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
                 android:background="@drawable/nav_pill_background"
-                android:elevation="10dp"
+                android:elevation="12dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="5dp">
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
 
                 <!-- 1. LIST BUTTON -->
                 <LinearLayout
                     android:id="@+id/nav_list"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:background="@drawable/nav_item_selection_bg"
+                    android:backgroundTint="#00FFFFFF"
                     android:clickable="true"
                     android:focusable="true"
                     android:orientation="vertical">
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@android:drawable/ic_menu_sort_by_size"
-                        app:tint="?attr/navBarContentColor" />
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@android:drawable/ic_menu_sort_by_size" />
                     <TextView
                         android:id="@+id/tv_nav_list"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="List"
-                        android:textColor="?attr/navBarContentColor"
-                        android:textSize="11sp" />
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <!-- 2. STATS BUTTON -->
                 <LinearLayout
                     android:id="@+id/nav_stats"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:background="@drawable/nav_item_selection_bg"
+                    android:backgroundTint="#00FFFFFF"
                     android:clickable="true"
                     android:focusable="true"
                     android:orientation="vertical">
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@android:drawable/ic_menu_compass"
-                        app:tint="?attr/navBarContentColor" />
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@android:drawable/ic_menu_compass" />
                     <TextView
                         android:id="@+id/tv_nav_stats"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Stats"
-                        android:textColor="?attr/navBarContentColor"
-                        android:textSize="11sp" />
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
-                <!-- 3. MIDDLE ADD BUTTON (THE BIG +) -->
+                <!-- 3. MIDDLE BIG ADD BUTTON (RESTORED) -->
                 <LinearLayout
                     android:id="@+id/nav_add"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1.2"
+                    android:layout_weight="1.3"
                     android:gravity="center"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
                     android:focusable="true">
-                    <FrameLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:background="@drawable/banner_background"
-                        android:backgroundTint="?attr/navBarContentColor">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="+"
-                            android:textColor="?attr/navBarBackground"
-                            android:textSize="36sp"
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        app:cardCornerRadius="32dp"
+                        app:cardElevation="8dp"
+                        app:cardBackgroundColor="?attr/navBarContentColor"
+                        app:strokeWidth="0dp">
+                        <ImageView
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:src="@android:drawable/ic_input_add"
                             android:layout_gravity="center"
-                            android:paddingBottom="2dp" />
-                    </FrameLayout>
+                            app:tint="?attr/navBarBackground" />
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
 
                 <!-- 4. INVENTORY BUTTON -->
                 <LinearLayout
                     android:id="@+id/nav_inventory"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:background="@drawable/nav_item_selection_bg"
+                    android:backgroundTint="#00FFFFFF"
                     android:clickable="true"
                     android:focusable="true"
                     android:orientation="vertical">
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@android:drawable/ic_dialog_info"
-                        app:tint="?attr/navBarContentColor" />
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@android:drawable/ic_dialog_info" />
                     <TextView
                         android:id="@+id/tv_nav_inv"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Inv"
-                        android:textColor="?attr/navBarContentColor"
-                        android:textSize="11sp" />
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <!-- 5. DASHBOARD BUTTON -->
                 <LinearLayout
                     android:id="@+id/nav_dashboard"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:background="@drawable/nav_item_selection_bg"
+                    android:backgroundTint="#00FFFFFF"
                     android:clickable="true"
                     android:focusable="true"
                     android:orientation="vertical">
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@android:drawable/ic_menu_today"
-                        app:tint="?attr/navBarContentColor" />
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@android:drawable/ic_menu_today" />
                     <TextView
                         android:id="@+id/tv_nav_dash"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Dash"
-                        android:textColor="?attr/navBarContentColor"
-                        android:textSize="11sp" />
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
             </LinearLayout>
         </RelativeLayout>
 
-        <!-- SUCCESS OVERLAY (Apple Pay Style) -->
+        <!-- SUCCESS OVERLAY -->
         <FrameLayout
             android:id="@+id/success_overlay"
             android:layout_width="match_parent"
@@ -212,7 +213,6 @@
 
     </RelativeLayout>
 
-    <!-- SLIDING SETTINGS CURTAIN (opens from START/LEFT) -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
         android:layout_width="260dp"
@@ -235,7 +235,6 @@
                 android:textColor="?android:attr/textColorPrimary"
                 android:layout_marginBottom="40dp"/>
 
-            <!-- PROFILE BUTTON -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_profile"
                 android:layout_width="match_parent"
@@ -247,7 +246,6 @@
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
-            <!-- THEME TOGGLE BUTTON -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_theme_toggle"
                 android:layout_width="match_parent"
@@ -259,7 +257,6 @@
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
-            <!-- LANGUAGE BUTTON -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_language"
                 android:layout_width="match_parent"
@@ -271,7 +268,6 @@
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
-            <!-- ADD WIDGET BUTTON -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_widget"
                 android:layout_width="match_parent"
