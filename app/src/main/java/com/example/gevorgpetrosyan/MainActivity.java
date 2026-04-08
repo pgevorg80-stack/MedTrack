@@ -221,8 +221,8 @@ public class MainActivity extends AppCompatActivity {
     private void updateStaticUI() {
         ((TextView) findViewById(R.id.tv_nav_list)).setText(tr("List", "Список"));
         ((TextView) findViewById(R.id.tv_nav_stats)).setText(tr("Stats", "История"));
-        ((TextView) findViewById(R.id.tv_nav_inv)).setText(tr("Inv", "Склад"));
-        ((TextView) findViewById(R.id.tv_nav_dash)).setText(tr("Dash", "Панель"));
+        ((TextView) findViewById(R.id.tv_nav_inv)).setText(tr("Stock", "Склад"));
+        ((TextView) findViewById(R.id.tv_nav_dash)).setText(tr("Home", "Панель"));
 
         ((TextView) findViewById(R.id.tv_settings_header)).setText(tr("SETTINGS", "НАСТРОЙКИ"));
         ((MaterialButton) findViewById(R.id.btn_profile)).setText(tr("My Profile", "Мой профиль"));
@@ -238,39 +238,44 @@ public class MainActivity extends AppCompatActivity {
         int[] ids = {R.id.nav_list, R.id.nav_stats, 0, R.id.nav_inventory, R.id.nav_dashboard};
         int activeIndex = (position < 2 ? position : position + 1);
 
+        View indicator = findViewById(R.id.nav_indicator);
         int navBg = getThemeColor(R.attr.navBarBackground);
-        int navContent = getThemeColor(R.attr.navBarContentColor);
         
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] == 0) continue;
             View v = findViewById(ids[i]);
             boolean isSelected = (i == activeIndex);
 
-            // Telegram style selection background logic
-            // If background is blue (Light mode), use white selection pill.
-            // If background is dark (Dark mode), use blue selection pill.
-            int selectionBg;
             int activeColor;
             int inactiveColor;
 
             if (navBg == Color.parseColor(BLUE_COLOR)) { // Light Mode
-                selectionBg = Color.argb(200, 255, 255, 255); // White pill
                 activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
                 inactiveColor = Color.argb(180, 255, 255, 255); // White icon (semi-trans)
             } else { // Dark Mode
-                selectionBg = Color.argb(60, 33, 150, 243); // Blue translucent pill
                 activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
                 inactiveColor = Color.argb(160, 255, 255, 255); // White-ish icon
             }
 
-            v.setBackgroundTintList(ColorStateList.valueOf(isSelected ? selectionBg : Color.TRANSPARENT));
+            if (isSelected && indicator != null) {
+                indicator.setVisibility(View.VISIBLE);
+                indicator.animate()
+                        .x(v.getX() + (v.getWidth() - indicator.getWidth()) / 2f)
+                        .alpha(1f)
+                        .setDuration(400)
+                        .setInterpolator(new OvershootInterpolator(1.4f))
+                        .start();
+            }
 
-            float targetScale = isSelected ? 1.05f : 1.0f;
+            float targetScale = isSelected ? 1.12f : 1.0f;
+            float targetTranslationY = isSelected ? -10f : 0f;
+            
             v.animate()
                     .scaleX(targetScale)
                     .scaleY(targetScale)
-                    .setDuration(250)
-                    .setInterpolator(new OvershootInterpolator(1.2f))
+                    .translationY(targetTranslationY)
+                    .setDuration(300)
+                    .setInterpolator(new OvershootInterpolator(1.5f))
                     .start();
 
             if (v instanceof ViewGroup) {
@@ -282,6 +287,7 @@ public class MainActivity extends AppCompatActivity {
                     } else if (child instanceof TextView) {
                         ((TextView) child).setTextColor(isSelected ? activeColor : inactiveColor);
                         ((TextView) child).setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+                        child.animate().alpha(isSelected ? 1.0f : 0.7f).setDuration(300).start();
                     }
                 }
             }
