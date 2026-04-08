@@ -156,6 +156,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Initialize first selection
+        viewPager.post(() -> updateBottomNavSelection(viewPager.getCurrentItem()));
+
         // --- Settings Drawer Listeners ---
         findViewById(R.id.btn_profile).setOnClickListener(v -> {
             drawerLayout.closeDrawers();

@@ -19,33 +19,49 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText etEmail, etPassword;
+    private View loginCard, loginTitle, logo, registerLink;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Request notification permission for Android 13+
         requestNotificationPermission();
 
-        // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        // Connect to your XML IDs
-        etEmail = findViewById(R.id.et_username); // Using your existing ID
+        etEmail = findViewById(R.id.et_username);
         etPassword = findViewById(R.id.et_password);
+        loginCard = findViewById(R.id.login_card);
+        loginTitle = findViewById(R.id.login_title);
+        logo = findViewById(R.id.imageViewLogin);
+        registerLink = findViewById(R.id.tv_register_link);
 
-        // LOGIN BUTTON
         findViewById(R.id.btn_login).setOnClickListener(v -> loginUser());
-
-        // GUEST MODE BUTTON
         findViewById(R.id.btn_guest).setOnClickListener(v -> loginAsGuest());
-
-        // SIGN UP / REGISTER LINK
-        findViewById(R.id.tv_register_link).setOnClickListener(v -> {
+        registerLink.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
             startActivity(intent);
         });
+
+        startEntryAnimations();
+    }
+
+    private void startEntryAnimations() {
+        // Initial state
+        logo.setAlpha(0f);
+        logo.setTranslationY(-50f);
+        loginTitle.setAlpha(0f);
+        loginTitle.setTranslationY(-30f);
+        loginCard.setAlpha(0f);
+        loginCard.setTranslationY(100f);
+        registerLink.setAlpha(0f);
+
+        // Animate
+        logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).start();
+        loginTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
+        loginCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
+        registerLink.animate().alpha(1f).setDuration(800).setStartDelay(1000).start();
     }
 
     private void requestNotificationPermission() {
@@ -95,7 +111,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // Check if user is already signed in (skip login page)
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null){
             goToMain();

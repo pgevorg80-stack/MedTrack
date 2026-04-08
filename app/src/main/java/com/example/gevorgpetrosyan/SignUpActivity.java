@@ -3,6 +3,7 @@ package com.example.gevorgpetrosyan;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -14,6 +15,7 @@ public class SignUpActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText etEmail, etPassword;
+    private View signupCard, signupTitle, logo, loginLink;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,12 +26,35 @@ public class SignUpActivity extends AppCompatActivity {
 
         etEmail = findViewById(R.id.et_signup_email);
         etPassword = findViewById(R.id.et_signup_password);
+        signupCard = findViewById(R.id.signup_card);
+        signupTitle = findViewById(R.id.signup_title);
+        logo = findViewById(R.id.imageViewSignup);
+        loginLink = findViewById(R.id.tv_login_link);
 
         findViewById(R.id.btn_signup).setOnClickListener(v -> registerUser());
 
-        findViewById(R.id.tv_login_link).setOnClickListener(v -> {
+        loginLink.setOnClickListener(v -> {
             finish(); // Go back to LoginActivity
         });
+
+        startEntryAnimations();
+    }
+
+    private void startEntryAnimations() {
+        // Initial state
+        logo.setAlpha(0f);
+        logo.setTranslationY(-50f);
+        signupTitle.setAlpha(0f);
+        signupTitle.setTranslationY(-30f);
+        signupCard.setAlpha(0f);
+        signupCard.setTranslationY(100f);
+        loginLink.setAlpha(0f);
+
+        // Animate
+        logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).start();
+        signupTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
+        signupCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
+        loginLink.animate().alpha(1f).setDuration(800).setStartDelay(1000).start();
     }
 
     private void registerUser() {
