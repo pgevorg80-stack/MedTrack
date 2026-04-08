@@ -49,6 +49,14 @@ public class WidgetConfigActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_widget_config);
 
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
         widgetBackgroundPreview = findViewById(R.id.widget_background_img);
         sbBgHue = findViewById(R.id.sb_bg_hue);
         sbTextHue = findViewById(R.id.sb_text_hue);
@@ -56,6 +64,12 @@ public class WidgetConfigActivity extends AppCompatActivity {
 
         // Apply Translations
         updateUIStrings();
+
+        // Initial state for animation
+        findViewById(R.id.tv_config_header).setAlpha(0);
+        findViewById(R.id.tv_live_preview_label).setAlpha(0);
+        findViewById(R.id.preview_card).setAlpha(0);
+        findViewById(R.id.controls_card).setAlpha(0);
 
         SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -73,6 +87,27 @@ public class WidgetConfigActivity extends AppCompatActivity {
         findViewById(R.id.btn_confirm).setOnClickListener(v -> handleConfirm());
         
         updatePreview();
+        startEntranceAnimations();
+    }
+
+    private void startEntranceAnimations() {
+        animateViewIn(findViewById(R.id.tv_config_header), 100);
+        animateViewIn(findViewById(R.id.tv_live_preview_label), 200);
+        animateViewIn(findViewById(R.id.preview_card), 300);
+        animateViewIn(findViewById(R.id.controls_card), 400);
+    }
+
+    private void animateViewIn(View view, int delay) {
+        if (view == null) return;
+        view.setAlpha(0f);
+        view.setTranslationY(50f);
+        view.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(600)
+                .setStartDelay(delay)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.2f))
+                .start();
     }
 
     private String tr(String en, String ru) {
