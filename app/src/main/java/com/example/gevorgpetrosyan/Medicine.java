@@ -18,6 +18,10 @@ public class Medicine {
     public String history = "";
     public long lastUpdated;
 
+    public Medicine() {
+        // Required for Firestore toObject()
+    }
+
     public Medicine(String userId, String name, String times) {
         this.userId = userId;
         this.name = name;

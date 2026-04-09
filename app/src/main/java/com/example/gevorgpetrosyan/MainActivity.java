@@ -136,6 +136,10 @@ public class MainActivity extends AppCompatActivity {
         }
         currentUserId = user.getUid();
         
+        db = AppDatabase.getInstance(this);
+        // Sync from Firestore on startup
+        FirestoreHelper.syncFromFirestore(currentUserId, db, () -> runOnUiThread(this::refreshCurrentTab));
+        
         setContentView(R.layout.activity_main);
 
         requestNotificationPermission();
@@ -1058,10 +1062,12 @@ public class MainActivity extends AppCompatActivity {
                 existing.expiryWarningDays = warn;
                 existing.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(existing);
+                FirestoreHelper.uploadMedicine(existing);
             } else {
                 Medicine m = new Medicine(currentUserId, name, "");
                 m.batches = batch; m.expiryWarningDays = warn;
                 db.medicineDao().insert(m);
+                FirestoreHelper.uploadMedicine(m);
             }
             runOnUiThread(() -> { 
                 refreshCurrentTab(); 
@@ -1467,6 +1473,7 @@ public class MainActivity extends AppCompatActivity {
             if (totalStock <= 0) sendStatusNotification(m.name, tr("OUT OF STOCK!", "НЕТ В НАЛИЧИИ!"));
             if (isMedicineExpired(m.batches)) sendStatusNotification(m.name, tr("EXPIRED!", "ПРОСРОЧЕНО!"));
             db.medicineDao().update(m);
+            FirestoreHelper.uploadMedicine(m);
             runOnUiThread(() -> { 
                 showSuccessAnimation();
                 refreshCurrentTab();
@@ -1561,6 +1568,7 @@ public class MainActivity extends AppCompatActivity {
                         m.times = android.text.TextUtils.join(",", tList);
                         m.lastUpdated = System.currentTimeMillis();
                         db.medicineDao().update(m);
+                        FirestoreHelper.uploadMedicine(m);
                         runOnUiThread(() -> {
                             showDeleteAnimation();
                             refreshCurrentTab();
@@ -1635,6 +1643,7 @@ public class MainActivity extends AppCompatActivity {
                 m.times = android.text.TextUtils.join(",", combined);
                 m.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(m);
+                FirestoreHelper.uploadMedicine(m);
                 setupAlarms(m.name, tempTimes);
             }
             runOnUiThread(() -> { 
@@ -1682,6 +1691,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton(tr("Delete", "Удалить"), (dialog, which) -> {
                     Executors.newSingleThreadExecutor().execute(() -> { 
                         db.medicineDao().delete(m); 
+                        FirestoreHelper.deleteMedicine(m);
                         runOnUiThread(() -> {
                             showDeleteAnimation();
                             refreshCurrentTab();
@@ -1713,6 +1723,7 @@ public class MainActivity extends AppCompatActivity {
             m.lastUpdated = System.currentTimeMillis();
             Executors.newSingleThreadExecutor().execute(() -> { 
                 db.medicineDao().update(m); 
+                FirestoreHelper.uploadMedicine(m);
                 runOnUiThread(() -> {
                     refreshCurrentTab();
                     updateWidget();
@@ -1725,6 +1736,7 @@ public class MainActivity extends AppCompatActivity {
             m.lastUpdated = System.currentTimeMillis();
             Executors.newSingleThreadExecutor().execute(() -> { 
                 db.medicineDao().update(m); 
+                FirestoreHelper.uploadMedicine(m);
                 runOnUiThread(() -> {
                     showDeleteAnimation();
                     refreshCurrentTab();
@@ -1791,8 +1803,10 @@ public class MainActivity extends AppCompatActivity {
             new AlertDialog.Builder(this).setMessage(tr("Clear all history?", "Очистить всю историю?"))
                 .setPositiveButton(tr("Yes", "Да"), (d2, w2) -> {
                     m.history = "";
+                    m.lastUpdated = System.currentTimeMillis();
                     Executors.newSingleThreadExecutor().execute(() -> { 
                         db.medicineDao().update(m); 
+                        FirestoreHelper.uploadMedicine(m);
                         runOnUiThread(() -> {
                             refreshCurrentTab();
                             updateWidget();

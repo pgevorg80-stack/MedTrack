@@ -28,6 +28,7 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitTextRecognition" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }

@@ -47,6 +47,7 @@ public class ActionReceiver extends BroadcastReceiver {
                 }
 
                 db.medicineDao().update(m);
+                FirestoreHelper.uploadMedicine(m);
                 
                 // Trigger Widget Update after DB change
                 updateWidget(context);
