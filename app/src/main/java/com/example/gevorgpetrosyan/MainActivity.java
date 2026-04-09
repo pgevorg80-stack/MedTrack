@@ -70,6 +70,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.pdf.PdfDocument;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.provider.MediaStore;
+import java.io.OutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -402,6 +410,13 @@ public class MainActivity extends AppCompatActivity {
     private void populateStats(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Usage History", "История использования")));
         
+        MaterialButton btnPdf = createActionButton(tr("+ Add PDF", "+ Создать PDF"));
+        LinearLayout.LayoutParams pdfLp = new LinearLayout.LayoutParams(-1, -2);
+        pdfLp.setMargins(0, 0, 0, 30);
+        btnPdf.setLayoutParams(pdfLp);
+        btnPdf.setOnClickListener(v -> showPdfDatePicker(meds));
+        layout.addView(btnPdf);
+
         boolean hasHistory = false;
         int delay = 100;
         for (Medicine m : meds) {
@@ -1769,6 +1784,180 @@ public class MainActivity extends AppCompatActivity {
             sectionsPagerAdapter.notifyDataSetChanged();
         }
     }
+
+    private void showPdfDatePicker(List<Medicine> meds) {
+        Calendar c = Calendar.getInstance();
+        new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
+            Calendar selectedDate = Calendar.getInstance();
+            selectedDate.set(year, month, dayOfMonth);
+            generatePdf(meds, selectedDate);
+        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+    }
+
+    private void generatePdf(List<Medicine> meds, Calendar selectedDate) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 103);
+                return;
+            }
+        }
+
+        PdfDocument document = new PdfDocument();
+        int pageNum = 1;
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNum).create();
+        PdfDocument.Page page = document.startPage(pageInfo);
+        Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+
+        String startStr = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(selectedDate.getTime());
+        String endStr = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+
+        paint.setTextSize(22);
+        paint.setFakeBoldText(true);
+        canvas.drawText(tr("Medicine Usage Report", "Отчет об использовании лекарств"), 50, 60, paint);
+        
+        paint.setTextSize(14);
+        paint.setFakeBoldText(false);
+        canvas.drawText(tr("From: ", "С: ") + startStr + tr(" To: ", " По: ") + endStr, 50, 95, paint);
+
+        paint.setStrokeWidth(1);
+        canvas.drawLine(50, 110, 545, 110, paint);
+
+        int y = 140;
+        boolean foundAny = false;
+
+        for (Medicine m : meds) {
+            if (m.history == null || m.history.isEmpty()) continue;
+            
+            Map<String, List<String>> rangeData = new LinkedHashMap<>();
+            String[] parts = m.history.split(",");
+            for (int i = 0; i < parts.length - 1; i += 2) {
+                String datePart = parts[i].trim();
+                String timeAndStatus = parts[i + 1].trim();
+                
+                if (isDateAfterOrEqual(datePart, selectedDate)) {
+                    if (!rangeData.containsKey(datePart)) rangeData.put(datePart, new ArrayList<>());
+                    rangeData.get(datePart).add(timeAndStatus);
+                }
+            }
+
+            if (!rangeData.isEmpty()) {
+                foundAny = true;
+                if (y > 720) {
+                    document.finishPage(page);
+                    pageNum++;
+                    pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNum).create();
+                    page = document.startPage(pageInfo);
+                    canvas = page.getCanvas();
+                    y = 60;
+                }
+                
+                paint.setTextSize(16);
+                paint.setFakeBoldText(true);
+                canvas.drawText(m.name + ":", 50, y, paint);
+                y += 25;
+                
+                paint.setTextSize(14);
+                paint.setFakeBoldText(false);
+                for (String dKey : rangeData.keySet()) {
+                    if (y > 780) {
+                        document.finishPage(page);
+                        pageNum++;
+                        pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNum).create();
+                        page = document.startPage(pageInfo);
+                        canvas = page.getCanvas();
+                        y = 60;
+                    }
+                    paint.setFakeBoldText(true);
+                    canvas.drawText(dKey + ":", 60, y, paint);
+                    paint.setFakeBoldText(false);
+                    y += 20;
+                    
+                    for (String status : rangeData.get(dKey)) {
+                        if (y > 800) {
+                            document.finishPage(page);
+                            pageNum++;
+                            pageInfo = new PdfDocument.PageInfo.Builder(595, 842, pageNum).create();
+                            page = document.startPage(pageInfo);
+                            canvas = page.getCanvas();
+                            y = 60;
+                        }
+                        canvas.drawText(" • " + status, 80, y, paint);
+                        y += 20;
+                    }
+                    y += 5;
+                }
+                y += 15;
+            }
+        }
+
+        if (!foundAny) {
+            paint.setTextSize(14);
+            canvas.drawText(tr("No data for this range.", "Нет данных за этот период."), 50, y, paint);
+        }
+
+        document.finishPage(page);
+
+        String fileName = "Medicine_Report_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(selectedDate.getTime()) + ".pdf";
+        
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+        
+        Uri collection;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/");
+            collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+        } else {
+            collection = MediaStore.Files.getContentUri("external");
+        }
+
+        Uri uri = getContentResolver().insert(collection, contentValues);
+        if (uri != null) {
+            try (OutputStream outputStream = getContentResolver().openOutputStream(uri)) {
+                document.writeTo(outputStream);
+                Toast.makeText(this, tr("PDF saved to Downloads", "PDF сохранен в Загрузки"), Toast.LENGTH_LONG).show();
+                
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "application/pdf");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(intent, tr("Open PDF", "Открыть PDF")));
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+        document.close();
+    }
+
+    private boolean isDateAfterOrEqual(String historyDateStr, Calendar selectedDate) {
+        try {
+            // historyDateStr might be "MMM dd" (Apr 01) or "MMM dd, HH:mm" (Apr 01, 10:30)
+            String cleanDate = historyDateStr.split(",")[0].trim();
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.US);
+            Date hDateParsed = sdf.parse(cleanDate);
+            if (hDateParsed == null) return false;
+
+            Calendar hCal = Calendar.getInstance();
+            Calendar sCal = (Calendar) selectedDate.clone();
+            Calendar now = Calendar.getInstance();
+
+            hCal.setTime(hDateParsed);
+            hCal.set(Calendar.YEAR, now.get(Calendar.YEAR));
+            hCal.set(Calendar.HOUR_OF_DAY, 0); hCal.set(Calendar.MINUTE, 0); hCal.set(Calendar.SECOND, 0); hCal.set(Calendar.MILLISECOND, 0);
+            
+            sCal.set(Calendar.HOUR_OF_DAY, 0); sCal.set(Calendar.MINUTE, 0); sCal.set(Calendar.SECOND, 0); sCal.set(Calendar.MILLISECOND, 0);
+
+            if (hCal.after(now)) {
+                hCal.add(Calendar.YEAR, -1);
+            }
+
+            return !hCal.before(sCal);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private LinearLayout createBaseLayout() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(30, 20, 30, 20); return l; }
     private TextView createSectionLabel(String txt) { 
         TextView tv = new TextView(this); 
@@ -1786,6 +1975,16 @@ public class MainActivity extends AppCompatActivity {
         b.setCornerRadius(30); 
         b.setPadding(40, 30, 40, 30); 
         return b; 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 103) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, tr("Permission granted. Please try again.", "Разрешение получено. Попробуйте еще раз."), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
