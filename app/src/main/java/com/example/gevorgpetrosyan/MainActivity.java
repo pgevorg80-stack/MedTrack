@@ -79,12 +79,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
 import android.content.ContentValues;
 import android.net.Uri;
 import android.provider.MediaStore;
+import java.io.File;
 import java.io.OutputStream;
 import java.io.IOException;
 
@@ -97,12 +102,17 @@ public class MainActivity extends AppCompatActivity {
     private final List<Medicine> tempMedsToSchedule = new ArrayList<>();
     private final String BLUE_COLOR = "#2196F3";
     private String tempExpiryInternal = "Not Set";
+    private String tempImagePath = null;
     private SpeechRecognizer speechRecognizer;
     private ImageView micIconRef;
     
     // OCR components
     private ActivityResultLauncher<Void> takePictureLauncher;
     private EditText ocrTargetEditText;
+
+    // Image picking for Medicine
+    private ActivityResultLauncher<Void> medicinePhotoLauncher;
+    private Medicine photoTargetMed;
 
     // Success Animation UI
     private FrameLayout successOverlay;
@@ -143,6 +153,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         requestNotificationPermission();
+
+        medicinePhotoLauncher = registerForActivityResult(new ActivityResultContracts.TakePicturePreview(), bitmap -> {
+            if (bitmap != null) {
+                if (photoTargetMed != null) {
+                    saveMedicineImage(photoTargetMed, bitmap);
+                } else {
+                    // It was for a new medicine
+                    saveTempMedicineImage(bitmap);
+                }
+            }
+        });
 
         takePictureLauncher = registerForActivityResult(
                 new ActivityResultContracts.TakePicturePreview(),
@@ -624,6 +645,29 @@ public class MainActivity extends AppCompatActivity {
         tvStock.setTextSize(14);
         tvStock.setTextColor(getThemeColor(R.attr.secondaryTextColor));
         textInfo.addView(tvStock);
+
+        // Refill Prediction
+        if (total > 0 && m.dosage > 0) {
+            int dailyDose = 0;
+            if (m.times != null && !m.times.isEmpty()) {
+                dailyDose = m.times.split(",").length * m.dosage;
+            }
+            if (dailyDose > 0) {
+                int daysLeft = total / dailyDose;
+                TextView tvPredict = new TextView(this);
+                String predText = tr("Lasts ~", "Хватит на ~") + daysLeft + tr(" days", " дн.");
+                if (daysLeft <= 3) {
+                    tvPredict.setTextColor(Color.parseColor("#F44336"));
+                    predText += " " + tr("(Refill Soon!)", "(Срочно!)");
+                } else {
+                    tvPredict.setTextColor(Color.parseColor("#4CAF50"));
+                }
+                tvPredict.setText(predText);
+                tvPredict.setTextSize(12);
+                tvPredict.setTypeface(null, Typeface.BOLD);
+                textInfo.addView(tvPredict);
+            }
+        }
         
         if (isExpired) {
             TextView tvExp = new TextView(this);
@@ -635,6 +679,46 @@ public class MainActivity extends AppCompatActivity {
         }
 
         card.addView(textInfo);
+
+        // Medicine Photo and Camera Button
+        LinearLayout photoBox = new LinearLayout(this);
+        photoBox.setOrientation(LinearLayout.HORIZONTAL);
+        photoBox.setGravity(Gravity.CENTER_VERTICAL);
+        
+        if (m.imagePath != null && !m.imagePath.isEmpty()) {
+            Bitmap b = BitmapFactory.decodeFile(m.imagePath);
+            if (b != null) {
+                com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
+                imgCard.setRadius(15);
+                imgCard.setCardElevation(0);
+                imgCard.setStrokeWidth(2);
+                imgCard.setStrokeColor(Color.parseColor("#15000000"));
+                LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(100, 100);
+                imgLp.setMargins(10, 0, 5, 0);
+                imgCard.setLayoutParams(imgLp);
+
+                ImageView ivMedPhoto = new ImageView(this);
+                ivMedPhoto.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                ivMedPhoto.setImageBitmap(b);
+                imgCard.addView(ivMedPhoto);
+                photoBox.addView(imgCard);
+            }
+        }
+
+        ImageView ivCamera = new ImageView(this);
+        ivCamera.setImageResource(android.R.drawable.ic_menu_camera);
+        ivCamera.setColorFilter(getThemeColor(R.attr.secondaryTextColor));
+        ivCamera.setPadding(12, 12, 12, 12);
+        TypedValue outVal = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outVal, true);
+        ivCamera.setBackgroundResource(outVal.resourceId);
+        ivCamera.setOnClickListener(v -> {
+            photoTargetMed = m;
+            medicinePhotoLauncher.launch(null);
+        });
+        photoBox.addView(ivCamera);
+        
+        card.addView(photoBox);
 
         // Arrow
         ImageView ivArrow = new ImageView(this);
@@ -842,10 +926,24 @@ public class MainActivity extends AppCompatActivity {
                 itemContent.setGravity(Gravity.CENTER_VERTICAL);
                 itemContent.setPadding(40, 35, 40, 35);
                 
+                com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
+                imgCard.setRadius(25);
+                imgCard.setCardElevation(0);
+                imgCard.setStrokeWidth(0);
+                LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(110, 110);
+                imgCard.setLayoutParams(imgLp);
+                
                 ImageView icon = new ImageView(this);
-                icon.setImageResource(android.R.drawable.ic_menu_today);
-                icon.setColorFilter(isNearest ? Color.parseColor(BLUE_COLOR) : getThemeColor(android.R.attr.textColorSecondary));
-                itemContent.addView(icon);
+                icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                if (m.imagePath != null) {
+                    icon.setImageBitmap(BitmapFactory.decodeFile(m.imagePath));
+                } else {
+                    icon.setImageResource(android.R.drawable.ic_menu_today);
+                    icon.setColorFilter(isNearest ? Color.parseColor(BLUE_COLOR) : getThemeColor(android.R.attr.textColorSecondary));
+                    icon.setPadding(20, 20, 20, 20);
+                }
+                imgCard.addView(icon);
+                itemContent.addView(imgCard);
 
                 LinearLayout textInfo = new LinearLayout(this);
                 textInfo.setOrientation(LinearLayout.VERTICAL);
@@ -986,11 +1084,17 @@ public class MainActivity extends AppCompatActivity {
             public void onResults(Bundle results) {
                 isListening = false;
                 ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if (matches != null && !matches.isEmpty()) processVoiceCommand(matches);
+                if (matches != null && !matches.isEmpty()) {
+                    String topMatch = matches.get(0);
+                        processVoiceCommand(matches);
+                }
                 if (voiceDialogShowing) restartListening();
             }
             @Override public void onPartialResults(Bundle partialResults) {
-                // Skip processing partial results to avoid over-logging
+                ArrayList<String> partialMatches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (partialMatches != null && !partialMatches.isEmpty()) {
+                    String partial = partialMatches.get(0);
+                    }
             }
             @Override public void onEvent(int eventType, Bundle params) {}
         });
@@ -1029,6 +1133,7 @@ public class MainActivity extends AppCompatActivity {
         EditText stockIn = v.findViewById(R.id.dialog_stock);
         EditText warnIn = v.findViewById(R.id.dialog_warn);
         MaterialButton expBtn = v.findViewById(R.id.dialog_btn_expiry);
+        MaterialButton photoBtn = v.findViewById(R.id.btn_med_photo);
         MaterialButton btnCancel = v.findViewById(R.id.btn_cancel);
         MaterialButton btnSave = v.findViewById(R.id.btn_save);
 
@@ -1041,6 +1146,7 @@ public class MainActivity extends AppCompatActivity {
         stockIn.setHint(tr("Initial Stock", "Начальный запас"));
         warnIn.setHint(tr("Warning Days (Expiry)", "Дней до конца срока"));
         expBtn.setText(tr("Set Expiry Date", "Установить срок годности"));
+        photoBtn.setText(tr("Add Medicine Photo", "Добавить фото"));
         btnCancel.setText(tr("Cancel", "Отмена"));
         btnSave.setText(tr("Add to Inventory", "Добавить"));
 
@@ -1055,6 +1161,16 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        photoBtn.setOnClickListener(view -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                photoTargetMed = null; // Signal it's for new medicine
+                requestPermissions(new String[]{Manifest.permission.CAMERA}, 101);
+            } else {
+                photoTargetMed = null;
+                medicinePhotoLauncher.launch(null);
             }
         });
 
@@ -1082,7 +1198,8 @@ public class MainActivity extends AppCompatActivity {
             int stock = Integer.parseInt(stockStr.isEmpty() ? "0" : stockStr);
             int warn = Integer.parseInt(warnStr.isEmpty() ? "0" : warnStr);
             if (!name.isEmpty()) {
-                saveToWarehouse(name, stock, tempExpiryInternal, warn);
+                saveToWarehouse(name, stock, tempExpiryInternal, warn, tempImagePath);
+                tempImagePath = null; // reset
                 dialog.dismiss();
             }
         });
@@ -1090,19 +1207,22 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void saveToWarehouse(String name, int stock, String exp, int warn) {
+    private void saveToWarehouse(String name, int stock, String exp, int warn, String imagePath) {
         Executors.newSingleThreadExecutor().execute(() -> {
             Medicine existing = db.medicineDao().getByNameAndUserId(name, currentUserId);
             String batch = stock + " pills (Exp: " + exp + ")";
             if (existing != null) {
                 existing.batches = (existing.batches == null || existing.batches.isEmpty()) ? batch : existing.batches + "|" + batch;
                 existing.expiryWarningDays = warn;
+                if (imagePath != null) existing.imagePath = imagePath;
                 existing.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(existing);
                 FirestoreHelper.uploadMedicine(existing);
             } else {
                 Medicine m = new Medicine(currentUserId, name, "");
                 m.batches = batch; m.expiryWarningDays = warn;
+                m.imagePath = imagePath;
+                m.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().insert(m);
                 FirestoreHelper.uploadMedicine(m);
             }
@@ -1193,6 +1313,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : "en-US");
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
         intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"ru-RU", "en-US"});
         intent.putExtra("android.speech.extra.LANGUAGE_SWITCH_ALLOWED", true);
         intent.putExtra("android.speech.extra.BILINGUAL_MODE", true);
@@ -1387,10 +1508,31 @@ public class MainActivity extends AppCompatActivity {
         tvName.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
         tvName.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
 
+        com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
+        imgCard.setRadius(20);
+        imgCard.setCardElevation(0);
+        imgCard.setStrokeWidth(2);
+        imgCard.setStrokeColor(Color.parseColor("#15000000"));
+        LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(90, 90);
+        imgLp.setMargins(0, 0, 25, 0);
+        imgCard.setLayoutParams(imgLp);
+        
+        ImageView ivMed = new ImageView(this);
+        ivMed.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        if (m.imagePath != null) {
+            ivMed.setImageBitmap(BitmapFactory.decodeFile(m.imagePath));
+        } else {
+            ivMed.setImageResource(android.R.drawable.ic_dialog_info);
+            ivMed.setPadding(20, 20, 20, 20);
+            ivMed.setColorFilter(Color.parseColor(BLUE_COLOR));
+        }
+        imgCard.addView(ivMed);
+
         ImageView ivArrow = new ImageView(this);
         ivArrow.setImageResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
         ivArrow.setColorFilter(getThemeColor(R.attr.secondaryTextColor));
 
+        header.addView(imgCard);
         header.addView(tvName);
         header.addView(ivArrow);
 
@@ -1525,6 +1667,35 @@ public class MainActivity extends AppCompatActivity {
 
     private void showDeleteAnimation() {
         showStatusAnimation(R.drawable.ic_delete_anim, tr("Deleted", "Удалено"));
+    }
+
+    private void saveMedicineImage(Medicine m, Bitmap bitmap) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            File dir = new File(getExternalFilesDir(null), "med_photos");
+            if (!dir.exists()) dir.mkdirs();
+            File file = new File(dir, "med_" + m.id + "_" + System.currentTimeMillis() + ".jpg");
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                m.imagePath = file.getAbsolutePath();
+                m.lastUpdated = System.currentTimeMillis();
+                db.medicineDao().update(m);
+                FirestoreHelper.uploadMedicine(m);
+                runOnUiThread(this::refreshCurrentTab);
+            } catch (Exception e) { e.printStackTrace(); }
+        });
+    }
+
+    private void saveTempMedicineImage(Bitmap bitmap) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            File dir = new File(getExternalFilesDir(null), "med_photos");
+            if (!dir.exists()) dir.mkdirs();
+            File file = new File(dir, "new_med_" + System.currentTimeMillis() + ".jpg");
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                tempImagePath = file.getAbsolutePath();
+                runOnUiThread(() -> Toast.makeText(this, tr("Photo attached", "Фото прикреплено"), Toast.LENGTH_SHORT).show());
+            } catch (Exception e) { e.printStackTrace(); }
+        });
     }
 
     private void showStatusAnimation(int iconRes, String message) {

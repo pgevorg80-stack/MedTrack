@@ -73,6 +73,24 @@
                 app:iconPadding="12dp"
                 app:iconTint="#FFFFFF" />
 
+            <!-- Photo Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_med_photo"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginBottom="24dp"
+                android:backgroundTint="#4CAF50"
+                android:text="Add Medicine Photo"
+                android:textColor="#FFFFFF"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                app:cornerRadius="32dp"
+                app:icon="@android:drawable/ic_menu_camera"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF" />
+
             <!-- Initial Stock -->
             <TextView
                 android:id="@+id/tv_stock_label"

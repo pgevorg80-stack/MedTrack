@@ -17,6 +17,7 @@ public class Medicine {
     public String batches = "";
     public String history = "";
     public long lastUpdated;
+    public String imagePath;
 
     public Medicine() {
         // Required for Firestore toObject()
