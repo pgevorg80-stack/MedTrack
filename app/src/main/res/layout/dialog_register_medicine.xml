@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="0dp"
+    android:backgroundTint="?android:attr/windowBackground">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tv_dialog_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="32dp"
+                android:text="Register New Medicine"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <!-- Medicine Name -->
+            <EditText
+                android:id="@+id/dialog_name"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/nav_pill_background"
+                android:backgroundTint="#0A000000"
+                android:hint="Medicine Name"
+                android:inputType="textCapWords"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <!-- Scan Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_scan_ocr"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginBottom="24dp"
+                android:backgroundTint="#2196F3"
+                android:text="Scan Name with Camera"
+                android:textColor="#FFFFFF"
+                app:cornerRadius="30dp"
+                app:icon="@android:drawable/ic_menu_camera"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF" />
+
+            <!-- Initial Stock -->
+            <TextView
+                android:id="@+id/tv_stock_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:alpha="0.6"
+                android:text="INITIAL STOCK"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingStart="12dp"/>
+
+            <EditText
+                android:id="@+id/dialog_stock"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/nav_pill_background"
+                android:backgroundTint="#0A000000"
+                android:hint="e.g. 30"
+                android:inputType="number"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <!-- Warning Days -->
+            <TextView
+                android:id="@+id/tv_warn_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:alpha="0.6"
+                android:text="WARNING DAYS (EXPIRY)"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingStart="12dp"/>
+
+            <EditText
+                android:id="@+id/dialog_warn"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/nav_pill_background"
+                android:backgroundTint="#0A000000"
+                android:hint="e.g. 7"
+                android:inputType="number"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <!-- Expiry Date Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dialog_btn_expiry"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="#0A000000"
+                android:text="Set Expiry Date"
+                android:textColor="?android:attr/textColorPrimary"
+                app:cornerRadius="30dp"
+                app:icon="@android:drawable/ic_menu_today"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="?attr/colorPrimary" />
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_cancel"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#10000000"
+                    android:text="Cancel"
+                    android:textColor="?android:attr/textColorSecondary"
+                    app:cornerRadius="28dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_save"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1.2"
+                    android:backgroundTint="#2196F3"
+                    android:text="Add"
+                    android:textColor="#FFFFFF"
+                    app:cornerRadius="28dp"
+                    app:elevation="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</com.google.android.material.card.MaterialCardView>

@@ -1,70 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:background="?android:attr/windowBackground">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add Medicine"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="?android:attr/textColorPrimary"
-        android:gravity="center"
-        android:layout_marginBottom="24dp"/>
+    app:cardCornerRadius="28dp"
+    app:cardElevation="0dp"
+    android:backgroundTint="?android:attr/windowBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:orientation="vertical"
+        android:padding="24dp">
 
-        <EditText
-            android:id="@+id/dialog_name"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:layout_weight="1"
-            android:hint="Medicine Name"
-            android:background="@drawable/card_background"
-            android:paddingLeft="20dp"
-            android:paddingRight="20dp"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp"
+            android:text="Add Medicine"
             android:textColor="?android:attr/textColorPrimary"
-            android:inputType="textCapWords"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-        <ImageButton
-            android:id="@+id/btn_scan_ocr"
-            android:layout_width="60dp"
+        <!-- Medicine Name Input with modern pill background -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/dialog_name"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:background="@drawable/nav_pill_background"
+                android:backgroundTint="#0A000000"
+                android:hint="Medicine Name"
+                android:inputType="textCapWords"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <ImageButton
+                android:id="@+id/btn_scan_ocr"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/nav_pill_background"
+                android:backgroundTint="#0A000000"
+                android:contentDescription="Scan label"
+                android:src="@android:drawable/ic_menu_camera"
+                app:tint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <!-- Time Selector styled as a soft pill button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/dialog_btn_time"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginLeft="8dp"
-            android:background="@drawable/card_background"
-            android:src="@android:drawable/ic_menu_camera"
-            android:contentDescription="Scan label"
-            app:tint="?attr/colorPrimary" />
+            android:layout_marginBottom="24dp"
+            android:backgroundTint="#0A000000"
+            android:text="Select Time"
+            android:textColor="?android:attr/textColorPrimary"
+            app:cornerRadius="30dp"
+            app:icon="@android:drawable/ic_menu_recent_history"
+            app:iconGravity="textStart"
+            app:iconPadding="12dp"
+            app:iconTint="?attr/colorPrimary" />
+
+        <!-- Bottom Action Buttons matching VoiceLog UI -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#10000000"
+                android:text="Cancel"
+                android:textColor="?android:attr/textColorSecondary"
+                app:cornerRadius="28dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dialog_btn_save"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1.2"
+                android:backgroundTint="#2196F3"
+                android:text="Save"
+                android:textColor="#FFFFFF"
+                app:cornerRadius="28dp"
+                app:elevation="4dp" />
+        </LinearLayout>
     </LinearLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/dialog_btn_time"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Select Time"
-        app:cornerRadius="30dp"
-        app:strokeColor="?attr/cardStrokeColor"
-        app:strokeWidth="1dp"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_marginBottom="16dp"/>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/dialog_btn_save"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="SAVE REMINDER"
-        android:textStyle="bold"
-        app:cornerRadius="30dp"
-        android:backgroundTint="?attr/colorPrimary"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="8dp"/>
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -949,77 +949,74 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showRegisterMedicineDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(tr("Register New Medicine", "Регистрация лекарства"));
-        
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 40);
+        View v = getLayoutInflater().inflate(R.layout.dialog_register_medicine, null);
+        TextView tvTitle = v.findViewById(R.id.tv_dialog_title);
+        TextView tvStockLabel = v.findViewById(R.id.tv_stock_label);
+        TextView tvWarnLabel = v.findViewById(R.id.tv_warn_label);
+        EditText nameIn = v.findViewById(R.id.dialog_name);
+        MaterialButton ocrBtn = v.findViewById(R.id.btn_scan_ocr);
+        EditText stockIn = v.findViewById(R.id.dialog_stock);
+        EditText warnIn = v.findViewById(R.id.dialog_warn);
+        MaterialButton expBtn = v.findViewById(R.id.dialog_btn_expiry);
+        MaterialButton btnCancel = v.findViewById(R.id.btn_cancel);
+        MaterialButton btnSave = v.findViewById(R.id.btn_save);
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
-        lp.setMargins(0, 15, 0, 15);
+        if (tvTitle != null) tvTitle.setText(tr("Register New Medicine", "Регистрация лекарства"));
+        if (tvStockLabel != null) tvStockLabel.setText(tr("INITIAL STOCK", "НАЧАЛЬНЫЙ ЗАПАС"));
+        if (tvWarnLabel != null) tvWarnLabel.setText(tr("WARNING DAYS (EXPIRY)", "ДНЕЙ ДО ИСТЕЧЕНИЯ"));
 
-        final EditText nameIn = new EditText(this); 
         nameIn.setHint(tr("Medicine Name", "Название лекарства"));
-        nameIn.setLayoutParams(lp);
+        ocrBtn.setText(tr("Scan Name with Camera", "Сканировать название"));
+        stockIn.setHint(tr("Initial Stock", "Начальный запас"));
+        warnIn.setHint(tr("Warning Days (Expiry)", "Дней до конца срока"));
+        expBtn.setText(tr("Set Expiry Date", "Установить срок годности"));
+        btnCancel.setText(tr("Cancel", "Отмена"));
+        btnSave.setText(tr("Add to Inventory", "Добавить"));
 
-        final MaterialButton ocrBtn = createActionButton(tr("Scan Name with Camera", "Сканировать название"));
-        ocrBtn.setIconResource(android.R.drawable.ic_menu_camera);
-        ocrBtn.setIconPadding(20);
-        ocrBtn.setLayoutParams(lp);
-        ocrBtn.setOnClickListener(v -> {
+        ocrBtn.setOnClickListener(view -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                ocrTargetEditText = nameIn; // Store context before requesting
+                ocrTargetEditText = nameIn;
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, 104);
             } else {
                 ocrTargetEditText = nameIn;
                 try {
                     takePictureLauncher.launch(null);
                 } catch (Exception e) {
-                    Toast.makeText(this, "Error launching camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-        final EditText stockIn = new EditText(this); 
-        stockIn.setHint(tr("Initial Stock", "Начальный запас")); 
-        stockIn.setInputType(2);
-        stockIn.setLayoutParams(lp);
-
-        final EditText warnIn = new EditText(this); 
-        warnIn.setHint(tr("Warning Days (Expiry)", "Дней до конца срока")); 
-        warnIn.setInputType(2);
-        warnIn.setLayoutParams(lp);
-
-        final MaterialButton expBtn = createActionButton(tr("Set Expiry Date", "Установить срок годности"));
-        expBtn.setLayoutParams(lp);
-        expBtn.setOnClickListener(v -> {
+        expBtn.setOnClickListener(view -> {
             Calendar c = Calendar.getInstance();
-            new DatePickerDialog(this, (view, y, m, d) -> {
+            new DatePickerDialog(this, (view1, y, m, d) -> {
                 tempExpiryInternal = d + "/" + (m + 1) + "/" + y;
                 expBtn.setText(tr("Exp: ", "Срок: ") + tempExpiryInternal);
             }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
         });
 
-        layout.addView(nameIn);
-        layout.addView(ocrBtn);
-        layout.addView(stockIn);
-        layout.addView(warnIn);
-        layout.addView(expBtn);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(v)
+                .create();
 
-        ScrollView scroll = new ScrollView(this);
-        scroll.addView(layout);
-        builder.setView(scroll);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        builder.setPositiveButton(tr("Add to Inventory", "Добавить"), (d, w) -> {
+        btnCancel.setOnClickListener(view -> dialog.dismiss());
+        btnSave.setOnClickListener(view -> {
             String name = nameIn.getText().toString().trim();
             String stockStr = stockIn.getText().toString();
             String warnStr = warnIn.getText().toString();
             int stock = Integer.parseInt(stockStr.isEmpty() ? "0" : stockStr);
             int warn = Integer.parseInt(warnStr.isEmpty() ? "0" : warnStr);
-            if (!name.isEmpty()) saveToWarehouse(name, stock, tempExpiryInternal, warn);
+            if (!name.isEmpty()) {
+                saveToWarehouse(name, stock, tempExpiryInternal, warn);
+                dialog.dismiss();
+            }
         });
-        builder.setNegativeButton(tr("Cancel", "Отмена"), null).show();
+
+        dialog.show();
     }
 
     private void saveToWarehouse(String name, int stock, String exp, int warn) {
