@@ -632,7 +632,7 @@ public class MainActivity extends AppCompatActivity {
         animateViewIn(tvGreeting, 100);
 
         com.google.android.material.card.MaterialCardView dashCard = new com.google.android.material.card.MaterialCardView(this);
-        dashCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, getResources().getDisplayMetrics()));
+        dashCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics()));
         dashCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()));
         dashCard.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
@@ -753,7 +753,7 @@ public class MainActivity extends AppCompatActivity {
                 String medNext = getNextDoseForMed(m);
                 
                 com.google.android.material.card.MaterialCardView itemCard = new com.google.android.material.card.MaterialCardView(this);
-                itemCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
+                itemCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics()));
                 itemCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()));
                 
                 boolean isNearest = medNext.equals(globalNext) && !globalNext.equals("--:--");
@@ -1632,7 +1632,7 @@ public class MainActivity extends AppCompatActivity {
         MaterialButton btnDeleteMed = new MaterialButton(this);
         btnDeleteMed.setText(tr("Delete Medicine Entirely", "Полностью удалить лекарство"));
         btnDeleteMed.setAllCaps(false);
-        btnDeleteMed.setCornerRadius(30);
+        btnDeleteMed.setCornerRadius(32);
         btnDeleteMed.setTextColor(Color.WHITE);
         btnDeleteMed.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F44336")));
         btnDeleteMed.setIconResource(android.R.drawable.ic_menu_delete);
@@ -1741,7 +1741,7 @@ public class MainActivity extends AppCompatActivity {
             MaterialButton btnDate = new MaterialButton(this);
             btnDate.setText(date + " (" + dateToTimes.get(date).size() + ")");
             btnDate.setAllCaps(false);
-            btnDate.setCornerRadius(25);
+            btnDate.setCornerRadius(32);
             btnDate.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
             btnDate.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             btnDate.setStrokeWidth(2);
@@ -1889,7 +1889,7 @@ public class MainActivity extends AppCompatActivity {
         container.removeAllViews();
         for (String t : tempTimes) {
             MaterialButton btn = new MaterialButton(this);
-            btn.setText(t); btn.setAllCaps(false); btn.setCornerRadius(25);
+            btn.setText(t); btn.setAllCaps(false); btn.setCornerRadius(32);
             btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
             btn.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             btn.setStrokeWidth(2);
@@ -1907,7 +1907,7 @@ public class MainActivity extends AppCompatActivity {
             MaterialButton btn = new MaterialButton(this);
             String label = m.name + " (" + m.dosage + " " + tr("pills", "таб.") + ")";
             btn.setText(label);
-            btn.setAllCaps(false); btn.setCornerRadius(25);
+            btn.setAllCaps(false); btn.setCornerRadius(32);
             btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
             btn.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
             btn.setStrokeWidth(2);
@@ -2112,7 +2112,7 @@ public class MainActivity extends AppCompatActivity {
         b.setAllCaps(false); 
         b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR))); 
         b.setTextColor(Color.WHITE); 
-        b.setCornerRadius(30); 
+        b.setCornerRadius(32);
         b.setPadding(40, 30, 40, 30); 
         return b; 
     }

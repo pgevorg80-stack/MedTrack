@@ -62,11 +62,10 @@
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium" />
 
-            <!-- Password Section Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="24dp"
+                app:cardCornerRadius="32dp"
                 app:cardElevation="2dp"
                 app:strokeColor="?attr/cardStrokeColor"
                 app:strokeWidth="1dp"
@@ -95,10 +94,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         app:endIconMode="password_toggle"
-                        app:boxCornerRadiusBottomEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusTopStart="16dp">
+                        app:boxCornerRadiusBottomEnd="32dp"
+                        app:boxCornerRadiusBottomStart="32dp"
+                        app:boxCornerRadiusTopEnd="32dp"
+                        app:boxCornerRadiusTopStart="32dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edit_password"
@@ -115,10 +114,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="24dp"
                         app:endIconMode="password_toggle"
-                        app:boxCornerRadiusBottomEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusTopStart="16dp">
+                        app:boxCornerRadiusBottomEnd="32dp"
+                        app:boxCornerRadiusBottomStart="32dp"
+                        app:boxCornerRadiusTopEnd="32dp"
+                        app:boxCornerRadiusTopStart="32dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edit_password_confirm"
@@ -135,7 +134,7 @@
                         android:text="Save Changes"
                         android:textAllCaps="false"
                         android:textSize="16sp"
-                        app:cornerRadius="16dp" />
+                        app:cornerRadius="32dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -250,7 +250,7 @@
                 android:layout_height="55dp"
                 android:text="My Profile"
                 android:textAllCaps="false"
-                app:cornerRadius="30dp"
+                app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
@@ -261,7 +261,7 @@
                 android:layout_height="55dp"
                 android:text="Switch Light/Dark Mode"
                 android:textAllCaps="false"
-                app:cornerRadius="30dp"
+                app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
@@ -272,7 +272,7 @@
                 android:layout_height="55dp"
                 android:text="Language"
                 android:textAllCaps="false"
-                app:cornerRadius="30dp"
+                app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
@@ -283,7 +283,7 @@
                 android:layout_height="55dp"
                 android:text="Add widget"
                 android:textAllCaps="false"
-                app:cornerRadius="30dp"
+                app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
                 android:textColor="#FFFFFF"/>
 

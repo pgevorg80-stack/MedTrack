@@ -1,13 +1,21 @@
 package com.example.gevorgpetrosyan;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputLayout;
 
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -15,7 +23,12 @@ public class SignUpActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText etEmail, etPassword;
-    private View signupCard, signupTitle, logo, loginLink;
+    private View signupCard, signupTitle, logo, loginLink, themeSwitcher;
+    private TextView tvLight, tvDark;
+    private ImageView ivThemeKnob;
+    private TextInputLayout tilEmail, tilPassword;
+    private MaterialButton btnLangToggle;
+    private boolean isRussian = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,12 +37,35 @@ public class SignUpActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
+        android.content.SharedPreferences prefs = getSharedPreferences("LangPrefs", MODE_PRIVATE);
+        isRussian = prefs.getBoolean("IsRussian", false);
+
         etEmail = findViewById(R.id.et_signup_email);
         etPassword = findViewById(R.id.et_signup_password);
         signupCard = findViewById(R.id.signup_card);
         signupTitle = findViewById(R.id.signup_title);
         logo = findViewById(R.id.imageViewSignup);
         loginLink = findViewById(R.id.tv_login_link);
+        tilEmail = findViewById(R.id.til_signup_email);
+        tilPassword = findViewById(R.id.til_signup_password);
+        btnLangToggle = findViewById(R.id.btn_lang_toggle_signup);
+        themeSwitcher = findViewById(R.id.theme_switcher_container_signup);
+        tvLight = findViewById(R.id.tv_light_label_signup);
+        tvDark = findViewById(R.id.tv_dark_label_signup);
+        ivThemeKnob = findViewById(R.id.iv_theme_icon_knob_signup);
+
+        updateTranslations();
+        updateThemeUI(false);
+
+        btnLangToggle.setOnClickListener(v -> {
+            isRussian = !isRussian;
+            getSharedPreferences("LangPrefs", MODE_PRIVATE).edit().putBoolean("IsRussian", isRussian).apply();
+            updateTranslations();
+        });
+
+        themeSwitcher.setOnClickListener(v -> toggleTheme());
+
+        TextView signupSubTitle = findViewById(R.id.signup_subtitle);
 
         findViewById(R.id.btn_signup).setOnClickListener(v -> registerUser());
 
@@ -38,6 +74,60 @@ public class SignUpActivity extends AppCompatActivity {
         });
 
         startEntryAnimations();
+    }
+
+    private void updateTranslations() {
+        TextView signupSubTitle = findViewById(R.id.signup_subtitle);
+        MaterialButton btnSignup = findViewById(R.id.btn_signup);
+
+        if (signupSubTitle != null) signupSubTitle.setText(tr("Join our health community", "Присоединяйтесь к нашему сообществу"));
+        ((TextView)signupTitle).setText(tr("Create Account", "Создать аккаунт"));
+        
+        if (tilEmail != null) tilEmail.setHint(tr("Email Address", "Электронная почта"));
+        else etEmail.setHint(tr("Email Address", "Электронная почта"));
+        
+        if (tilPassword != null) tilPassword.setHint(tr("Create Password", "Придумайте пароль"));
+        else etPassword.setHint(tr("Create Password", "Придумайте пароль"));
+
+        btnSignup.setText(tr("Create Account", "Создать аккаунт"));
+        ((TextView)loginLink).setText(tr("Already have an account? Sign In", "Уже есть аккаунт? Войти"));
+        btnLangToggle.setText(isRussian ? "RU" : "EN");
+
+        if (tvLight != null) tvLight.setText(tr("Light", "Светлая"));
+        if (tvDark != null) tvDark.setText(tr("Dark", "Темная"));
+    }
+
+    private void toggleTheme() {
+        int currentMode = AppCompatDelegate.getDefaultNightMode();
+        boolean isDark = (currentMode == AppCompatDelegate.MODE_NIGHT_YES);
+        
+        if (isDark) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }
+        updateThemeUI(true);
+    }
+
+    private void updateThemeUI(boolean animate) {
+        boolean isDark = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
+        float density = getResources().getDisplayMetrics().density;
+        float translationPx = (isDark ? 26 : 0) * density;
+
+        if (animate) {
+            ivThemeKnob.animate()
+                    .translationX(translationPx)
+                    .setDuration(300)
+                    .start();
+        } else {
+            ivThemeKnob.setTranslationX(translationPx);
+        }
+        
+        ivThemeKnob.setImageResource(isDark ? R.drawable.ic_moon : R.drawable.ic_sun);
+        ivThemeKnob.setImageTintList(ColorStateList.valueOf(Color.parseColor("#2196F3")));
+        
+        if (tvLight != null) tvLight.setAlpha(isDark ? 0.5f : 1.0f);
+        if (tvDark != null) tvDark.setAlpha(isDark ? 1.0f : 0.5f);
     }
 
     private void startEntryAnimations() {
@@ -50,11 +140,23 @@ public class SignUpActivity extends AppCompatActivity {
         signupCard.setTranslationY(100f);
         loginLink.setAlpha(0f);
 
+        // Inputs initial state
+        if (tilEmail != null) { tilEmail.setAlpha(0f); tilEmail.setTranslationY(50f); }
+        if (tilPassword != null) { tilPassword.setAlpha(0f); tilPassword.setTranslationY(50f); }
+
         // Animate
         logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).start();
         signupTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
         signupCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
-        loginLink.animate().alpha(1f).setDuration(800).setStartDelay(1000).start();
+
+        if (tilEmail != null) {
+            tilEmail.animate().alpha(1f).translationY(0f).setDuration(500).setStartDelay(800).start();
+        }
+        if (tilPassword != null) {
+            tilPassword.animate().alpha(1f).translationY(0f).setDuration(500).setStartDelay(900).start();
+        }
+
+        loginLink.animate().alpha(1f).setDuration(800).setStartDelay(1100).start();
     }
 
     private void registerUser() {
@@ -62,21 +164,25 @@ public class SignUpActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(email) || password.length() < 6) {
-            Toast.makeText(this, "Email required & Password min 6 chars", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, tr("Email required & Password min 6 chars", "Требуется Email и пароль от 6 символов"), Toast.LENGTH_SHORT).show();
             return;
         }
 
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, tr("Account Created Successfully!", "Аккаунт успешно создан!"), Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();
                     } else {
-                        Toast.makeText(this, "Registration Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, tr("Registration Failed: ", "Ошибка регистрации: ") + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private String tr(String en, String ru) {
+        return isRussian ? ru : en;
     }
 }

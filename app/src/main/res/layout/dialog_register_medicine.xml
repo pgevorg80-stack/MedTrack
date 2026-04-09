@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="28dp"
+    app:cardCornerRadius="32dp"
     app:cardElevation="0dp"
     android:backgroundTint="?android:attr/windowBackground">
 
@@ -29,18 +29,31 @@
                 android:textStyle="bold" />
 
             <!-- Medicine Name -->
-            <EditText
-                android:id="@+id/dialog_name"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_dialog_name"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/nav_pill_background"
-                android:backgroundTint="#0A000000"
-                android:hint="Medicine Name"
-                android:inputType="textCapWords"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:textColor="?android:attr/textColorPrimary" />
+                app:boxBackgroundColor="#0A000000"
+                app:boxCornerRadiusBottomEnd="30dp"
+                app:boxCornerRadiusBottomStart="30dp"
+                app:boxCornerRadiusTopEnd="30dp"
+                app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/dialog_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:hint="Medicine Name"
+                    android:inputType="textCapWords"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Scan Button -->
             <com.google.android.material.button.MaterialButton
@@ -52,6 +65,8 @@
                 android:backgroundTint="#2196F3"
                 android:text="Scan Name with Camera"
                 android:textColor="#FFFFFF"
+                android:textAllCaps="false"
+                android:textStyle="bold"
                 app:cornerRadius="30dp"
                 app:icon="@android:drawable/ic_menu_camera"
                 app:iconGravity="textStart"
@@ -66,22 +81,36 @@
                 android:layout_marginBottom="8dp"
                 android:alpha="0.6"
                 android:text="INITIAL STOCK"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
+                android:letterSpacing="0.05"
                 android:paddingStart="12dp"/>
 
-            <EditText
-                android:id="@+id/dialog_stock"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_dialog_stock"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/nav_pill_background"
-                android:backgroundTint="#0A000000"
-                android:hint="e.g. 30"
-                android:inputType="number"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:textColor="?android:attr/textColorPrimary" />
+                app:boxBackgroundColor="#0A000000"
+                app:boxCornerRadiusBottomEnd="30dp"
+                app:boxCornerRadiusBottomStart="30dp"
+                app:boxCornerRadiusTopEnd="30dp"
+                app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/dialog_stock"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:hint="e.g. 30"
+                    android:inputType="number"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Warning Days -->
             <TextView
@@ -91,22 +120,36 @@
                 android:layout_marginBottom="8dp"
                 android:alpha="0.6"
                 android:text="WARNING DAYS (EXPIRY)"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
+                android:letterSpacing="0.05"
                 android:paddingStart="12dp"/>
 
-            <EditText
-                android:id="@+id/dialog_warn"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_dialog_warn"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/nav_pill_background"
-                android:backgroundTint="#0A000000"
-                android:hint="e.g. 7"
-                android:inputType="number"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:textColor="?android:attr/textColorPrimary" />
+                app:boxBackgroundColor="#0A000000"
+                app:boxCornerRadiusBottomEnd="30dp"
+                app:boxCornerRadiusBottomStart="30dp"
+                app:boxCornerRadiusTopEnd="30dp"
+                app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/dialog_warn"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:hint="e.g. 7"
+                    android:inputType="number"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Expiry Date Button -->
             <com.google.android.material.button.MaterialButton
@@ -141,7 +184,7 @@
                     android:backgroundTint="#10000000"
                     android:text="Cancel"
                     android:textColor="?android:attr/textColorSecondary"
-                    app:cornerRadius="28dp" />
+                    app:cornerRadius="32dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_save"
