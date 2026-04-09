@@ -40,6 +40,8 @@ dependencies {
     implementation libs.firebase.auth
     implementation libs.firebase.firestore
     implementation libs.mlkit.text.recognition
+    implementation libs.exifinterface
+    implementation libs.glide
 
     // Local ROOM Database (This saves your medicines on the phone)
     implementation "androidx.room:room-runtime:2.6.1"

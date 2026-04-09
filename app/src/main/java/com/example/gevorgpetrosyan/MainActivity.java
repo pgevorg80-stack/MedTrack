@@ -56,6 +56,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.graphics.Matrix;
+import androidx.exifinterface.media.ExifInterface;
+import com.bumptech.glide.Glide;
+import java.io.InputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
@@ -95,6 +101,7 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final ExecutorService diskExecutor = Executors.newFixedThreadPool(4);
     private AppDatabase db;
     private ViewPager2 viewPager;
     private DrawerLayout drawerLayout;
@@ -107,12 +114,13 @@ public class MainActivity extends AppCompatActivity {
     private ImageView micIconRef;
     
     // OCR components
-    private ActivityResultLauncher<Void> takePictureLauncher;
+    private ActivityResultLauncher<Uri> takePictureLauncher;
     private EditText ocrTargetEditText;
 
     // Image picking for Medicine
-    private ActivityResultLauncher<Void> medicinePhotoLauncher;
+    private ActivityResultLauncher<Uri> medicinePhotoLauncher;
     private Medicine photoTargetMed;
+    private Uri photoUri;
 
     // Success Animation UI
     private FrameLayout successOverlay;
@@ -154,31 +162,46 @@ public class MainActivity extends AppCompatActivity {
 
         requestNotificationPermission();
 
-        medicinePhotoLauncher = registerForActivityResult(new ActivityResultContracts.TakePicturePreview(), bitmap -> {
-            if (bitmap != null) {
-                if (photoTargetMed != null) {
-                    saveMedicineImage(photoTargetMed, bitmap);
-                } else {
-                    // It was for a new medicine
-                    saveTempMedicineImage(bitmap);
-                }
+        medicinePhotoLauncher = registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+            if (success && photoUri != null) {
+                diskExecutor.execute(() -> {
+                    try (InputStream is = getContentResolver().openInputStream(photoUri)) {
+                        Bitmap bitmap = BitmapFactory.decodeStream(is);
+                        if (bitmap != null) {
+                            Bitmap rotated = rotateBitmapIfRequired(bitmap, photoUri);
+                            if (photoTargetMed != null) {
+                                saveMedicineImage(photoTargetMed, rotated);
+                            } else {
+                                saveTempMedicineImage(rotated);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         });
 
-        takePictureLauncher = registerForActivityResult(
-                new ActivityResultContracts.TakePicturePreview(),
-                bitmap -> {
-                    if (bitmap != null) {
-                        if (ocrTargetEditText != null) {
-                            recognizeText(bitmap);
-                        } else {
-                            Toast.makeText(this, "Internal Error: Target EditText is null", Toast.LENGTH_SHORT).show();
+        takePictureLauncher = registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+            if (success && photoUri != null) {
+                diskExecutor.execute(() -> {
+                    try (InputStream is = getContentResolver().openInputStream(photoUri)) {
+                        Bitmap bitmap = BitmapFactory.decodeStream(is);
+                        if (bitmap != null) {
+                            Bitmap rotated = rotateBitmapIfRequired(bitmap, photoUri);
+                            if (ocrTargetEditText != null) {
+                                runOnUiThread(() -> recognizeText(rotated));
+                            }
                         }
-                    } else {
-                        Toast.makeText(this, tr("Camera cancelled or failed", "Камера отменена или произошла ошибка"), Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                }
-        );
+                });
+            } else if (!success) {
+                Toast.makeText(this, tr("Camera cancelled or failed", "Камера отменена или произошла ошибка"), Toast.LENGTH_SHORT).show();
+            }
+        });
+        
 
         db = AppDatabase.getInstance(this);
         viewPager = findViewById(R.id.view_pager);
@@ -587,6 +610,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void launchCamera() {
+        File photoFile = new File(getExternalFilesDir(null), "camera_temp.jpg");
+        photoUri = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", photoFile);
+        medicinePhotoLauncher.launch(photoUri);
+    }
+
+    private void launchOCRCamera() {
+        File photoFile = new File(getExternalFilesDir(null), "ocr_temp.jpg");
+        photoUri = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", photoFile);
+        takePictureLauncher.launch(photoUri);
+    }
+
     private View createInventoryCard(Medicine m) {
         int total = calculateTotalStock(m.batches);
         boolean isExpired = isMedicineExpired(m.batches);
@@ -685,24 +720,22 @@ public class MainActivity extends AppCompatActivity {
         photoBox.setOrientation(LinearLayout.HORIZONTAL);
         photoBox.setGravity(Gravity.CENTER_VERTICAL);
         
-        if (m.imagePath != null && !m.imagePath.isEmpty()) {
-            Bitmap b = BitmapFactory.decodeFile(m.imagePath);
-            if (b != null) {
-                com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
-                imgCard.setRadius(15);
-                imgCard.setCardElevation(0);
-                imgCard.setStrokeWidth(2);
-                imgCard.setStrokeColor(Color.parseColor("#15000000"));
-                LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(100, 100);
-                imgLp.setMargins(10, 0, 5, 0);
-                imgCard.setLayoutParams(imgLp);
+        if (m.imagePath != null && !m.imagePath.isEmpty() && new File(m.imagePath).exists()) {
+            com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
+            imgCard.setRadius(15);
+            imgCard.setCardElevation(0);
+            imgCard.setStrokeWidth(2);
+            imgCard.setStrokeColor(Color.parseColor("#15000000"));
+            LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(100, 100);
+            imgLp.setMargins(10, 0, 5, 0);
+            imgCard.setLayoutParams(imgLp);
 
-                ImageView ivMedPhoto = new ImageView(this);
-                ivMedPhoto.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                ivMedPhoto.setImageBitmap(b);
-                imgCard.addView(ivMedPhoto);
-                photoBox.addView(imgCard);
-            }
+            ImageView ivMedPhoto = new ImageView(this);
+            ivMedPhoto.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            Glide.with(this).load(new File(m.imagePath)).into(ivMedPhoto);
+            ivMedPhoto.setOnClickListener(v -> showExpandedImage(m));
+            imgCard.addView(ivMedPhoto);
+            photoBox.addView(imgCard);
         }
 
         ImageView ivCamera = new ImageView(this);
@@ -714,7 +747,7 @@ public class MainActivity extends AppCompatActivity {
         ivCamera.setBackgroundResource(outVal.resourceId);
         ivCamera.setOnClickListener(v -> {
             photoTargetMed = m;
-            medicinePhotoLauncher.launch(null);
+            launchCamera();
         });
         photoBox.addView(ivCamera);
         
@@ -936,7 +969,7 @@ public class MainActivity extends AppCompatActivity {
                 ImageView icon = new ImageView(this);
                 icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 if (m.imagePath != null) {
-                    icon.setImageBitmap(BitmapFactory.decodeFile(m.imagePath));
+                    Glide.with(this).load(new File(m.imagePath)).into(icon);
                 } else {
                     icon.setImageResource(android.R.drawable.ic_menu_today);
                     icon.setColorFilter(isNearest ? Color.parseColor(BLUE_COLOR) : getThemeColor(android.R.attr.textColorSecondary));
@@ -1156,11 +1189,7 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, 104);
             } else {
                 ocrTargetEditText = nameIn;
-                try {
-                    takePictureLauncher.launch(null);
-                } catch (Exception e) {
-                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
+                launchOCRCamera();
             }
         });
 
@@ -1170,7 +1199,7 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, 101);
             } else {
                 photoTargetMed = null;
-                medicinePhotoLauncher.launch(null);
+                launchCamera();
             }
         });
 
@@ -1519,12 +1548,14 @@ public class MainActivity extends AppCompatActivity {
         
         ImageView ivMed = new ImageView(this);
         ivMed.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        if (m.imagePath != null) {
-            ivMed.setImageBitmap(BitmapFactory.decodeFile(m.imagePath));
+        if (m.imagePath != null && !m.imagePath.isEmpty() && new File(m.imagePath).exists()) {
+            Glide.with(this).load(new File(m.imagePath)).into(ivMed);
+            imgCard.setOnClickListener(v -> showExpandedImage(m));
         } else {
             ivMed.setImageResource(android.R.drawable.ic_dialog_info);
             ivMed.setPadding(20, 20, 20, 20);
             ivMed.setColorFilter(Color.parseColor(BLUE_COLOR));
+            // Don't set click listener if no image
         }
         imgCard.addView(ivMed);
 
@@ -1669,30 +1700,62 @@ public class MainActivity extends AppCompatActivity {
         showStatusAnimation(R.drawable.ic_delete_anim, tr("Deleted", "Удалено"));
     }
 
+    private Bitmap rotateBitmapIfRequired(Bitmap img, Uri selectedImage) throws IOException {
+        InputStream input = getContentResolver().openInputStream(selectedImage);
+        ExifInterface ei;
+        if (Build.VERSION.SDK_INT > 23)
+            ei = new ExifInterface(input);
+        else
+            ei = new ExifInterface(selectedImage.getPath());
+
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                return rotateImage(img, 90);
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                return rotateImage(img, 180);
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                return rotateImage(img, 270);
+            default:
+                return img;
+        }
+    }
+
+    private Bitmap rotateImage(Bitmap img, int degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        img.recycle();
+        return rotatedImg;
+    }
+
     private void saveMedicineImage(Medicine m, Bitmap bitmap) {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        diskExecutor.execute(() -> {
             File dir = new File(getExternalFilesDir(null), "med_photos");
             if (!dir.exists()) dir.mkdirs();
             File file = new File(dir, "med_" + m.id + "_" + System.currentTimeMillis() + ".jpg");
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
                 m.imagePath = file.getAbsolutePath();
                 m.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(m);
                 FirestoreHelper.uploadMedicine(m);
+                bitmap.recycle(); // Free memory
                 runOnUiThread(this::refreshCurrentTab);
             } catch (Exception e) { e.printStackTrace(); }
         });
     }
 
     private void saveTempMedicineImage(Bitmap bitmap) {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        diskExecutor.execute(() -> {
             File dir = new File(getExternalFilesDir(null), "med_photos");
             if (!dir.exists()) dir.mkdirs();
             File file = new File(dir, "new_med_" + System.currentTimeMillis() + ".jpg");
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
                 tempImagePath = file.getAbsolutePath();
+                bitmap.recycle(); // Free memory
                 runOnUiThread(() -> Toast.makeText(this, tr("Photo attached", "Фото прикреплено"), Toast.LENGTH_SHORT).show());
             } catch (Exception e) { e.printStackTrace(); }
         });
@@ -1860,6 +1923,85 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, tr("Schedule Updated", "Расписание обновлено"), Toast.LENGTH_SHORT).show(); 
             });
         });
+    }
+
+    private void showExpandedImage(Medicine m) {
+        if (m.imagePath == null || m.imagePath.isEmpty()) {
+            Toast.makeText(this, tr("No photo available", "Нет фото"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File file = new File(m.imagePath);
+        if (!file.exists()) {
+            Toast.makeText(this, tr("Photo file not found", "Файл фото не найден"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        com.google.android.material.card.MaterialCardView root = new com.google.android.material.card.MaterialCardView(this);
+        root.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics()));
+        root.setCardElevation(0);
+        root.setStrokeWidth(0);
+        root.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(android.R.attr.windowBackground)));
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(60, 60, 60, 60);
+        layout.setGravity(Gravity.CENTER);
+
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText(m.name);
+        tvTitle.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        tvTitle.setTextSize(20);
+        tvTitle.setTypeface(null, Typeface.BOLD);
+        tvTitle.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(-1, -2);
+        titleLp.setMargins(0, 0, 0, 40);
+        tvTitle.setLayoutParams(titleLp);
+        layout.addView(tvTitle);
+
+        com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
+        imgCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+        imgCard.setCardElevation(0);
+        imgCard.setStrokeWidth(0);
+        imgCard.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#0A000000")));
+        LinearLayout.LayoutParams imgCardLp = new LinearLayout.LayoutParams(-1, -2);
+        imgCardLp.setMargins(0, 0, 0, 60);
+        imgCard.setLayoutParams(imgCardLp);
+
+        ImageView iv = new ImageView(this);
+        Glide.with(this)
+                .load(file)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .error(android.R.drawable.ic_menu_report_image)
+                .into(iv);
+        iv.setAdjustViewBounds(true);
+        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imgCard.addView(iv);
+        layout.addView(imgCard);
+
+        MaterialButton btnClose = new MaterialButton(this);
+        btnClose.setText(tr("Close", "Закрыть"));
+        btnClose.setAllCaps(false);
+        btnClose.setCornerRadius((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, getResources().getDisplayMetrics()));
+        btnClose.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
+        btnClose.setTextColor(Color.WHITE);
+        btnClose.setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-1, (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, getResources().getDisplayMetrics()));
+        btnClose.setLayoutParams(btnLp);
+        
+        layout.addView(btnClose);
+        root.addView(layout);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(root)
+                .create();
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void showBatchEditMenu(Medicine m) {
