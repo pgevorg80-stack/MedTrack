@@ -43,16 +43,25 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.google.android.gms.tasks.Task;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.google.firebase.auth.FirebaseAuth; 
 import com.google.firebase.auth.FirebaseUser;
 import com.google.android.material.button.MaterialButton;
@@ -91,6 +100,10 @@ public class MainActivity extends AppCompatActivity {
     private SpeechRecognizer speechRecognizer;
     private ImageView micIconRef;
     
+    // OCR components
+    private ActivityResultLauncher<Void> takePictureLauncher;
+    private EditText ocrTargetEditText;
+
     // Success Animation UI
     private FrameLayout successOverlay;
     private View successContent;
@@ -126,6 +139,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         requestNotificationPermission();
+
+        takePictureLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicturePreview(),
+                bitmap -> {
+                    if (bitmap != null) {
+                        if (ocrTargetEditText != null) {
+                            recognizeText(bitmap);
+                        } else {
+                            Toast.makeText(this, "Internal Error: Target EditText is null", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, tr("Camera cancelled or failed", "Камера отменена или произошла ошибка"), Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
 
         db = AppDatabase.getInstance(this);
         viewPager = findViewById(R.id.view_pager);
@@ -355,6 +383,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void recognizeText(android.graphics.Bitmap bitmap) {
+        InputImage image = InputImage.fromBitmap(bitmap, 0);
+        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+
+        recognizer.process(image)
+                .addOnSuccessListener(visionText -> {
+                    String resultText = visionText.getText();
+                    if (resultText != null && !resultText.isEmpty() && ocrTargetEditText != null) {
+                        String[] lines = resultText.split("\n");
+                        String bestMatch = "";
+                        for (String line : lines) {
+                            String trimmed = line.trim();
+                            if (trimmed.length() > bestMatch.length()) {
+                                bestMatch = trimmed;
+                            }
+                        }
+                        ocrTargetEditText.setText(bestMatch.isEmpty() ? lines[0].trim() : bestMatch);
+                    } else {
+                        Toast.makeText(this, tr("No text detected", "Текст не найден"), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, tr("OCR Failed", "Ошибка распознавания"), Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void refreshPageContent(ScrollView scrollView, int position) {
         scrollView.removeAllViews();
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -416,9 +470,10 @@ public class MainActivity extends AppCompatActivity {
         btnPdf.setLayoutParams(pdfLp);
         btnPdf.setOnClickListener(v -> showPdfDatePicker(meds));
         layout.addView(btnPdf);
+        animateViewIn(btnPdf, 100);
 
         boolean hasHistory = false;
-        int delay = 100;
+        int delay = 200;
         for (Medicine m : meds) {
             int taken = 0;
             if (m.history != null && !m.history.isEmpty()) {
@@ -845,9 +900,7 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onEndOfSpeech() { 
                 isListening = false;
                 if (micIconRef != null) micIconRef.clearAnimation();
-                if (voiceDialogShowing) {
-                    restartListening();
-                }
+                // Removed restartListening from here to avoid double-triggering with onResults/onError
             }
             @Override public void onError(int error) { 
                 isListening = false;
@@ -866,8 +919,7 @@ public class MainActivity extends AppCompatActivity {
                 if (voiceDialogShowing) restartListening();
             }
             @Override public void onPartialResults(Bundle partialResults) {
-                ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if (matches != null && !matches.isEmpty()) processVoiceCommand(matches);
+                // Skip processing partial results to avoid over-logging
             }
             @Override public void onEvent(int eventType, Bundle params) {}
         });
@@ -879,8 +931,12 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : Locale.getDefault().toString());
-                intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : "en-US");
+                intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"ru-RU", "en-US"});
+                intent.putExtra("android.speech.extra.LANGUAGE_SWITCH_ALLOWED", true);
+                intent.putExtra("android.speech.extra.BILINGUAL_MODE", true);
+                intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
+                intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
                 speechRecognizer.startListening(intent);
             } catch (Exception ignored) {}
         }, 100);
@@ -895,15 +951,48 @@ public class MainActivity extends AppCompatActivity {
     private void showRegisterMedicineDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(tr("Register New Medicine", "Регистрация лекарства"));
+        
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 20);
+        layout.setPadding(50, 40, 50, 40);
 
-        final EditText nameIn = new EditText(this); nameIn.setHint(tr("Medicine Name", "Название лекарства"));
-        final EditText stockIn = new EditText(this); stockIn.setHint(tr("Initial Stock", "Начальный запас")); stockIn.setInputType(2);
-        final EditText warnIn = new EditText(this); warnIn.setHint(tr("Warning Days (Expiry)", "Предупредить за (дней до конца срока)")); warnIn.setInputType(2);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, 15, 0, 15);
+
+        final EditText nameIn = new EditText(this); 
+        nameIn.setHint(tr("Medicine Name", "Название лекарства"));
+        nameIn.setLayoutParams(lp);
+
+        final MaterialButton ocrBtn = createActionButton(tr("Scan Name with Camera", "Сканировать название"));
+        ocrBtn.setIconResource(android.R.drawable.ic_menu_camera);
+        ocrBtn.setIconPadding(20);
+        ocrBtn.setLayoutParams(lp);
+        ocrBtn.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ocrTargetEditText = nameIn; // Store context before requesting
+                requestPermissions(new String[]{Manifest.permission.CAMERA}, 104);
+            } else {
+                ocrTargetEditText = nameIn;
+                try {
+                    takePictureLauncher.launch(null);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Error launching camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        final EditText stockIn = new EditText(this); 
+        stockIn.setHint(tr("Initial Stock", "Начальный запас")); 
+        stockIn.setInputType(2);
+        stockIn.setLayoutParams(lp);
+
+        final EditText warnIn = new EditText(this); 
+        warnIn.setHint(tr("Warning Days (Expiry)", "Дней до конца срока")); 
+        warnIn.setInputType(2);
+        warnIn.setLayoutParams(lp);
 
         final MaterialButton expBtn = createActionButton(tr("Set Expiry Date", "Установить срок годности"));
+        expBtn.setLayoutParams(lp);
         expBtn.setOnClickListener(v -> {
             Calendar c = Calendar.getInstance();
             new DatePickerDialog(this, (view, y, m, d) -> {
@@ -912,11 +1001,16 @@ public class MainActivity extends AppCompatActivity {
             }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
         });
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 20, 0, 20);
-        nameIn.setLayoutParams(lp); stockIn.setLayoutParams(lp); warnIn.setLayoutParams(lp); expBtn.setLayoutParams(lp);
+        layout.addView(nameIn);
+        layout.addView(ocrBtn);
+        layout.addView(stockIn);
+        layout.addView(warnIn);
+        layout.addView(expBtn);
 
-        layout.addView(nameIn); layout.addView(stockIn); layout.addView(warnIn); layout.addView(expBtn);
-        builder.setView(layout);
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(layout);
+        builder.setView(scroll);
+
         builder.setPositiveButton(tr("Add to Inventory", "Добавить"), (d, w) -> {
             String name = nameIn.getText().toString().trim();
             String stockStr = stockIn.getText().toString();
@@ -1028,8 +1122,12 @@ public class MainActivity extends AppCompatActivity {
         
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : Locale.getDefault().toString());
-        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : "en-US");
+        intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"ru-RU", "en-US"});
+        intent.putExtra("android.speech.extra.LANGUAGE_SWITCH_ALLOWED", true);
+        intent.putExtra("android.speech.extra.BILINGUAL_MODE", true);
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
         
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             try {
@@ -1041,19 +1139,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void processVoiceCommand(List<String> matches) {
+        if (matches == null || matches.isEmpty()) return;
+        
         Executors.newSingleThreadExecutor().execute(() -> {
             List<Medicine> meds = db.medicineDao().getAllByUserId(currentUserId);
             boolean addedNew = false;
 
-            for (String result : matches) {
-                String resultLower = result.toLowerCase();
-                for (Medicine m : meds) {
-                    String medNameLower = m.name.toLowerCase();
-                    if (resultLower.contains(medNameLower)) {
-                        if (!detectedMeds.contains(m)) {
-                            detectedMeds.add(m);
-                            addedNew = true;
-                        }
+            // Use only the top match to avoid over-logging from similar-sounding alternatives
+            String topResult = matches.get(0);
+            // Pad with spaces for whole-phrase matching
+            String rClean = " " + normalizeForVoice(topResult) + " ";
+
+            for (Medicine m : meds) {
+                String mClean = normalizeForVoice(m.name);
+                if (mClean.length() < 2) continue;
+
+                // Match if the recognized speech contains the medicine name as a whole phrase/word
+                if (rClean.contains(" " + mClean + " ")) {
+                    if (!detectedMeds.contains(m)) {
+                        detectedMeds.add(m);
+                        addedNew = true;
                     }
                 }
             }
@@ -1062,6 +1167,44 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(this::updateDetectedMedsUI);
             }
         });
+    }
+
+    private String normalizeForVoice(String s) {
+        if (s == null) return "";
+        // Lowercase and replace punctuation/symbols with spaces
+        s = s.toLowerCase().replaceAll("[^a-zа-я0-9]", " ").trim();
+        StringBuilder sb = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (c == 'а') sb.append('a');
+            else if (c == 'б') sb.append('b');
+            else if (c == 'в') sb.append('v');
+            else if (c == 'г') sb.append('g');
+            else if (c == 'д') sb.append('d');
+            else if (c == 'е' || c == 'ё' || c == 'э') sb.append('e');
+            else if (c == 'ж') sb.append('j');
+            else if (c == 'з') sb.append('z');
+            else if (c == 'и' || c == 'й' || c == 'ы') sb.append('i');
+            else if (c == 'к') sb.append('k');
+            else if (c == 'л') sb.append('l');
+            else if (c == 'м') sb.append('m');
+            else if (c == 'н') sb.append('n');
+            else if (c == 'о') sb.append('o');
+            else if (c == 'п') sb.append('p');
+            else if (c == 'р') sb.append('r');
+            else if (c == 'с') sb.append('s');
+            else if (c == 'т') sb.append('t');
+            else if (c == 'у') sb.append('u');
+            else if (c == 'ф') sb.append('f');
+            else if (c == 'х') sb.append('h');
+            else if (c == 'ц') sb.append('c');
+            else if (c == 'ч') sb.append("ch");
+            else if (c == 'ш') sb.append("sh");
+            else if (c == 'ю') sb.append("yu");
+            else if (c == 'я') sb.append("ya");
+            else sb.append(c);
+        }
+        // Normalize multiple spaces to a single space for consistent phrase matching
+        return sb.toString().replaceAll("\\s+", " ").trim();
     }
     
     private void updateDetectedMedsUI() {
@@ -1980,7 +2123,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 103) {
+        if (requestCode == 104) { // Camera
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ocrTargetEditText != null) {
+                    try {
+                        takePictureLauncher.launch(null);
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Error launching camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            } else {
+                Toast.makeText(this, tr("Camera permission denied", "Доступ к камере отклонен"), Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == 101 || requestCode == 103) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, tr("Permission granted. Please try again.", "Разрешение получено. Попробуйте еще раз."), Toast.LENGTH_SHORT).show();
             }

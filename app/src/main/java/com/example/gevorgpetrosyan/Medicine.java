@@ -29,4 +29,17 @@ public class Medicine {
         this.batches = "";
         this.lastUpdated = System.currentTimeMillis();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Medicine medicine = (Medicine) o;
+        return id == medicine.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
+    }
 }

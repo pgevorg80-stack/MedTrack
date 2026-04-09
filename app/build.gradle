@@ -38,6 +38,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation platform(libs.firebase.bom)
     implementation libs.firebase.auth
+    implementation libs.mlkit.text.recognition
 
     // Local ROOM Database (This saves your medicines on the phone)
     implementation "androidx.room:room-runtime:2.6.1"
