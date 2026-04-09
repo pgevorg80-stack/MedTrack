@@ -699,7 +699,24 @@ public class MainActivity extends AppCompatActivity {
         String[] dayLetters = isRussian ? dayLettersRu : dayLettersEn;
         int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 
+        // Pre-calculate which days have intakes in the current week
+        Set<String> intakeDays = new HashSet<>();
+        SimpleDateFormat sdfIntake = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        for (Medicine m : meds) {
+            if (m.history != null && !m.history.isEmpty()) {
+                for (String entry : m.history.split(",")) {
+                    try { intakeDays.add(entry.split(" ")[0]); } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+
         for (int i = 1; i <= 7; i++) {
+            String dayKey = sdfIntake.format(cal.getTime());
+            boolean hasIntake = intakeDays.contains(dayKey);
+
             LinearLayout col = new LinearLayout(this);
             col.setOrientation(LinearLayout.VERTICAL);
             col.setGravity(Gravity.CENTER);
@@ -713,17 +730,37 @@ public class MainActivity extends AppCompatActivity {
             tvLetter.setTypeface(null, i == currentDay ? Typeface.BOLD : Typeface.NORMAL);
             col.addView(tvLetter);
 
-            View dot = new View(this);
-            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
-            LinearLayout.LayoutParams dotP = new LinearLayout.LayoutParams(size, size);
-            dotP.setMargins(0, 8, 0, 0);
+            com.google.android.material.card.MaterialCardView dot = new com.google.android.material.card.MaterialCardView(this);
+            int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, i == currentDay ? 18 : 8, getResources().getDisplayMetrics());
+            
+            LinearLayout.LayoutParams dotP = new LinearLayout.LayoutParams(width, height);
+            dotP.setMargins(0, 10, 0, 0);
             dot.setLayoutParams(dotP);
-            dot.setBackgroundResource(R.drawable.ok_background);
-            if (i == currentDay) dot.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE));
-            else dot.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#40FFFFFF")));
-            col.addView(dot);
+            dot.setRadius(100);
+            dot.setStrokeWidth(0);
 
+            if (i == currentDay) {
+                dot.setCardBackgroundColor(Color.WHITE);
+                dot.setCardElevation(6);
+            } else if (i < currentDay) {
+                if (hasIntake) {
+                    dot.setCardBackgroundColor(Color.WHITE); // Solid for taken
+                    dot.setAlpha(0.9f);
+                } else {
+                    dot.setStrokeWidth(3);
+                    dot.setStrokeColor(Color.parseColor("#60FFFFFF")); // Ring for missed
+                    dot.setCardBackgroundColor(Color.TRANSPARENT);
+                    dot.setCardElevation(0);
+                }
+            } else {
+                dot.setCardBackgroundColor(Color.parseColor("#40FFFFFF")); // Future
+                dot.setCardElevation(0);
+            }
+            
+            col.addView(dot);
             weekGrid.addView(col);
+            cal.add(Calendar.DAY_OF_YEAR, 1);
         }
         leftPart.addView(weekGrid);
 
