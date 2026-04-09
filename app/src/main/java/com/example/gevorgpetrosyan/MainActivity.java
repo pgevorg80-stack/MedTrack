@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                 View[] items = {
                     findViewById(R.id.tv_settings_header),
                     findViewById(R.id.btn_profile),
-                    findViewById(R.id.btn_theme_toggle),
+                    findViewById(R.id.theme_switcher_container),
                     findViewById(R.id.btn_language),
                     findViewById(R.id.btn_add_widget),
                     findViewById(R.id.btn_logout)
@@ -232,12 +232,27 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, ProfileActivity.class));
         });
 
-        findViewById(R.id.btn_theme_toggle).setOnClickListener(v -> {
+        findViewById(R.id.theme_switcher_container).setOnClickListener(v -> {
             SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
             boolean isDark = pref.getBoolean("IsDarkMode", false);
-            AppCompatDelegate.setDefaultNightMode(isDark ? AppCompatDelegate.MODE_NIGHT_NO : AppCompatDelegate.MODE_NIGHT_YES);
-            pref.edit().putBoolean("IsDarkMode", !isDark).apply();
-            drawerLayout.closeDrawers();
+            boolean nextDark = !isDark;
+            
+            pref.edit().putBoolean("IsDarkMode", nextDark).apply();
+            
+            // Animate knob and then recreate
+            View knob = findViewById(R.id.iv_theme_icon_knob);
+            if (knob != null) {
+                float targetX = nextDark ? 26 * getResources().getDisplayMetrics().density : 0;
+                knob.animate()
+                    .translationX(targetX)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+                    })
+                    .start();
+            } else {
+                AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+            }
         });
 
         findViewById(R.id.btn_language).setOnClickListener(v -> {
@@ -288,10 +303,25 @@ public class MainActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.tv_settings_header)).setText(tr("SETTINGS", "НАСТРОЙКИ"));
         ((MaterialButton) findViewById(R.id.btn_profile)).setText(tr("My Profile", "Мой профиль"));
-        ((MaterialButton) findViewById(R.id.btn_theme_toggle)).setText(tr("Switch Light/Dark Mode", "Сменить тему"));
+        ((TextView) findViewById(R.id.tv_light_label)).setText(tr("Light", "Светлая"));
+        ((TextView) findViewById(R.id.tv_dark_label)).setText(tr("Dark", "Темная"));
         ((MaterialButton) findViewById(R.id.btn_language)).setText(tr("Language", "Язык (RU)"));
         ((MaterialButton) findViewById(R.id.btn_add_widget)).setText(tr("Add widget", "Добавить виджет"));
         ((MaterialButton) findViewById(R.id.btn_logout)).setText(tr("Log Out", "Выйти"));
+
+        // Theme Switcher Sync
+        boolean isDark = getSharedPreferences("ThemePrefs", MODE_PRIVATE).getBoolean("IsDarkMode", false);
+        View knob = findViewById(R.id.iv_theme_icon_knob);
+        if (knob != null) {
+            float density = getResources().getDisplayMetrics().density;
+            knob.setTranslationX(isDark ? 26 * density : 0);
+            ((ImageView) knob).setImageResource(isDark ? R.drawable.ic_moon : R.drawable.ic_sun);
+            ((ImageView) knob).setImageTintList(ColorStateList.valueOf(Color.parseColor("#2196F3")));
+        }
+        View lightLabel = findViewById(R.id.tv_light_label);
+        View darkLabel = findViewById(R.id.tv_dark_label);
+        if (lightLabel != null) lightLabel.setAlpha(isDark ? 0.4f : 1.0f);
+        if (darkLabel != null) darkLabel.setAlpha(isDark ? 1.0f : 0.4f);
         
         if (tvSuccessMsg != null) tvSuccessMsg.setText(tr("Logged!", "Отмечено!"));
     }
@@ -831,7 +861,7 @@ public class MainActivity extends AppCompatActivity {
         View[] items = {
             findViewById(R.id.tv_settings_header),
             findViewById(R.id.btn_profile),
-            findViewById(R.id.btn_theme_toggle),
+            findViewById(R.id.theme_switcher_container),
             findViewById(R.id.btn_language),
             findViewById(R.id.btn_add_widget),
             findViewById(R.id.btn_logout)

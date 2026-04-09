@@ -255,16 +255,69 @@
                 android:textColor="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_theme_toggle"
+            <!-- Modern Theme Switcher -->
+            <LinearLayout
+                android:id="@+id/theme_switcher_container"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
-                android:text="Switch Light/Dark Mode"
-                android:textAllCaps="false"
-                app:cornerRadius="32dp"
-                android:backgroundTint="#2196F3"
-                android:textColor="#FFFFFF"
-                android:layout_marginBottom="15dp"/>
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:background="@drawable/nav_pill_background"
+                android:backgroundTint="#15000000"
+                android:paddingHorizontal="16dp"
+                android:layout_marginBottom="15dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/tv_light_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Light"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <FrameLayout
+                    android:id="@+id/theme_toggle_pill"
+                    android:layout_width="54dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/nav_pill_background"
+                    android:backgroundTint="#25000000">
+
+                    <ImageView
+                        android:id="@+id/iv_theme_icon_knob"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="2dp"
+                        android:background="@drawable/nav_pill_background"
+                        android:backgroundTint="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="5dp"
+                        android:src="@drawable/ic_sun"
+                        app:tint="#2196F3" />
+                </FrameLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tv_dark_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_language"

@@ -38,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applySavedTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
@@ -109,22 +110,31 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void toggleTheme() {
-        int currentMode = AppCompatDelegate.getDefaultNightMode();
-        boolean isDark = (currentMode == AppCompatDelegate.MODE_NIGHT_YES);
-        
-        if (isDark) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }
-        updateThemeUI(true);
+        SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
+        boolean isDark = pref.getBoolean("IsDarkMode", false);
+        boolean nextDark = !isDark;
+
+        pref.edit().putBoolean("IsDarkMode", nextDark).apply();
+
+        float density = getResources().getDisplayMetrics().density;
+        float targetX = nextDark ? 26 * density : 0;
+
+        ivThemeKnob.animate()
+                .translationX(targetX)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+                })
+                .start();
+
+        if (tvLight != null) tvLight.animate().alpha(nextDark ? 0.5f : 1.0f).setDuration(300).start();
+        if (tvDark != null) tvDark.animate().alpha(nextDark ? 1.0f : 0.5f).setDuration(300).start();
     }
 
     private void updateThemeUI(boolean animate) {
-        boolean isDark = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
-        float targetX = isDark ? 26f : 0f; // Simplified, in real app use dimension or calculate
-        
-        // Convert dp to px for more accurate translation
+        SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
+        boolean isDark = pref.getBoolean("IsDarkMode", false);
+
         float density = getResources().getDisplayMetrics().density;
         float translationPx = (isDark ? 26 : 0) * density;
 
@@ -136,13 +146,19 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             ivThemeKnob.setTranslationX(translationPx);
         }
-        
+
         ivThemeKnob.setImageResource(isDark ? R.drawable.ic_moon : R.drawable.ic_sun);
         ivThemeKnob.setImageTintList(ColorStateList.valueOf(Color.parseColor("#2196F3")));
-        
+
         // Update label opacity
         if (tvLight != null) tvLight.setAlpha(isDark ? 0.5f : 1.0f);
         if (tvDark != null) tvDark.setAlpha(isDark ? 1.0f : 0.5f);
+    }
+
+    private void applySavedTheme() {
+        SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
+        AppCompatDelegate.setDefaultNightMode(pref.getBoolean("IsDarkMode", false) ?
+                AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
     }
 
     private void startEntryAnimations() {
@@ -155,7 +171,13 @@ public class LoginActivity extends AppCompatActivity {
         loginCard.setTranslationY(100f);
         registerLink.setAlpha(0f);
 
-        // Inputs initial state for Profile-like animation
+        // Top bar items initial state
+        themeSwitcher.setAlpha(0f);
+        themeSwitcher.setTranslationX(-100f);
+        btnLangToggle.setAlpha(0f);
+        btnLangToggle.setTranslationX(100f);
+
+        // Inputs initial state
         if (tilEmail != null) { tilEmail.setAlpha(0f); tilEmail.setTranslationY(50f); }
         if (tilPassword != null) { tilPassword.setAlpha(0f); tilPassword.setTranslationY(50f); }
 
@@ -164,6 +186,23 @@ public class LoginActivity extends AppCompatActivity {
         loginTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
         loginCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
         
+        // Top bar animations (similar to settings drawer items)
+        themeSwitcher.animate()
+                .alpha(1f)
+                .translationX(0f)
+                .setDuration(600)
+                .setStartDelay(300)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+
+        btnLangToggle.animate()
+                .alpha(1f)
+                .translationX(0f)
+                .setDuration(600)
+                .setStartDelay(300)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+
         if (tilEmail != null) {
             tilEmail.animate().alpha(1f).translationY(0f).setDuration(500).setStartDelay(800).start();
         }

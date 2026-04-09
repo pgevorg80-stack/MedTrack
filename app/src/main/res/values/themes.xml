@@ -16,6 +16,10 @@
         <item name="android:windowBackground">#FFFFFF</item>
         <item name="android:textColorPrimary">#000000</item>
         <item name="secondaryTextColor">#757575</item>
+        <item name="colorOutline">#2196F3</item>
+        <item name="colorPrimaryContainer">#E3F2FD</item>
+        <item name="colorOnPrimaryContainer">#1976D2</item>
+        <item name="colorOutline">#2196F3</item>
 
         <!-- Card Colors Light -->
         <item name="cardBackgroundColor">#F8F9FA</item>

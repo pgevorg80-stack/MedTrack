@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="28dp"
+    app:cardCornerRadius="32dp"
     app:cardElevation="0dp"
     android:backgroundTint="?android:attr/windowBackground">
 
@@ -65,7 +65,7 @@
             android:backgroundTint="#0A000000"
             android:text="Select Time"
             android:textColor="?android:attr/textColorPrimary"
-            app:cornerRadius="30dp"
+            app:cornerRadius="32dp"
             app:icon="@android:drawable/ic_menu_recent_history"
             app:iconGravity="textStart"
             app:iconPadding="12dp"
@@ -89,7 +89,7 @@
                 android:backgroundTint="#10000000"
                 android:text="Cancel"
                 android:textColor="?android:attr/textColorSecondary"
-                app:cornerRadius="28dp" />
+                app:cornerRadius="32dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dialog_btn_save"
@@ -100,7 +100,7 @@
                 android:backgroundTint="#2196F3"
                 android:text="Save"
                 android:textColor="#FFFFFF"
-                app:cornerRadius="28dp"
+                app:cornerRadius="32dp"
                 app:elevation="4dp" />
         </LinearLayout>
     </LinearLayout>
