@@ -2441,13 +2441,13 @@ public class MainActivity extends AppCompatActivity {
             long msLeftUntilExpiry = earliestExpiry - now;
             if (msLeftUntilExpiry <= 0) return 0.01f;
 
-            // Usage time: how long the stock will actually last
-            long daysOfStock = total / dailyDose;
-            long msOfStock = daysOfStock * 24L * 60 * 60 * 1000;
+            // Usage time in milliseconds: how long the stock will actually last
+            // total is count of pills, dailyDose is pills per day
+            double daysOfStock = (double) total / dailyDose;
+            long msOfStock = (long) (daysOfStock * 24.0 * 60.0 * 60.0 * 1000.0);
 
             // Progress is based on: (Time left until expiry) / (Time it takes to use the stock)
-            // If we have 100 days of stock but it expires in 50 days, progress is 0.5 (50%)
-            float progress = (float) msLeftUntilExpiry / msOfStock;
+            float progress = (float) ((double) msLeftUntilExpiry / msOfStock);
             return Math.min(1f, progress);
 
         } catch (Exception ignored) {}
