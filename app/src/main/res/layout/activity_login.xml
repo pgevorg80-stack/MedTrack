@@ -19,13 +19,14 @@
 
     <LinearLayout
         android:id="@+id/top_controls"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="16dp"
-        android:gravity="center_vertical"
+        android:gravity="end"
         android:elevation="10dp"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_lang_toggle"
@@ -36,16 +37,12 @@
             android:textColor="?android:attr/textColorSecondary"
             android:textStyle="bold" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
         <!-- Modern Theme Switcher -->
         <LinearLayout
             android:id="@+id/theme_switcher_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:background="@drawable/nav_pill_background"
