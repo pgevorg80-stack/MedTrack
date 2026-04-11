@@ -393,7 +393,22 @@
                 android:textAllCaps="false"
                 app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
-                android:textColor="#FFFFFF"/>
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="15dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_share"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:text="Share App"
+                android:textAllCaps="false"
+                app:cornerRadius="32dp"
+                android:backgroundTint="#2196F3"
+                android:textColor="#FFFFFF"
+                app:icon="@android:drawable/ic_menu_share"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_logout"

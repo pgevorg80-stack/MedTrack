@@ -276,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.theme_switcher_container),
                     findViewById(R.id.language_switcher_container),
                     findViewById(R.id.btn_add_widget),
+                    findViewById(R.id.btn_share),
                     findViewById(R.id.btn_logout)
                 };
                 for (View v : items) if (v != null) v.setAlpha(0);
@@ -343,6 +344,11 @@ public class MainActivity extends AppCompatActivity {
             drawerLayout.closeDrawers();
         });
 
+        findViewById(R.id.btn_share).setOnClickListener(v -> {
+            drawerLayout.closeDrawers();
+            shareApp();
+        });
+
         findViewById(R.id.btn_logout).setOnClickListener(v -> {
             drawerLayout.closeDrawers();
             FirebaseAuth.getInstance().signOut();
@@ -367,6 +373,19 @@ public class MainActivity extends AppCompatActivity {
 
     private String tr(String en, String ru) {
         return isRussian ? ru : en;
+    }
+
+    private void shareApp() {
+        String shareMessage = tr(
+                "Check out the presentation for this Medicine Tracker app!",
+                "Посмотрите презентацию этого приложения для отслеживания лекарств!"
+        );
+        String canvaLink = "https://canva.link/sw6j3wbntl0p6lb";
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Medicine Tracker Presentation");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage + "\n\n" + canvaLink);
+        startActivity(Intent.createChooser(shareIntent, tr("Share via", "Поделиться через")));
     }
 
     private void updateStaticUI() {
@@ -402,6 +421,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         ((MaterialButton) findViewById(R.id.btn_add_widget)).setText(tr("Add widget", "Добавить виджет"));
+        ((MaterialButton) findViewById(R.id.btn_share)).setText(tr("Share App", "Поделиться"));
         ((MaterialButton) findViewById(R.id.btn_logout)).setText(tr("Log Out", "Выйти"));
 
         // Theme Switcher Sync
@@ -1158,6 +1178,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.theme_switcher_container),
             findViewById(R.id.language_switcher_container),
             findViewById(R.id.btn_add_widget),
+            findViewById(R.id.btn_share),
             findViewById(R.id.btn_logout)
         };
         int delay = 50;
