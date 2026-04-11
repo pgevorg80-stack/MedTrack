@@ -408,7 +408,38 @@
                 app:icon="@android:drawable/ic_menu_share"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
-                app:iconTint="#FFFFFF" />
+                app:iconTint="#FFFFFF"
+                android:layout_marginBottom="15dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_sync"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:text="Sync Data"
+                android:textAllCaps="false"
+                app:cornerRadius="32dp"
+                android:backgroundTint="#2196F3"
+                android:textColor="#FFFFFF"
+                app:icon="@android:drawable/stat_notify_sync"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF"
+                android:layout_marginBottom="15dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_support"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:text="Support"
+                android:textAllCaps="false"
+                app:cornerRadius="32dp"
+                android:backgroundTint="#2196F3"
+                android:textColor="#FFFFFF"
+                app:icon="@android:drawable/ic_menu_help"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF"
+                android:layout_marginBottom="15dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_logout"

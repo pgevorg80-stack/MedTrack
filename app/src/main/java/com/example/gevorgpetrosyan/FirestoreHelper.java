@@ -39,6 +39,9 @@ public class FirestoreHelper {
                         }
                         if (onComplete != null) onComplete.run();
                     });
+                })
+                .addOnFailureListener(e -> {
+                    if (onComplete != null) onComplete.run();
                 });
     }
 }

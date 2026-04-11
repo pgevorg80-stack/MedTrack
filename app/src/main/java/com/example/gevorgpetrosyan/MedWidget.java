@@ -14,15 +14,20 @@ import android.widget.RemoteViews;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MedWidget extends AppWidgetProvider {
 
     public static final String ACTION_AUTO_UPDATE = "com.example.gevorgpetrosyan.WIDGET_UPDATE";
     public static final String ACTION_WIDGET_PINNED = "com.example.gevorgpetrosyan.WIDGET_PINNED";
+    private static final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -42,6 +47,12 @@ public class MedWidget extends AppWidgetProvider {
             editor.remove("bg_opacity_" + appWidgetId);
         }
         editor.apply();
+    }
+
+    @Override
+    public void onEnabled(Context context) {
+        super.onEnabled(context);
+        // Start ticking when first widget is added
     }
 
     @Override
@@ -68,7 +79,8 @@ public class MedWidget extends AppWidgetProvider {
         } else if (ACTION_AUTO_UPDATE.equals(intent.getAction()) || 
             Intent.ACTION_TIME_TICK.equals(intent.getAction()) || 
             Intent.ACTION_TIME_CHANGED.equals(intent.getAction()) ||
-            Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction())) {
+            Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction()) ||
+            Intent.ACTION_DATE_CHANGED.equals(intent.getAction())) {
             
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, MedWidget.class));
             for (int appWidgetId : appWidgetIds) {
@@ -92,8 +104,6 @@ public class MedWidget extends AppWidgetProvider {
         views.setInt(R.id.widget_background_img, "setImageAlpha", opacity);
 
         // Update Time
-        String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-        views.setTextViewText(R.id.widget_time, currentTime);
         views.setTextColor(R.id.widget_time, textColor);
 
         // Update Week Grid
@@ -103,7 +113,8 @@ public class MedWidget extends AppWidgetProvider {
         String[] dayLetters = isRussian ? dayLettersRu : dayLettersEn;
         int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 
-        views.setTextViewText(R.id.widget_date, new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
+        Locale widgetLocale = isRussian ? new Locale("ru") : Locale.US;
+        views.setTextViewText(R.id.widget_date, new SimpleDateFormat("d MMMM", widgetLocale).format(new Date()));
         views.setTextColor(R.id.widget_date, subTextColor);
 
         int[] tvIds = {R.id.tv_day_1, R.id.tv_day_2, R.id.tv_day_3, R.id.tv_day_4, R.id.tv_day_5, R.id.tv_day_6, R.id.tv_day_7};
@@ -130,6 +141,7 @@ public class MedWidget extends AppWidgetProvider {
         views.setTextColor(R.id.widget_next_dose, textColor);
         
         // Apply colors to new elements (Labels and pill backgrounds)
+        views.setTextViewText(R.id.widget_next_dose_label, isRussian ? "СЛЕД. ДОЗА" : "NEXT DOSE");
         views.setTextColor(R.id.widget_next_dose_label, Color.argb(204, Color.red(textColor), Color.green(textColor), Color.blue(textColor)));
         views.setInt(R.id.widget_next_dose_bg, "setColorFilter", textColor);
         views.setInt(R.id.widget_next_dose_bg, "setImageAlpha", 64);
@@ -144,10 +156,18 @@ public class MedWidget extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_mic_btn, pendingIntent);
 
         // Fetch Data and Update Next Dose
-        Executors.newSingleThreadExecutor().execute(() -> {
+        executor.execute(() -> {
             try {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user == null) {
+                    RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.med_widget);
+                    updateViews.setTextViewText(R.id.widget_next_dose, "--:--");
+                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, updateViews);
+                    return;
+                }
+                
                 AppDatabase db = AppDatabase.getInstance(context);
-                List<Medicine> meds = db.medicineDao().getAll();
+                List<Medicine> meds = db.medicineDao().getAllByUserId(user.getUid());
                 String nextDose = getNextUpcomingDose(meds);
                 
                 RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.med_widget);

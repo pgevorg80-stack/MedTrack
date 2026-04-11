@@ -16,6 +16,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
@@ -104,7 +105,8 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final ExecutorService diskExecutor = Executors.newFixedThreadPool(4);
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private final ExecutorService diskExecutor = executor;
     private AppDatabase db;
     private ViewPager2 viewPager;
     private DrawerLayout drawerLayout;
@@ -277,6 +279,8 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.language_switcher_container),
                     findViewById(R.id.btn_add_widget),
                     findViewById(R.id.btn_share),
+                    findViewById(R.id.btn_sync),
+                    findViewById(R.id.btn_support),
                     findViewById(R.id.btn_logout)
                 };
                 for (View v : items) if (v != null) v.setAlpha(0);
@@ -349,6 +353,16 @@ public class MainActivity extends AppCompatActivity {
             shareApp();
         });
 
+        findViewById(R.id.btn_sync).setOnClickListener(v -> {
+            drawerLayout.closeDrawers();
+            syncData();
+        });
+
+        findViewById(R.id.btn_support).setOnClickListener(v -> {
+            drawerLayout.closeDrawers();
+            openSupport();
+        });
+
         findViewById(R.id.btn_logout).setOnClickListener(v -> {
             drawerLayout.closeDrawers();
             FirebaseAuth.getInstance().signOut();
@@ -371,10 +385,6 @@ public class MainActivity extends AppCompatActivity {
         isRussian = getSharedPreferences("LangPrefs", MODE_PRIVATE).getBoolean("IsRussian", false);
     }
 
-    private String tr(String en, String ru) {
-        return isRussian ? ru : en;
-    }
-
     private void shareApp() {
         String shareMessage = tr(
                 "Check out the presentation for this Medicine Tracker app!",
@@ -386,6 +396,37 @@ public class MainActivity extends AppCompatActivity {
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Medicine Tracker Presentation");
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage + "\n\n" + canvaLink);
         startActivity(Intent.createChooser(shareIntent, tr("Share via", "Поделиться через")));
+    }
+
+    private void syncData() {
+        MaterialButton btnSync = findViewById(R.id.btn_sync);
+        
+        String originalText = btnSync.getText().toString();
+        btnSync.setText(tr("Syncing...", "Синхронизация..."));
+        btnSync.setEnabled(false);
+        btnSync.setIconTint(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+
+        FirestoreHelper.syncFromFirestore(currentUserId, db, () -> {
+            runOnUiThread(() -> {
+                btnSync.setText(originalText);
+                btnSync.setEnabled(true);
+                btnSync.setIconTint(null);
+                refreshCurrentTab();
+                updateWidget();
+                showStatusAnimation(android.R.drawable.stat_notify_sync, tr("Synced!", "Готово!"));
+            });
+        });
+    }
+
+    private void openSupport() {
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:medicinetrackuwc@gmail.com"));
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Support Request - Medicine Tracker");
+        try {
+            startActivity(Intent.createChooser(intent, tr("Send Email", "Отправить письмо")));
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(this, tr("No email clients installed", "Почтовые приложения не установлены"), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateStaticUI() {
@@ -422,6 +463,8 @@ public class MainActivity extends AppCompatActivity {
 
         ((MaterialButton) findViewById(R.id.btn_add_widget)).setText(tr("Add widget", "Добавить виджет"));
         ((MaterialButton) findViewById(R.id.btn_share)).setText(tr("Share App", "Поделиться"));
+        ((MaterialButton) findViewById(R.id.btn_sync)).setText(tr("Sync Data", "Синхронизация"));
+        ((MaterialButton) findViewById(R.id.btn_support)).setText(tr("Support", "Поддержка"));
         ((MaterialButton) findViewById(R.id.btn_logout)).setText(tr("Log Out", "Выйти"));
 
         // Theme Switcher Sync
@@ -944,12 +987,22 @@ public class MainActivity extends AppCompatActivity {
         tvDate.setPadding(5, 0, 0, 0);
         leftPart.addView(tvDate);
 
+        // REAL-TIME CLOCK FOR DASHBOARD
         TextView tvTime = new TextView(this);
-        tvTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
         tvTime.setTextSize(64);
         tvTime.setTextColor(Color.WHITE);
         tvTime.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         tvTime.setLetterSpacing(-0.02f);
+        
+        final Handler clockHandler = new Handler(Looper.getMainLooper());
+        Runnable clockRunnable = new Runnable() {
+            @Override
+            public void run() {
+                tvTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
+                clockHandler.postDelayed(this, 1000);
+            }
+        };
+        clockHandler.post(clockRunnable);
         leftPart.addView(tvTime);
 
         LinearLayout weekGrid = new LinearLayout(this);
@@ -1179,6 +1232,8 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.language_switcher_container),
             findViewById(R.id.btn_add_widget),
             findViewById(R.id.btn_share),
+            findViewById(R.id.btn_sync),
+            findViewById(R.id.btn_support),
             findViewById(R.id.btn_logout)
         };
         int delay = 50;
@@ -1908,6 +1963,13 @@ public class MainActivity extends AppCompatActivity {
         if (successOverlay == null) return;
         
         successCheckmark.setImageResource(iconRes);
+        // If it's the sync icon, use green. Otherwise, let it be default (e.g. checkmark is usually green in source or white)
+        if (iconRes == android.R.drawable.stat_notify_sync) {
+            successCheckmark.setColorFilter(Color.parseColor("#4CAF50"), PorterDuff.Mode.SRC_IN);
+        } else {
+            successCheckmark.clearColorFilter();
+        }
+
         tvSuccessMsg.setText(message);
         
         successOverlay.setVisibility(View.VISIBLE);
@@ -1976,7 +2038,7 @@ public class MainActivity extends AppCompatActivity {
         new AlertDialog.Builder(this).setTitle(tr("Delete Dose", "Удалить прием"))
                 .setMessage(tr("Remove the ", "Удалить прием в ") + timeToDelete + tr(" dose for ", " для ") + m.name + "?")
                 .setPositiveButton(tr("Delete", "Удалить"), (d, w) -> {
-                    Executors.newSingleThreadExecutor().execute(() -> {
+                    executor.execute(() -> {
                         List<String> tList = new ArrayList<>(Arrays.asList(m.times.split(",")));
                         tList.remove(timeToDelete);
                         m.times = android.text.TextUtils.join(",", tList);
@@ -1993,7 +2055,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showScheduleDoseDialog() {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        executor.execute(() -> {
             List<Medicine> warehouseMeds = db.medicineDao().getAllByUserId(currentUserId);
             runOnUiThread(() -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -2216,9 +2278,9 @@ public class MainActivity extends AppCompatActivity {
         btnDeleteMed.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
                 .setTitle(tr("Delete Medicine", "Удалить лекарство"))
-                .setMessage(tr("Are you sure you want to delete ", "Вы уверены, что хотите удалить ") + m.name + tr(" и всю историю?", " and all its history?"))
+                .setMessage(tr("Are you sure you want to delete ", "Вы уверены, что хотите удалить ") + m.name + tr(" and all its history?", " и всю историю?"))
                 .setPositiveButton(tr("Delete", "Удалить"), (dialog, which) -> {
-                    Executors.newSingleThreadExecutor().execute(() -> { 
+                    executor.execute(() -> { 
                         db.medicineDao().delete(m); 
                         FirestoreHelper.deleteMedicine(m);
                         runOnUiThread(() -> {
@@ -2247,10 +2309,10 @@ public class MainActivity extends AppCompatActivity {
         EditText in = new EditText(this); in.setInputType(2); in.setText(count); lay.addView(in);
         b.setView(lay);
         b.setPositiveButton(tr("Save", "Сохранить"), (d, w) -> {
-            arr[index] = in.getText().toString() + " pills" + arr[index].substring(arr[index].indexOf(" (Exp:"));
+            arr[index] = in.getText().toString() + " " + tr("pills", "таб.") + arr[index].substring(arr[index].indexOf(" (Exp:"));
             m.batches = android.text.TextUtils.join("|", arr);
             m.lastUpdated = System.currentTimeMillis();
-            Executors.newSingleThreadExecutor().execute(() -> { 
+            executor.execute(() -> { 
                 db.medicineDao().update(m); 
                 FirestoreHelper.uploadMedicine(m);
                 runOnUiThread(() -> {
@@ -2263,7 +2325,7 @@ public class MainActivity extends AppCompatActivity {
             ArrayList<String> list = new ArrayList<>(Arrays.asList(arr)); list.remove(index);
             m.batches = android.text.TextUtils.join("|", list);
             m.lastUpdated = System.currentTimeMillis();
-            Executors.newSingleThreadExecutor().execute(() -> { 
+            executor.execute(() -> { 
                 db.medicineDao().update(m); 
                 FirestoreHelper.uploadMedicine(m);
                 runOnUiThread(() -> {
@@ -2333,7 +2395,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton(tr("Yes", "Да"), (d2, w2) -> {
                     m.history = "";
                     m.lastUpdated = System.currentTimeMillis();
-                    Executors.newSingleThreadExecutor().execute(() -> { 
+                    executor.execute(() -> {
                         db.medicineDao().update(m); 
                         FirestoreHelper.uploadMedicine(m);
                         runOnUiThread(() -> {
@@ -2681,7 +2743,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(Intent.createChooser(intent, tr("Open PDF", "Открыть PDF")));
             } catch (IOException e) {
                 e.printStackTrace();
-                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, tr("Error: ", "Ошибка: ") + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
         document.close();
@@ -2743,7 +2805,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         takePictureLauncher.launch(null);
                     } catch (Exception e) {
-                        Toast.makeText(this, "Error launching camera: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, tr("Error launching camera: ", "Ошибка запуска камеры: ") + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
             } else {
@@ -2754,6 +2816,10 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, tr("Permission granted. Please try again.", "Разрешение получено. Попробуйте еще раз."), Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private String tr(String en, String ru) {
+        return isRussian ? ru : en;
     }
 
     @Override
