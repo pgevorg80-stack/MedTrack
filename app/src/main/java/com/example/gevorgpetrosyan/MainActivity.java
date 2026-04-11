@@ -716,6 +716,47 @@ public class MainActivity extends AppCompatActivity {
             card.setForeground(getDrawable(outValue.resourceId));
         }
 
+        // Status Container (Icon + Progress Circle)
+        FrameLayout statusContainer = new FrameLayout(this);
+        LinearLayout.LayoutParams scP = new LinearLayout.LayoutParams(90, 90);
+        scP.setMargins(0, 0, 35, 0);
+        statusContainer.setLayoutParams(scP);
+
+        // Progress Circle
+        View progressCircle = new View(this) {
+            private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            
+            @Override
+            protected void onDraw(Canvas canvas) {
+                super.onDraw(canvas);
+                float width = getWidth();
+                float height = getHeight();
+                float radius = Math.min(width, height) / 2f - 4f;
+                
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(6f);
+                paint.setStrokeCap(Paint.Cap.ROUND);
+
+                // Background track
+                paint.setColor(Color.parseColor("#15000000"));
+                canvas.drawCircle(width / 2f, height / 2f, radius, paint);
+
+                // Progress
+                float progress = getExpiryProgress(m);
+                if (progress > 0) {
+                    if (progress < 0.2f) paint.setColor(Color.parseColor("#F44336"));
+                    else if (progress < 0.5f) paint.setColor(Color.parseColor("#FF9800"));
+                    else paint.setColor(Color.parseColor("#4CAF50"));
+                    
+                    canvas.drawArc(width / 2f - radius, height / 2f - radius, 
+                                 width / 2f + radius, height / 2f + radius, 
+                                 -90, 360 * progress, false, paint);
+                }
+            }
+        };
+        progressCircle.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+        statusContainer.addView(progressCircle);
+
         // Status Icon
         ImageView ivStatus = new ImageView(this);
         int iconRes = android.R.drawable.ic_dialog_info;
@@ -731,10 +772,12 @@ public class MainActivity extends AppCompatActivity {
         
         ivStatus.setImageResource(iconRes);
         ivStatus.setColorFilter(iconColor);
-        LinearLayout.LayoutParams iconP = new LinearLayout.LayoutParams(70, 70);
-        iconP.setMargins(0, 0, 35, 0);
+        FrameLayout.LayoutParams iconP = new FrameLayout.LayoutParams(55, 55);
+        iconP.gravity = Gravity.CENTER;
         ivStatus.setLayoutParams(iconP);
-        card.addView(ivStatus);
+        statusContainer.addView(ivStatus);
+
+        card.addView(statusContainer);
 
         // Text Info
         LinearLayout textInfo = new LinearLayout(this);
@@ -2356,6 +2399,50 @@ public class MainActivity extends AppCompatActivity {
             try { total += Integer.parseInt(b.split(" ")[0]); } catch (Exception ignored) {}
         }
         return total;
+    }
+
+    private float getExpiryProgress(Medicine m) {
+        if (m.batches == null || m.batches.isEmpty()) return 0f;
+        int total = calculateTotalStock(m.batches);
+        if (total <= 0) return 0f;
+
+        // Calculate daily dosage
+        int dailyDose = 0;
+        if (m.dosage > 0 && m.times != null && !m.times.isEmpty()) {
+            dailyDose = m.times.split(",").length * m.dosage;
+        }
+        if (dailyDose <= 0) return 1f; // Cannot calculate usage time
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy", Locale.getDefault());
+            long now = System.currentTimeMillis();
+            
+            // Find the earliest expiry date
+            long earliestExpiry = Long.MAX_VALUE;
+            for (String batch : m.batches.split("\\|")) {
+                if (batch.contains("(Exp: ")) {
+                    String dateStr = batch.substring(batch.indexOf("(Exp: ") + 6, batch.length() - 1);
+                    Date d = sdf.parse(dateStr);
+                    if (d != null && d.getTime() < earliestExpiry) earliestExpiry = d.getTime();
+                }
+            }
+
+            if (earliestExpiry == Long.MAX_VALUE) return 1f;
+            
+            long msLeftUntilExpiry = earliestExpiry - now;
+            if (msLeftUntilExpiry <= 0) return 0.01f;
+
+            // Usage time: how long the stock will actually last
+            long daysOfStock = total / dailyDose;
+            long msOfStock = daysOfStock * 24L * 60 * 60 * 1000;
+
+            // Progress is based on: (Time left until expiry) / (Time it takes to use the stock)
+            // If we have 100 days of stock but it expires in 50 days, progress is 0.5 (50%)
+            float progress = (float) msLeftUntilExpiry / msOfStock;
+            return Math.min(1f, progress);
+
+        } catch (Exception ignored) {}
+        return 1f;
     }
 
     private void setupAlarms(String name, List<String> times) {
