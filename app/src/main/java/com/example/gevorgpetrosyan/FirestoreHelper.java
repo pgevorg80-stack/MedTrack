@@ -1,5 +1,6 @@
 package com.example.gevorgpetrosyan;
 
+import android.util.Log;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import java.util.List;
@@ -12,7 +13,9 @@ public class FirestoreHelper {
         if (medicine.userId == null) return;
         String docId = medicine.userId + "_" + medicine.name.replace("/", "_");
         FirebaseFirestore.getInstance().collection(COLLECTION_NAME).document(docId)
-                .set(medicine, SetOptions.merge());
+                .set(medicine, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Uploaded: " + medicine.name))
+                .addOnFailureListener(e -> Log.e("Firestore", "Upload failed", e));
     }
 
     public static void deleteMedicine(Medicine medicine) {
@@ -27,6 +30,8 @@ public class FirestoreHelper {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Medicine> remoteMeds = queryDocumentSnapshots.toObjects(Medicine.class);
+                    Log.d("Sync", "Found " + remoteMeds.size() + " medicines in cloud.");
+
                     Executors.newSingleThreadExecutor().execute(() -> {
                         for (Medicine remote : remoteMeds) {
                             Medicine local = localDb.medicineDao().getByNameAndUserId(remote.name, userId);
@@ -41,6 +46,7 @@ public class FirestoreHelper {
                     });
                 })
                 .addOnFailureListener(e -> {
+                    Log.e("Sync", "Sync failed", e);
                     if (onComplete != null) onComplete.run();
                 });
     }
