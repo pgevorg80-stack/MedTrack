@@ -263,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.tv_settings_header),
                     findViewById(R.id.btn_profile),
                     findViewById(R.id.theme_switcher_container),
-                    findViewById(R.id.btn_language),
+                    findViewById(R.id.language_switcher_container),
                     findViewById(R.id.btn_add_widget),
                     findViewById(R.id.btn_logout)
                 };
@@ -303,12 +303,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.btn_language).setOnClickListener(v -> {
+        findViewById(R.id.language_switcher_container).setOnClickListener(v -> {
             isRussian = !isRussian;
             getSharedPreferences("LangPrefs", MODE_PRIVATE).edit().putBoolean("IsRussian", isRussian).apply();
-            updateStaticUI();
-            refreshCurrentTab();
-            drawerLayout.closeDrawers();
+            
+            // Animate language knob
+            View langKnob = findViewById(R.id.iv_lang_knob);
+            if (langKnob != null) {
+                float density = getResources().getDisplayMetrics().density;
+                float targetX = isRussian ? 26 * density : 0;
+                langKnob.animate()
+                    .translationX(targetX)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        updateStaticUI();
+                        refreshCurrentTab();
+                    })
+                    .start();
+            } else {
+                updateStaticUI();
+                refreshCurrentTab();
+            }
         });
 
         findViewById(R.id.btn_add_widget).setOnClickListener(v -> {
@@ -353,7 +368,28 @@ public class MainActivity extends AppCompatActivity {
         ((MaterialButton) findViewById(R.id.btn_profile)).setText(tr("My Profile", "Мой профиль"));
         ((TextView) findViewById(R.id.tv_light_label)).setText(tr("Light", "Светлая"));
         ((TextView) findViewById(R.id.tv_dark_label)).setText(tr("Dark", "Темная"));
-        ((MaterialButton) findViewById(R.id.btn_language)).setText(tr("Language", "Язык (RU)"));
+        
+        // Language labels
+        TextView enLabel = findViewById(R.id.tv_lang_en_label);
+        TextView ruLabel = findViewById(R.id.tv_lang_ru_label);
+        if (enLabel != null) {
+            enLabel.setText(tr("EN", "АНГ"));
+            enLabel.setAlpha(isRussian ? 0.4f : 1.0f);
+        }
+        if (ruLabel != null) {
+            ruLabel.setText(tr("RU", "РУС"));
+            ruLabel.setAlpha(isRussian ? 1.0f : 0.4f);
+        }
+
+        // Sync Language Knob
+        View langKnob = findViewById(R.id.iv_lang_knob);
+        if (langKnob != null) {
+            float density = getResources().getDisplayMetrics().density;
+            langKnob.setTranslationX(isRussian ? 26 * density : 0);
+            ((ImageView) langKnob).setImageResource(isRussian ? R.drawable.flag_russia : R.drawable.flag_uk);
+            ((ImageView) langKnob).setImageTintList(null); // Clear tint to show flag colors
+        }
+
         ((MaterialButton) findViewById(R.id.btn_add_widget)).setText(tr("Add widget", "Добавить виджет"));
         ((MaterialButton) findViewById(R.id.btn_logout)).setText(tr("Log Out", "Выйти"));
 
@@ -1034,7 +1070,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.tv_settings_header),
             findViewById(R.id.btn_profile),
             findViewById(R.id.theme_switcher_container),
-            findViewById(R.id.btn_language),
+            findViewById(R.id.language_switcher_container),
             findViewById(R.id.btn_add_widget),
             findViewById(R.id.btn_logout)
         };
