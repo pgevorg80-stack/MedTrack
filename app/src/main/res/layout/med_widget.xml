@@ -29,6 +29,16 @@
             android:gravity="center_vertical"
             android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/widget_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="24 October"
+                android:textColor="#A0FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:paddingLeft="4dp" />
+
             <TextClock
                 android:id="@+id/widget_time"
                 android:layout_width="wrap_content"
@@ -36,10 +46,11 @@
                 android:format12Hour="hh:mm"
                 android:format24Hour="HH:mm"
                 android:textColor="#FFFFFF"
-                android:textSize="84sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-condensed-medium"
-                android:includeFontPadding="false" />
+                android:textSize="72sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.03" />
 
             <LinearLayout
                 android:layout_width="match_parent"

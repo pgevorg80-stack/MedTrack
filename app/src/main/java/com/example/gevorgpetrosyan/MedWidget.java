@@ -98,6 +98,9 @@ public class MedWidget extends AppWidgetProvider {
         String[] dayLetters = isRussian ? dayLettersRu : dayLettersEn;
         int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 
+        views.setTextViewText(R.id.widget_date, new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
+        views.setTextColor(R.id.widget_date, subTextColor);
+
         int[] tvIds = {R.id.tv_day_1, R.id.tv_day_2, R.id.tv_day_3, R.id.tv_day_4, R.id.tv_day_5, R.id.tv_day_6, R.id.tv_day_7};
         int[] dotIds = {R.id.dot_day_1, R.id.dot_day_2, R.id.dot_day_3, R.id.dot_day_4, R.id.dot_day_5, R.id.dot_day_6, R.id.dot_day_7};
 

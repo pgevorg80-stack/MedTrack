@@ -23,7 +23,10 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class WidgetConfigActivity extends AppCompatActivity {
 
@@ -151,6 +154,8 @@ public class WidgetConfigActivity extends AppCompatActivity {
             widgetBackgroundPreview.setColorFilter(currentBgColor);
             
             ((TextView)findViewById(R.id.widget_time)).setTextColor(currentTextColor);
+            ((TextView)findViewById(R.id.widget_date)).setTextColor(Color.argb(160, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor)));
+            ((TextView)findViewById(R.id.widget_date)).setText(new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
             ((TextView)findViewById(R.id.widget_next_dose)).setTextColor(currentTextColor);
             ((ImageView)findViewById(R.id.widget_mic_icon)).setColorFilter(currentTextColor);
             
