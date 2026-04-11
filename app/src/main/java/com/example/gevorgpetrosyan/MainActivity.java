@@ -1878,8 +1878,17 @@ public class MainActivity extends AppCompatActivity {
             m.history += dateStamp + (isRussian ? " - Принято," : " - Taken,");
             m.lastUpdated = System.currentTimeMillis();
             int totalStock = calculateTotalStock(m.batches);
-            if (totalStock <= 0) sendStatusNotification(m.name, tr("OUT OF STOCK!", "НЕТ В НАЛИЧИИ!"));
-            if (isMedicineExpired(m.batches)) sendStatusNotification(m.name, tr("EXPIRED!", "ПРОСРОЧЕНО!"));
+            if (totalStock <= 0) {
+                sendStatusNotification(m.name, tr("OUT OF STOCK!", "НЕТ В НАЛИЧИИ!"));
+            } else if (totalStock <= 3 * m.dosage) {
+                sendStatusNotification(m.name, tr("LOW STOCK (3 days left)!", "низкий запас (осталось на 3 дня)!"));
+            }
+
+            if (isMedicineExpired(m.batches)) {
+                sendStatusNotification(m.name, tr("EXPIRED!", "ПРОСРОЧЕНО!"));
+            } else if (isMedicineNearExpiry(m.batches, m.expiryWarningDays)) {
+                sendStatusNotification(m.name, tr("EXPIRING SOON!", "СКОРО ИСТЕКАЕТ!"));
+            }
             db.medicineDao().update(m);
             FirestoreHelper.uploadMedicine(m);
             runOnUiThread(() -> { 
@@ -2028,6 +2037,28 @@ public class MainActivity extends AppCompatActivity {
                     String dateStr = batch.substring(batch.indexOf("(Exp: ") + 6, batch.length() - 1);
                     Date expiryDate = sdf.parse(dateStr);
                     if (expiryDate != null && expiryDate.before(today)) return true;
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private boolean isMedicineNearExpiry(String batchString, int warningDays) {
+        if (batchString == null || batchString.isEmpty() || warningDays <= 0) return false;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy", Locale.getDefault());
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DAY_OF_YEAR, warningDays);
+            Date warningThreshold = cal.getTime();
+            Date today = new Date();
+
+            for (String batch : batchString.split("\\|")) {
+                if (batch.contains("(Exp: ")) {
+                    String dateStr = batch.substring(batch.indexOf("(Exp: ") + 6, batch.length() - 1);
+                    Date expiryDate = sdf.parse(dateStr);
+                    if (expiryDate != null && expiryDate.after(today) && expiryDate.before(warningThreshold)) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception ignored) {}
