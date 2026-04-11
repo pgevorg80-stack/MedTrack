@@ -540,6 +540,41 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private View createEmptyStateView(int iconRes, String title, String subtitle) {
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setGravity(Gravity.CENTER);
+        container.setPadding(60, 120, 60, 120);
+        container.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(iconRes);
+        icon.setLayoutParams(new LinearLayout.LayoutParams(350, 350));
+        icon.setAlpha(0.5f);
+        container.addView(icon);
+
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText(title);
+        tvTitle.setTextSize(20);
+        tvTitle.setTypeface(null, Typeface.BOLD);
+        tvTitle.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+        tvTitle.setGravity(Gravity.CENTER);
+        tvTitle.setPadding(0, 40, 0, 10);
+        container.addView(tvTitle);
+
+        if (subtitle != null) {
+            TextView tvSub = new TextView(this);
+            tvSub.setText(subtitle);
+            tvSub.setTextSize(14);
+            tvSub.setTextColor(getThemeColor(android.R.attr.textColorSecondary));
+            tvSub.setGravity(Gravity.CENTER);
+            tvSub.setAlpha(0.7f);
+            container.addView(tvSub);
+        }
+
+        return container;
+    }
+
     private void populateList(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Medicine Reminders", "График приема")));
         
@@ -564,12 +599,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!hasSchedules) {
-            TextView empty = new TextView(this);
-            empty.setText(tr("No reminders set yet.", "Напоминания еще не установлены."));
-            empty.setGravity(Gravity.CENTER);
-            empty.setPadding(0, 100, 0, 0);
-            empty.setAlpha(0.6f);
-            empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
+                tr("No Schedules Yet", "Нет расписания"), 
+                tr("Start by adding a dose to your reminders.", "Добавьте дозу в свои напоминания."));
             layout.addView(empty);
             animateViewIn(empty, 200);
         }
@@ -604,12 +636,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!hasHistory) {
-            TextView empty = new TextView(this);
-            empty.setText(tr("No usage history available.", "История использования отсутствует."));
-            empty.setGravity(Gravity.CENTER);
-            empty.setPadding(0, 100, 0, 0);
-            empty.setAlpha(0.6f);
-            empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
+                tr("No History Found", "История не найдена"), 
+                tr("Log your medicine intake to see stats here.", "Записывайте прием лекарств, чтобы увидеть статистику."));
             layout.addView(empty);
             animateViewIn(empty, 200);
         }
@@ -627,12 +656,9 @@ public class MainActivity extends AppCompatActivity {
         animateViewIn(btnAdd, 100);
 
         if (meds.isEmpty()) {
-            TextView empty = new TextView(this);
-            empty.setText(tr("Your warehouse is empty.", "Ваш склад пуст."));
-            empty.setGravity(Gravity.CENTER);
-            empty.setPadding(0, 100, 0, 0);
-            empty.setAlpha(0.6f);
-            empty.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
+                tr("Warehouse is Empty", "Склад пуст"), 
+                tr("Register your medicines to track stock.", "Зарегистрируйте лекарства для отслеживания запасов."));
             layout.addView(empty);
             animateViewIn(empty, 200);
         } else {
@@ -1055,13 +1081,10 @@ public class MainActivity extends AppCompatActivity {
         }
         
         if (!hasMeds) {
-            TextView tvEmpty = new TextView(this);
-            tvEmpty.setText(tr("No medicines scheduled for today", "Нет запланированных лекарств на сегодня"));
-            tvEmpty.setTextSize(15);
-            tvEmpty.setGravity(Gravity.CENTER);
-            tvEmpty.setPadding(0, 100, 0, 0);
-            tvEmpty.setAlpha(0.6f);
-            layout.addView(tvEmpty);
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
+                tr("Nothing for Today", "На сегодня ничего нет"), 
+                tr("Relax! No doses are scheduled for now.", "Отдыхайте! На данный момент приемов не запланировано."));
+            layout.addView(empty);
         }
     }
 
