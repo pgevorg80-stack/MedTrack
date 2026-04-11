@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -18,6 +19,7 @@ public class ProfileActivity extends AppCompatActivity {
     private ImageView ivProfileAvatar;
     private TextView tvUserEmail;
     private EditText etNewPassword, etConfirmPassword;
+    private TextInputLayout tilNewPassword, tilConfirmPassword;
     private MaterialButton btnSavePassword;
     private FirebaseAuth mAuth;
     private boolean isRussian = false;
@@ -43,6 +45,8 @@ public class ProfileActivity extends AppCompatActivity {
         tvUserEmail = findViewById(R.id.tv_profile_email);
         etNewPassword = findViewById(R.id.edit_password);
         etConfirmPassword = findViewById(R.id.edit_password_confirm);
+        tilNewPassword = findViewById(R.id.til_password);
+        tilConfirmPassword = findViewById(R.id.til_password_confirm);
         btnSavePassword = findViewById(R.id.btn_save_profile);
 
         updateUI();
@@ -93,8 +97,8 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        etNewPassword.setHint(tr("New Password", "Новый пароль"));
-        etConfirmPassword.setHint(tr("Confirm New Password", "Подтвердите пароль"));
+        if (tilNewPassword != null) tilNewPassword.setHint(tr("New Password", "Новый пароль"));
+        if (tilConfirmPassword != null) tilConfirmPassword.setHint(tr("Confirm New Password", "Подтвердите пароль"));
         btnSavePassword.setText(tr("Save Changes", "Сохранить изменения"));
         
         TextView label = findViewById(R.id.tv_label_change_pass);
