@@ -98,6 +98,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/widget_next_dose_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="NEXT DOSE"
@@ -107,46 +108,52 @@
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="4dp"/>
 
-            <FrameLayout
-                android:id="@+id/widget_next_dose_container"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:paddingLeft="10dp"
-                android:paddingTop="8dp"
-                android:paddingRight="10dp"
-                android:paddingBottom="8dp"
-                android:background="@drawable/nav_pill_background"
-                android:backgroundTint="#40FFFFFF">
+                android:layout_marginBottom="12dp">
+
+                <ImageView
+                    android:id="@+id/widget_next_dose_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:src="@drawable/nav_pill_background"
+                    android:scaleType="fitXY"
+                    android:alpha="0.25" />
 
                 <TextView
                     android:id="@+id/widget_next_dose"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:layout_centerInParent="true"
                     android:text="18:31"
                     android:textColor="#FFFFFF"
                     android:textSize="22sp"
                     android:textStyle="bold" />
-            </FrameLayout>
+            </RelativeLayout>
 
-            <FrameLayout
+            <RelativeLayout
                 android:id="@+id/widget_mic_btn"
                 android:layout_width="54dp"
                 android:layout_height="54dp"
                 android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/widget_dot_circle"
-                android:backgroundTint="#40FFFFFF">
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/widget_mic_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/widget_dot_circle"
+                    android:alpha="0.25" />
 
                 <ImageView
                     android:id="@+id/widget_mic_icon"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:layout_gravity="center"
+                    android:layout_centerInParent="true"
                     android:src="@android:drawable/ic_btn_speak_now"
                     android:tint="#FFFFFF" />
-            </FrameLayout>
+            </RelativeLayout>
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

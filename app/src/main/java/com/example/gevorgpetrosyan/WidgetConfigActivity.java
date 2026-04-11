@@ -32,11 +32,12 @@ public class WidgetConfigActivity extends AppCompatActivity {
 
     private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private ImageView widgetBackgroundPreview;
-    private SeekBar sbBgHue, sbTextHue;
+    private SeekBar sbBgHue, sbBgOpacity, sbTextHue;
     private CheckBox cbTextWhite;
     private boolean isRussian = false;
     
     private int currentBgColor = Color.parseColor("#2196F3");
+    private int currentBgOpacity = 255;
     private int currentTextColor = Color.WHITE;
 
     @Override
@@ -73,6 +74,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
 
         widgetBackgroundPreview = findViewById(R.id.widget_background_img);
         sbBgHue = findViewById(R.id.sb_bg_hue);
+        sbBgOpacity = findViewById(R.id.sb_bg_opacity);
         sbTextHue = findViewById(R.id.sb_text_hue);
         cbTextWhite = findViewById(R.id.cb_text_white);
 
@@ -95,6 +97,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
         };
 
         sbBgHue.setOnSeekBarChangeListener(listener);
+        sbBgOpacity.setOnSeekBarChangeListener(listener);
         sbTextHue.setOnSeekBarChangeListener(listener);
         cbTextWhite.setOnCheckedChangeListener((v, checked) -> updatePreview());
 
@@ -132,6 +135,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.tv_config_header)).setText(tr("Customize Your Widget", "Настройка виджета"));
         ((TextView) findViewById(R.id.tv_live_preview_label)).setText(tr("Live Preview", "Предпросмотр"));
         ((TextView) findViewById(R.id.tv_bg_color_label)).setText(tr("Background Color", "Цвет фона"));
+        ((TextView) findViewById(R.id.tv_bg_opacity_label)).setText(tr("Background Opacity", "Прозрачность фона"));
         ((TextView) findViewById(R.id.tv_text_color_label)).setText(tr("Text and Icons Color", "Цвет текста и иконок"));
         cbTextWhite.setText(tr("Keep text white (Better contrast)", "Белый текст (лучший контраст)"));
         ((MaterialButton) findViewById(R.id.btn_confirm)).setText(tr("ADD TO HOME SCREEN", "ДОБАВИТЬ НА ЭКРАН"));
@@ -140,6 +144,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
     private void updatePreview() {
         float[] bgHsv = {sbBgHue.getProgress(), 0.8f, 0.9f};
         currentBgColor = Color.HSVToColor(bgHsv);
+        currentBgOpacity = sbBgOpacity.getProgress();
         
         if (cbTextWhite.isChecked()) {
             currentTextColor = Color.WHITE;
@@ -151,19 +156,38 @@ public class WidgetConfigActivity extends AppCompatActivity {
         }
 
         if (widgetBackgroundPreview != null) {
+            int subTextColor = Color.argb(160, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor));
+            
             widgetBackgroundPreview.setColorFilter(currentBgColor);
+            widgetBackgroundPreview.setImageAlpha(currentBgOpacity);
             
             ((TextView)findViewById(R.id.widget_time)).setTextColor(currentTextColor);
-            ((TextView)findViewById(R.id.widget_date)).setTextColor(Color.argb(160, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor)));
+            ((TextView)findViewById(R.id.widget_date)).setTextColor(subTextColor);
             ((TextView)findViewById(R.id.widget_date)).setText(new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
+            
+            TextView nextDoseLabel = findViewById(R.id.widget_next_dose_label);
+            if (nextDoseLabel != null) {
+                nextDoseLabel.setTextColor(Color.argb(204, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor)));
+            }
+            
             ((TextView)findViewById(R.id.widget_next_dose)).setTextColor(currentTextColor);
             ((ImageView)findViewById(R.id.widget_mic_icon)).setColorFilter(currentTextColor);
+            
+            ImageView doseBg = findViewById(R.id.widget_next_dose_bg);
+            if (doseBg != null) {
+                doseBg.setColorFilter(currentTextColor);
+                doseBg.setImageAlpha(64);
+            }
+            
+            ImageView micBg = findViewById(R.id.widget_mic_bg);
+            if (micBg != null) {
+                micBg.setColorFilter(currentTextColor);
+                micBg.setImageAlpha(64);
+            }
             
             int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
             int[] tvIds = {R.id.tv_day_1, R.id.tv_day_2, R.id.tv_day_3, R.id.tv_day_4, R.id.tv_day_5, R.id.tv_day_6, R.id.tv_day_7};
             int[] dotIds = {R.id.dot_day_1, R.id.dot_day_2, R.id.dot_day_3, R.id.dot_day_4, R.id.dot_day_5, R.id.dot_day_6, R.id.dot_day_7};
-            
-            int subTextColor = Color.argb(160, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor));
 
             for (int i = 1; i <= 7; i++) {
                 TextView tvDay = findViewById(tvIds[i-1]);
@@ -207,6 +231,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
         prefs.edit()
             .putInt("bg_color_" + id, currentBgColor)
             .putInt("text_color_" + id, currentTextColor)
+            .putInt("bg_opacity_" + id, currentBgOpacity)
             .apply();
     }
 
@@ -220,6 +245,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
                 callbackIntent.setAction("com.example.gevorgpetrosyan.WIDGET_PINNED");
                 callbackIntent.putExtra("pending_bg", currentBgColor);
                 callbackIntent.putExtra("pending_text", currentTextColor);
+                callbackIntent.putExtra("pending_opacity", currentBgOpacity);
                 
                 PendingIntent successCallback = PendingIntent.getBroadcast(this, 0, 
                         callbackIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);

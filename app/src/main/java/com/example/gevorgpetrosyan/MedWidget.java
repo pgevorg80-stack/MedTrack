@@ -39,6 +39,7 @@ public class MedWidget extends AppWidgetProvider {
         for (int appWidgetId : appWidgetIds) {
             editor.remove("bg_color_" + appWidgetId);
             editor.remove("text_color_" + appWidgetId);
+            editor.remove("bg_opacity_" + appWidgetId);
         }
         editor.apply();
     }
@@ -53,11 +54,13 @@ public class MedWidget extends AppWidgetProvider {
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
                 int bgColor = intent.getIntExtra("pending_bg", Color.parseColor("#2196F3"));
                 int textColor = intent.getIntExtra("pending_text", Color.WHITE);
+                int opacity = intent.getIntExtra("pending_opacity", 255);
                 
                 SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
                 prefs.edit()
                     .putInt("bg_color_" + appWidgetId, bgColor)
                     .putInt("text_color_" + appWidgetId, textColor)
+                    .putInt("bg_opacity_" + appWidgetId, opacity)
                     .apply();
                     
                 updateAppWidget(context, appWidgetManager, appWidgetId);
@@ -81,10 +84,12 @@ public class MedWidget extends AppWidgetProvider {
         SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
         int bgColor = prefs.getInt("bg_color_" + appWidgetId, Color.parseColor("#2196F3"));
         int textColor = prefs.getInt("text_color_" + appWidgetId, Color.WHITE);
+        int opacity = prefs.getInt("bg_opacity_" + appWidgetId, 255);
         int subTextColor = Color.argb(160, Color.red(textColor), Color.green(textColor), Color.blue(textColor));
 
-        // Apply background tint
+        // Apply background tint and opacity
         views.setInt(R.id.widget_background_img, "setColorFilter", bgColor);
+        views.setInt(R.id.widget_background_img, "setImageAlpha", opacity);
 
         // Update Time
         String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
@@ -123,6 +128,13 @@ public class MedWidget extends AppWidgetProvider {
 
         views.setInt(R.id.widget_mic_icon, "setColorFilter", textColor);
         views.setTextColor(R.id.widget_next_dose, textColor);
+        
+        // Apply colors to new elements (Labels and pill backgrounds)
+        views.setTextColor(R.id.widget_next_dose_label, Color.argb(204, Color.red(textColor), Color.green(textColor), Color.blue(textColor)));
+        views.setInt(R.id.widget_next_dose_bg, "setColorFilter", textColor);
+        views.setInt(R.id.widget_next_dose_bg, "setImageAlpha", 64);
+        views.setInt(R.id.widget_mic_bg, "setColorFilter", textColor);
+        views.setInt(R.id.widget_mic_bg, "setImageAlpha", 64);
 
         // Setup Mic Click
         Intent intent = new Intent(context, MainActivity.class);
