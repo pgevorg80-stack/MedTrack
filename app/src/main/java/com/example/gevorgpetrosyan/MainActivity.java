@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.view_pager);
         drawerLayout = findViewById(R.id.drawer_layout);
         
-        // Init Success Overlay
+        // Init Success Overlay ggg
         successOverlay = findViewById(R.id.success_overlay);
         successContent = findViewById(R.id.success_content);
         successCheckmark = findViewById(R.id.success_checkmark);
