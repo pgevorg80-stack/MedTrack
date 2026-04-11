@@ -30,7 +30,6 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private EditText etEmail, etPassword;
     private View loginCard, loginTitle, logo, registerLink, themeSwitcher;
-    private TextView tvLight, tvDark;
     private ImageView ivThemeKnob;
     private TextInputLayout tilEmail, tilPassword;
     private MaterialButton btnLangToggle;
@@ -59,8 +58,6 @@ public class LoginActivity extends AppCompatActivity {
         registerLink = findViewById(R.id.tv_register_link);
         btnLangToggle = findViewById(R.id.btn_lang_toggle);
         themeSwitcher = findViewById(R.id.theme_switcher_container);
-        tvLight = findViewById(R.id.tv_light_label);
-        tvDark = findViewById(R.id.tv_dark_label);
         ivThemeKnob = findViewById(R.id.iv_theme_icon_knob);
 
         updateTranslations();
@@ -104,9 +101,6 @@ public class LoginActivity extends AppCompatActivity {
         btnGuest.setText(tr("Continue as Guest", "Продолжить как гость"));
         ((TextView)registerLink).setText(tr("New here? Create Account", "Впервые здесь? Создать аккаунт"));
         btnLangToggle.setText(isRussian ? "RU" : "EN");
-
-        if (tvLight != null) tvLight.setText(tr("Light", "Светлая"));
-        if (tvDark != null) tvDark.setText(tr("Dark", "Темная"));
     }
 
     private void toggleTheme() {
@@ -126,9 +120,6 @@ public class LoginActivity extends AppCompatActivity {
                     AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
                 })
                 .start();
-
-        if (tvLight != null) tvLight.animate().alpha(nextDark ? 0.5f : 1.0f).setDuration(300).start();
-        if (tvDark != null) tvDark.animate().alpha(nextDark ? 1.0f : 0.5f).setDuration(300).start();
     }
 
     private void updateThemeUI(boolean animate) {
@@ -149,10 +140,6 @@ public class LoginActivity extends AppCompatActivity {
 
         ivThemeKnob.setImageResource(isDark ? R.drawable.ic_moon : R.drawable.ic_sun);
         ivThemeKnob.setImageTintList(ColorStateList.valueOf(Color.parseColor("#2196F3")));
-
-        // Update label opacity
-        if (tvLight != null) tvLight.setAlpha(isDark ? 0.5f : 1.0f);
-        if (tvDark != null) tvDark.setAlpha(isDark ? 1.0f : 0.5f);
     }
 
     private void applySavedTheme() {

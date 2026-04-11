@@ -55,20 +55,10 @@
             android:clickable="true"
             android:focusable="true">
 
-            <TextView
-                android:id="@+id/tv_light_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Light"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
-
             <FrameLayout
                 android:id="@+id/theme_toggle_pill"
                 android:layout_width="54dp"
                 android:layout_height="28dp"
-                android:layout_marginHorizontal="8dp"
                 android:background="@drawable/nav_pill_background"
                 android:backgroundTint="#25000000">
 
@@ -85,15 +75,6 @@
                     android:src="@drawable/ic_sun"
                     app:tint="#2196F3" />
             </FrameLayout>
-
-            <TextView
-                android:id="@+id/tv_dark_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Dark"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
         </LinearLayout>
     </LinearLayout>
 
