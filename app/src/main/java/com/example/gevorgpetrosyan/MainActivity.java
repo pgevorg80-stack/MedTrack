@@ -916,11 +916,20 @@ public class MainActivity extends AppCompatActivity {
         leftPart.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1.8f));
         leftPart.setGravity(Gravity.CENTER_VERTICAL);
 
+        TextView tvDate = new TextView(this);
+        tvDate.setText(new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
+        tvDate.setTextSize(14);
+        tvDate.setTextColor(Color.parseColor("#B0FFFFFF"));
+        tvDate.setTypeface(null, Typeface.BOLD);
+        tvDate.setPadding(5, 0, 0, 0);
+        leftPart.addView(tvDate);
+
         TextView tvTime = new TextView(this);
         tvTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
-        tvTime.setTextSize(54);
+        tvTime.setTextSize(64);
         tvTime.setTextColor(Color.WHITE);
-        tvTime.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        tvTime.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        tvTime.setLetterSpacing(-0.02f);
         leftPart.addView(tvTime);
 
         LinearLayout weekGrid = new LinearLayout(this);
