@@ -51,6 +51,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
@@ -159,6 +162,14 @@ public class MainActivity extends AppCompatActivity {
         FirestoreHelper.syncFromFirestore(currentUserId, db, () -> runOnUiThread(this::refreshCurrentTab));
         
         setContentView(R.layout.activity_main);
+
+        // Hide navigation bar for immersive experience
+        WindowInsetsControllerCompat windowInsetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        windowInsetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        );
+        windowInsetsController.hide(WindowInsetsCompat.Type.navigationBars());
 
         requestNotificationPermission();
 

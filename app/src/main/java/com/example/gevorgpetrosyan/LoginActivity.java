@@ -17,6 +17,9 @@ import android.content.SharedPreferences;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -40,6 +43,14 @@ public class LoginActivity extends AppCompatActivity {
         applySavedTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        // Hide navigation bar for immersive experience
+        WindowInsetsControllerCompat windowInsetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        windowInsetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        );
+        windowInsetsController.hide(WindowInsetsCompat.Type.navigationBars());
 
         requestNotificationPermission();
 

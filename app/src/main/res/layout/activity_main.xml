@@ -15,8 +15,10 @@
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/nav_container"
-            android:padding="15dp"
+            android:paddingStart="15dp"
+            android:paddingTop="15dp"
+            android:paddingEnd="15dp"
+            android:paddingBottom="104dp"
             android:clipToPadding="false" />
 
         <RelativeLayout
