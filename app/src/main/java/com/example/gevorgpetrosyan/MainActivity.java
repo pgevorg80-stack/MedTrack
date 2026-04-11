@@ -1990,17 +1990,53 @@ public class MainActivity extends AppCompatActivity {
         btnClose.setLayoutParams(btnLp);
         
         layout.addView(btnClose);
+
+        MaterialButton btnDeleteImg = new MaterialButton(this);
+        btnDeleteImg.setText(tr("Delete Photo", "Удалить фото"));
+        btnDeleteImg.setAllCaps(false);
+        btnDeleteImg.setCornerRadius((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, getResources().getDisplayMetrics()));
+        btnDeleteImg.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F44336")));
+        btnDeleteImg.setTextColor(Color.WHITE);
+        btnDeleteImg.setIconResource(android.R.drawable.ic_menu_delete);
+        btnDeleteImg.setIconTint(ColorStateList.valueOf(Color.WHITE));
+        btnDeleteImg.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
+        LinearLayout.LayoutParams delLp = new LinearLayout.LayoutParams(-1, (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, getResources().getDisplayMetrics()));
+        delLp.setMargins(0, 20, 0, 0);
+        btnDeleteImg.setLayoutParams(delLp);
+
+        layout.addView(btnDeleteImg);
         root.addView(layout);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(root)
                 .create();
-        
+
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnDeleteImg.setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                .setTitle(tr("Delete Photo", "Удалить фото"))
+                .setMessage(tr("Are you sure you want to delete this medicine photo?", "Вы уверены, что хотите удалить фото этого лекарства?"))
+                .setPositiveButton(tr("Delete", "Удалить"), (d, w) -> {
+                    diskExecutor.execute(() -> {
+                        if (file.exists()) file.delete();
+                        m.imagePath = null;
+                        m.lastUpdated = System.currentTimeMillis();
+                        db.medicineDao().update(m);
+                        FirestoreHelper.uploadMedicine(m);
+                        runOnUiThread(() -> {
+                            dialog.dismiss();
+                            refreshCurrentTab();
+                            Toast.makeText(this, tr("Photo deleted", "Фото удалено"), Toast.LENGTH_SHORT).show();
+                        });
+                    });
+                })
+                .setNegativeButton(tr("Cancel", "Отмена"), null)
+                .show();
+        });
         dialog.show();
     }
 
