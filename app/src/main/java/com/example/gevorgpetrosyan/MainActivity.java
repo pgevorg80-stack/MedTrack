@@ -413,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
                 btnSync.setIconTint(null);
                 refreshCurrentTab();
                 updateWidget();
-                showStatusAnimation(android.R.drawable.stat_notify_sync, tr("Synced!", "Готово!"));
+                showStatusAnimation(R.drawable.ic_sync_anim, tr("Synced!", "Готово!"));
             });
         });
     }
