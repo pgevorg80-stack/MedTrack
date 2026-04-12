@@ -461,7 +461,11 @@ public class MainActivity extends AppCompatActivity {
             ((ImageView) langKnob).setImageTintList(null); // Clear tint to show flag colors
         }
 
-        ((MaterialButton) findViewById(R.id.btn_add_widget)).setText(tr("Add widget", "Добавить виджет"));
+        MaterialButton btnAddWidget = findViewById(R.id.btn_add_widget);
+        if (btnAddWidget != null) {
+            btnAddWidget.setText(tr("Add widget", "Добавить виджет"));
+            btnAddWidget.setTextSize(TypedValue.COMPLEX_UNIT_SP, isRussian ? 13 : 14);
+        }
         ((MaterialButton) findViewById(R.id.btn_share)).setText(tr("Share App", "Поделиться"));
         ((MaterialButton) findViewById(R.id.btn_sync)).setText(tr("Sync Data", "Синхронизация"));
         ((MaterialButton) findViewById(R.id.btn_support)).setText(tr("Support", "Поддержка"));
