@@ -437,8 +437,8 @@ public class MainActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.tv_settings_header)).setText(tr("SETTINGS", "НАСТРОЙКИ"));
         ((MaterialButton) findViewById(R.id.btn_profile)).setText(tr("My Profile", "Мой профиль"));
-        ((TextView) findViewById(R.id.tv_light_label)).setText(tr("Light", "Светлая"));
-        ((TextView) findViewById(R.id.tv_dark_label)).setText(tr("Dark", "Темная"));
+        ((TextView) findViewById(R.id.tv_light_label)).setText(tr("Light", "День"));
+        ((TextView) findViewById(R.id.tv_dark_label)).setText(tr("Dark", "Ночь"));
         
         // Language labels
         TextView enLabel = findViewById(R.id.tv_lang_en_label);
