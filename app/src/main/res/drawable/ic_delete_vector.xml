@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Scraps of paper that will fly out -->
+    <group android:name="scrap1" android:translateX="12" android:translateY="12" android:alpha="0">
+        <path android:fillColor="#F44336" android:pathData="M-1,-1 h2 v2 h-2 z" />
+    </group>
+    <group android:name="scrap2" android:translateX="12" android:translateY="12" android:alpha="0">
+        <path android:fillColor="#F44336" android:pathData="M-1,-1 h2 v2 h-2 z" />
+    </group>
+    <group android:name="scrap3" android:translateX="12" android:translateY="12" android:alpha="0">
+        <path android:fillColor="#F44336" android:pathData="M-1,-1 h2 v2 h-2 z" />
+    </group>
+
+    <group
+        android:name="lid_group"
+        android:pivotX="5"
+        android:pivotY="6">
+        <path
+            android:name="lid_path"
+            android:fillColor="#F44336"
+            android:pathData="M15.5,4l-1,-1h-5l-1,1H5v2h14V4H15.5z" />
+    </group>
+
+    <group
+        android:name="bin_group"
+        android:pivotX="12"
+        android:pivotY="21">
+        <path
+            android:name="bin_path"
+            android:fillColor="#F44336"
+            android:pathData="M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2V7H6V19z" />
+    </group>
+</vector>
