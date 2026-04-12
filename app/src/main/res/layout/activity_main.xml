@@ -255,6 +255,10 @@
                 app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
                 android:textColor="#FFFFFF"
+                app:icon="@drawable/ic_profile_button"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
             <!-- Modern Theme Switcher -->
@@ -394,6 +398,10 @@
                 app:cornerRadius="32dp"
                 android:backgroundTint="#2196F3"
                 android:textColor="#FFFFFF"
+                app:icon="@drawable/ic_widget"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
             <com.google.android.material.button.MaterialButton
