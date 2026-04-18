@@ -79,9 +79,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import android.widget.GridLayout;
 import java.util.Set;
 
 import android.graphics.Bitmap;
@@ -681,13 +683,17 @@ public class MainActivity extends AppCompatActivity {
     private void populateStats(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Usage History", "История использования")));
         
-        MaterialButton btnPdf = createActionButton(tr("+ Add PDF", "+ Создать PDF"));
+        MaterialButton btnPdf = createActionButton(tr("+ Export PDF Report", "+ Экспорт PDF Отчета"));
         LinearLayout.LayoutParams pdfLp = new LinearLayout.LayoutParams(-1, -2);
         pdfLp.setMargins(0, 0, 0, 30);
         btnPdf.setLayoutParams(pdfLp);
         btnPdf.setOnClickListener(v -> showPdfDatePicker(meds));
         layout.addView(btnPdf);
         animateViewIn(btnPdf, 100);
+
+        // --- Heatmap Section (Restored Positioning) ---
+        layout.addView(createHeatmapView(meds));
+        // -----------------------
 
         boolean hasHistory = false;
         int delay = 200;
@@ -713,6 +719,156 @@ public class MainActivity extends AppCompatActivity {
             layout.addView(empty);
             animateViewIn(empty, 200);
         }
+    }
+
+    private View createHeatmapView(List<Medicine> meds) {
+        SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
+        boolean isDark = pref.getBoolean("IsDarkMode", false);
+        
+        int bgColor = isDark ? Color.parseColor("#252525") : Color.WHITE;
+        int strokeColor = isDark ? Color.parseColor("#444444") : Color.parseColor("#CCCCCC");
+        int textColor = isDark ? Color.WHITE : Color.parseColor("#111111");
+        int emptySquareColor = isDark ? Color.parseColor("#333333") : Color.parseColor("#F0F0F0");
+
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        
+        android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+        bg.setColor(bgColor);
+        bg.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics()));
+        
+        int strokeWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1.5f, getResources().getDisplayMetrics());
+        bg.setStroke(strokeWidth, strokeColor);
+        
+        container.setBackground(bg);
+        container.setPadding(45, 45, 45, 45);
+        
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, 0, 0, 45);
+        container.setLayoutParams(lp);
+
+        TextView title = new TextView(this);
+        title.setText(tr("Health Consistency (Last 90 Days)", "Активность (последние 90 дней)"));
+        title.setTypeface(null, Typeface.BOLD);
+        title.setTextColor(textColor);
+        title.setTextSize(16);
+        title.setGravity(Gravity.START);
+        container.addView(title);
+
+        // Align grid to the left
+        LinearLayout gridWrapper = new LinearLayout(this);
+        gridWrapper.setGravity(Gravity.START);
+        gridWrapper.setPadding(0, 30, 0, 30);
+        
+        GridLayout grid = new GridLayout(this);
+        grid.setColumnCount(13); // Approx 13 weeks
+        
+        // Calculate dose counts per day
+        Map<String, Integer> dailyCounts = new HashMap<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.ENGLISH);
+        Calendar cal = Calendar.getInstance();
+        
+        int totalScheduledPerDay = 0;
+        for (Medicine m : meds) {
+            if (m.times != null && !m.times.isEmpty()) {
+                totalScheduledPerDay += m.times.split(",").length;
+            }
+            if (m.history == null) continue;
+            String[] parts = m.history.split(",");
+            for (int i = 0; i < parts.length - 1; i += 2) {
+                String date = parts[i].trim();
+                dailyCounts.put(date, dailyCounts.getOrDefault(date, 0) + 1);
+            }
+        }
+
+        // Draw 90 squares
+        cal.add(Calendar.DAY_OF_YEAR, -90);
+        for (int i = 0; i < 91; i++) {
+            String dateKey = sdf.format(cal.getTime());
+            Integer countObj = dailyCounts.get(dateKey);
+            int taken = (countObj == null) ? 0 : countObj;
+            
+            int percentage = 0;
+            if (totalScheduledPerDay > 0) {
+                percentage = (int) Math.min(100, (taken * 100.0) / totalScheduledPerDay);
+            } else if (taken > 0) {
+                percentage = 100;
+            }
+
+            View square = new View(this);
+            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 18, getResources().getDisplayMetrics());
+            GridLayout.LayoutParams slp = new GridLayout.LayoutParams();
+            slp.width = size;
+            slp.height = size;
+            slp.setMargins(4, 4, 4, 4);
+            square.setLayoutParams(slp);
+            
+            // Percentage-based color palette (Adaptive for Dark Mode)
+            String color = (isDark ? "#333333" : "#F0F0F0"); // Default Empty
+            if (percentage > 0 && percentage <= 15) color = (isDark ? "#4A1A1A" : "#FFEBEE");
+            else if (percentage > 15 && percentage <= 35) color = (isDark ? "#7B1F1F" : "#FFCDD2");
+            else if (percentage > 35 && percentage <= 55) color = (isDark ? "#C62828" : "#EF5350");
+            else if (percentage > 55 && percentage <= 75) color = (isDark ? "#EF6C00" : "#FFB74D");
+            else if (percentage > 75 && percentage <= 90) color = (isDark ? "#2E7D32" : "#A5D6A7");
+            else if (percentage > 90 && percentage < 100) color = (isDark ? "#43A047" : "#4CAF50");
+            else if (percentage >= 100) color = (isDark ? "#1B5E20" : "#1B5E20");
+            
+            android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+            shape.setCornerRadius(8);
+            shape.setColor(Color.parseColor(color));
+            square.setBackground(shape);
+            
+            grid.addView(square);
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        gridWrapper.addView(grid);
+        container.addView(gridWrapper);
+
+        // Legend aligned to start
+        LinearLayout legend = new LinearLayout(this);
+        legend.setOrientation(LinearLayout.HORIZONTAL);
+        legend.setGravity(Gravity.START);
+        
+        TextView lblLess = new TextView(this);
+        lblLess.setText(tr("0% ", "0% "));
+        lblLess.setTextSize(10);
+        lblLess.setTextColor(textColor);
+        legend.addView(lblLess);
+        
+        String[] colors = {emptySquareColor + "", "#FFEBEE", "#FFCDD2", "#EF5350", "#FFB74D", "#A5D6A7", "#4CAF50", "#1B5E20"};
+        // Recalculate colors for legend based on mode
+        for (int j = 0; j < colors.length; j++) {
+             String c;
+             if (j == 0) c = (isDark ? "#333333" : "#F0F0F0");
+             else if (j == 1) c = (isDark ? "#4A1A1A" : "#FFEBEE");
+             else if (j == 2) c = (isDark ? "#7B1F1F" : "#FFCDD2");
+             else if (j == 3) c = (isDark ? "#C62828" : "#EF5350");
+             else if (j == 4) c = (isDark ? "#EF6C00" : "#FFB74D");
+             else if (j == 5) c = (isDark ? "#2E7D32" : "#A5D6A7");
+             else if (j == 6) c = (isDark ? "#43A047" : "#4CAF50");
+             else c = "#1B5E20";
+
+            View s = new View(this);
+            int sSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics());
+            LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(sSize, sSize);
+            sLp.setMargins(4, 0, 4, 0);
+            s.setLayoutParams(sLp);
+            android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+            g.setCornerRadius(4);
+            g.setColor(Color.parseColor(c));
+            s.setBackground(g);
+            legend.addView(s);
+        }
+
+        TextView lblMore = new TextView(this);
+        lblMore.setText(tr(" 100%", " 100%"));
+        lblMore.setTextSize(10);
+        lblMore.setTextColor(textColor);
+        legend.addView(lblMore);
+        
+        container.addView(legend);
+
+        return container;
     }
 
     private void populateInventory(LinearLayout layout, List<Medicine> meds) {
