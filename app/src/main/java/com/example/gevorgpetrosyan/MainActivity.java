@@ -57,8 +57,18 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.graphics.Matrix;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
 import androidx.exifinterface.media.ExifInterface;
 import com.bumptech.glide.Glide;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
 import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -139,6 +149,13 @@ public class MainActivity extends AppCompatActivity {
 
     private SectionsPagerAdapter sectionsPagerAdapter;
     private String currentUserId;
+
+    // Wink-to-Log
+    private PreviewView winkPreviewView;
+    private FaceDetector winkDetector;
+    private boolean isWinkDetectionActive = false;
+    private long lastWinkTime = 0;
+    private static final long WINK_COOLDOWN = 3000; // 3 seconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,6 +238,13 @@ public class MainActivity extends AppCompatActivity {
         successCheckmark = findViewById(R.id.success_checkmark);
         tvSuccessMsg = findViewById(R.id.tv_success_msg);
 
+        winkPreviewView = findViewById(R.id.wink_preview_view);
+        FaceDetectorOptions options = new FaceDetectorOptions.Builder()
+                .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .build();
+        winkDetector = FaceDetection.getClient(options);
+
         sectionsPagerAdapter = new SectionsPagerAdapter();
         viewPager.setAdapter(sectionsPagerAdapter);
 
@@ -250,6 +274,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 updateBottomNavSelection(position);
+                if (position == 3) {
+                    startWinkDetection();
+                } else {
+                    stopWinkDetection();
+                }
             }
         });
 
@@ -1653,16 +1682,29 @@ public class MainActivity extends AppCompatActivity {
         if (m.times == null || m.times.isEmpty()) return "--:--";
         Calendar now = Calendar.getInstance();
         int nowTotal = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
+        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+
         String closest = "--:--";
         int minDiff = Integer.MAX_VALUE;
         for (String t : m.times.split(",")) {
             try {
-                String[] p = t.trim().split(":");
+                String time = t.trim();
+                String[] p = time.split(":");
                 int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
+
+                // If already taken today at this specific time, skip to next occurrence
+                if (m.history != null && m.history.contains(todayStr) && m.history.contains(time)) {
+                    continue;
+                }
+
                 int diff = total - nowTotal;
                 if (diff < 0) diff += 1440;
-                if (diff < minDiff) { minDiff = diff; closest = t.trim(); }
-            } catch (Exception ignored) {}
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = time;
+                }
+            } catch (Exception ignored) {
+            }
         }
         return closest;
     }
@@ -1856,18 +1898,31 @@ public class MainActivity extends AppCompatActivity {
     private String getNextUpcomingDose(List<Medicine> meds) {
         Calendar now = Calendar.getInstance();
         int nowTotal = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
+        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+
         String closest = "--:--";
         int minDiff = Integer.MAX_VALUE;
         for (Medicine m : meds) {
-            if (m.times == null) continue;
+            if (m.times == null || m.times.isEmpty()) continue;
             for (String t : m.times.split(",")) {
                 try {
-                    String[] p = t.trim().split(":");
+                    String time = t.trim();
+                    String[] p = time.split(":");
                     int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
+
+                    // Skip if taken today
+                    if (m.history != null && m.history.contains(todayStr) && m.history.contains(time)) {
+                        continue;
+                    }
+
                     int diff = total - nowTotal;
                     if (diff < 0) diff += 1440;
-                    if (diff < minDiff) { minDiff = diff; closest = t.trim(); }
-                } catch (Exception ignored) {}
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = time;
+                    }
+                } catch (Exception ignored) {
+                }
             }
         }
         return closest;
@@ -2060,10 +2115,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void logManualIntake(Medicine m) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            String dateStamp = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(new Date());
+            String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+            String scheduledTime = getNextDoseForMed(m);
+            
             m.batches = subtractFromBatches(m.batches, m.dosage);
             if (m.history == null) m.history = "";
-            m.history += dateStamp + (isRussian ? " - Принято," : " - Taken,");
+            
+            String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+            String historyEntry = todayStr + " " + (scheduledTime.equals("--:--") ? timeStamp : scheduledTime);
+            
+            m.history += historyEntry + (isRussian ? " - Принято," : " - Taken,");
             m.lastUpdated = System.currentTimeMillis();
             int totalStock = calculateTotalStock(m.batches);
             if (totalStock <= 0) {
@@ -2840,6 +2901,130 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startWinkDetection() {
+        if (isWinkDetectionActive) return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            androidx.core.app.ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 104);
+            return;
+        }
+
+        isWinkDetectionActive = true;
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                
+                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+                imageAnalysis.setAnalyzer(executor, image -> {
+                    processImageForWink(image);
+                });
+
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA;
+                cameraProvider.unbindAll();
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void stopWinkDetection() {
+        isWinkDetectionActive = false;
+        try {
+            ProcessCameraProvider.getInstance(this).get().unbindAll();
+        } catch (Exception ignored) {}
+    }
+
+        @androidx.annotation.OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
+    private void processImageForWink(ImageProxy imageProxy) {
+        if (imageProxy.getImage() == null) {
+            imageProxy.close();
+            return;
+        }
+
+        InputImage image = InputImage.fromMediaImage(imageProxy.getImage(), imageProxy.getImageInfo().getRotationDegrees());
+        winkDetector.process(image)
+                .addOnSuccessListener(faces -> {
+                    for (Face face : faces) {
+                        if (face.getRightEyeOpenProbability() != null && face.getLeftEyeOpenProbability() != null) {
+                            float rightOpen = face.getRightEyeOpenProbability();
+                            float leftOpen = face.getLeftEyeOpenProbability();
+
+                            // Thresholds: right eye closed (< 0.2), left eye open (> 0.8)
+                            if (rightOpen < 0.25f && leftOpen > 0.75f) {
+                                long currentTime = System.currentTimeMillis();
+                                if (currentTime - lastWinkTime > WINK_COOLDOWN) {
+                                    lastWinkTime = currentTime;
+                                    runOnUiThread(this::takeAllNearestMeds);
+                                }
+                            }
+                        }
+                    }
+                })
+                .addOnCompleteListener(task -> imageProxy.close());
+    }
+
+    private void takeAllNearestMeds() {
+        executor.execute(() -> {
+            List<Medicine> meds = db.medicineDao().getAll();
+            if (meds == null || meds.isEmpty()) return;
+            
+            String globalNext = getNextUpcomingDose(meds);
+            if (globalNext.equals("--:--")) return;
+
+            boolean triggered = false;
+            for (Medicine m : meds) {
+                if (getNextDoseForMed(m).equals(globalNext)) {
+                    logManualIntakeSync(m);
+                    triggered = true;
+                }
+            }
+            if (triggered) {
+                runOnUiThread(() -> {
+                    showSuccessAnimation();
+                    refreshCurrentTab();
+                    updateWidget();
+                });
+            }
+        });
+    }
+
+    private void logManualIntakeSync(Medicine m) {
+        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        
+        // Determine the scheduled dose time before we log it
+        String scheduledTime = getNextDoseForMed(m);
+        
+        m.batches = subtractFromBatches(m.batches, m.dosage);
+        if (m.history == null) m.history = "";
+        
+        // Add a history entry that includes the date AND specific scheduled time
+        // so getNextUpcomingDose() can identify it as "already taken today"
+        String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+        String historyEntry = todayStr + " " + (scheduledTime.equals("--:--") ? timeStamp : scheduledTime);
+        
+        m.history += historyEntry + (isRussian ? " - Принято," : " - Taken,");
+        m.lastUpdated = System.currentTimeMillis();
+
+        int totalStock = calculateTotalStock(m.batches);
+        if (totalStock <= 0) {
+            sendStatusNotification(m.name, tr("OUT OF STOCK!", "НЕТ В НАЛИЧИИ!"));
+        } else if (totalStock <= 3 * m.dosage) {
+            sendStatusNotification(m.name, tr("LOW STOCK (3 days left)!", "низкий запас (осталось на 3 дня)!"));
+        }
+
+        if (isMedicineExpired(m.batches)) {
+            sendStatusNotification(m.name, tr("EXPIRED!", "ПРОСРОЧЕНО!"));
+        } else if (isMedicineNearExpiry(m.batches, m.expiryWarningDays)) {
+            sendStatusNotification(m.name, tr("EXPIRING SOON!", "СКОРО ИСТЕКАЕТ!"));
+        }
+        db.medicineDao().update(m);
+        FirestoreHelper.uploadMedicine(m);
+    }
+
     private void refreshCurrentTab() {
         if (sectionsPagerAdapter != null && viewPager != null) {
             sectionsPagerAdapter.notifyDataSetChanged();
@@ -3043,7 +3228,9 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 104) { // Camera
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (ocrTargetEditText != null) {
+                if (viewPager.getCurrentItem() == 3) {
+                    startWinkDetection();
+                } else if (ocrTargetEditText != null) {
                     try {
                         takePictureLauncher.launch(null);
                     } catch (Exception e) {
@@ -3067,6 +3254,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (speechRecognizer != null) speechRecognizer.destroy();
+        if (winkDetector != null) winkDetector.close();
         super.onDestroy();
     }
 }

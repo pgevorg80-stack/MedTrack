@@ -11,6 +11,8 @@ roomRuntime = "2.6.1"
 roomCompiler = "2.6.1"
 googleGmsGoogleServices = "4.4.2"
 mlkitTextRecognition = "19.0.1"
+mlkitFaceDetection = "17.1.0"
+cameraxVersion = "1.4.1"
 firebaseDatabase = "22.0.1"
 firebase-bom = "32.7.0"
 glide = "4.16.0"
@@ -31,6 +33,11 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitTextRecognition" }
+mlkit-face-detection = { group = "com.google.android.gms", name = "play-services-mlkit-face-detection", version.ref = "mlkitFaceDetection" }
+camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraxVersion" }
+camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "cameraxVersion" }
+camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraxVersion" }
+camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraxVersion" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }

@@ -21,6 +21,13 @@
             android:paddingBottom="104dp"
             android:clipToPadding="false" />
 
+        <!-- Wink-to-Log Camera Preview (Hidden but active) -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/wink_preview_view"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:alpha="0" />
+
         <RelativeLayout
             android:id="@+id/nav_container"
             android:layout_width="match_parent"

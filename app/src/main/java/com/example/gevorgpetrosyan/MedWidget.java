@@ -182,18 +182,31 @@ public class MedWidget extends AppWidgetProvider {
     private static String getNextUpcomingDose(List<Medicine> meds) {
         Calendar now = Calendar.getInstance();
         int nowTotal = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
+        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+
         String closest = "--:--";
         int minDiff = Integer.MAX_VALUE;
         for (Medicine m : meds) {
             if (m.times == null || m.times.isEmpty()) continue;
             for (String t : m.times.split(",")) {
                 try {
-                    String[] p = t.trim().split(":");
+                    String time = t.trim();
+                    String[] p = time.split(":");
                     int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
+
+                    // Skip if taken today at this specific time
+                    if (m.history != null && m.history.contains(todayStr) && m.history.contains(time)) {
+                        continue;
+                    }
+
                     int diff = total - nowTotal;
                     if (diff < 0) diff += 1440;
-                    if (diff < minDiff) { minDiff = diff; closest = t.trim(); }
-                } catch (Exception ignored) {}
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = time;
+                    }
+                } catch (Exception ignored) {
+                }
             }
         }
         return closest;

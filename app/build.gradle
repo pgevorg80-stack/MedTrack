@@ -40,6 +40,11 @@ dependencies {
     implementation libs.firebase.auth
     implementation libs.firebase.firestore
     implementation libs.mlkit.text.recognition
+    implementation libs.mlkit.face.detection
+    implementation libs.camera.core
+    implementation libs.camera.camera2
+    implementation libs.camera.lifecycle
+    implementation libs.camera.view
     implementation libs.exifinterface
     implementation libs.glide
 
