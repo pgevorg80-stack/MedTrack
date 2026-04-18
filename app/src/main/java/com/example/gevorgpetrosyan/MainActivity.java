@@ -8,8 +8,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,8 +32,6 @@ import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.OvershootInterpolator;
-import android.view.animation.ScaleAnimation;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -66,9 +62,8 @@ import com.bumptech.glide.Glide;
 import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import com.google.android.gms.tasks.Task;
+
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
@@ -88,13 +83,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
 import android.content.ContentValues;
 import android.net.Uri;
@@ -877,6 +870,20 @@ public class MainActivity extends AppCompatActivity {
                 if (daysLeft <= 3) {
                     tvPredict.setTextColor(Color.parseColor("#F44336"));
                     predText += " " + tr("(Refill Soon!)", "(Срочно!)");
+
+                    MaterialButton btnFind = new MaterialButton(this);
+                    btnFind.setText(tr("Find Pharmacy", "Найти аптеку"));
+                    btnFind.setTextSize(10);
+                    btnFind.setCornerRadius(20);
+                    btnFind.setAllCaps(false);
+                    btnFind.setIcon(getDrawable(android.R.drawable.ic_menu_mapmode));
+                    btnFind.setIconPadding(8);
+                    btnFind.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+                    LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-2, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics()));
+                    btnLp.setMargins(0, 10, 0, 0);
+                    btnFind.setLayoutParams(btnLp);
+                    btnFind.setOnClickListener(v1 -> openNearestPharmacy());
+                    textInfo.addView(btnFind);
                 } else {
                     tvPredict.setTextColor(Color.parseColor("#4CAF50"));
                 }
@@ -885,6 +892,27 @@ public class MainActivity extends AppCompatActivity {
                 tvPredict.setTypeface(null, Typeface.BOLD);
                 textInfo.addView(tvPredict);
             }
+        } else if (total <= 0) {
+            TextView tvPredict = new TextView(this);
+            tvPredict.setText(tr("OUT OF STOCK", "НЕТ В НАЛИЧИИ"));
+            tvPredict.setTextColor(Color.parseColor("#F44336"));
+            tvPredict.setTextSize(12);
+            tvPredict.setTypeface(null, Typeface.BOLD);
+            textInfo.addView(tvPredict);
+
+            MaterialButton btnFind = new MaterialButton(this);
+            btnFind.setText(tr("Find Pharmacy", "Найти аптеку"));
+            btnFind.setTextSize(10);
+            btnFind.setCornerRadius(20);
+            btnFind.setAllCaps(false);
+            btnFind.setIcon(getDrawable(android.R.drawable.ic_menu_mapmode));
+            btnFind.setIconPadding(8);
+            btnFind.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+            LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-2, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics()));
+            btnLp.setMargins(0, 10, 0, 0);
+            btnFind.setLayoutParams(btnLp);
+            btnFind.setOnClickListener(v1 -> openNearestPharmacy());
+            textInfo.addView(btnFind);
         }
         
         if (isExpired) {
@@ -2015,6 +2043,18 @@ public class MainActivity extends AppCompatActivity {
         }, 1200);
     }
 
+    private void openNearestPharmacy() {
+        Uri gmmIntentUri = Uri.parse("geo:0,0?q=pharmacy");
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        try {
+            startActivity(mapIntent);
+        } catch (Exception e) {
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/pharmacy"));
+            startActivity(webIntent);
+        }
+    }
+
     private void sendStatusNotification(String medName, String status) {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         String CHANNEL_ID = "med_reminders";
@@ -2022,12 +2062,23 @@ public class MainActivity extends AppCompatActivity {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Alerts", NotificationManager.IMPORTANCE_HIGH);
             if (manager != null) manager.createNotificationChannel(channel);
         }
+
+        Uri gmmIntentUri = Uri.parse("geo:0,0?q=pharmacy");
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        PendingIntent mapPendingIntent = PendingIntent.getActivity(this, 0, mapIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+
         NotificationCompat.Builder b = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_error)
                 .setContentTitle(tr("Medicine Alert", "Предупреждение о лекарстве"))
                 .setContentText(medName + " " + status)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
+
+        if (status.contains("STOCK")) {
+            b.addAction(android.R.drawable.ic_menu_mapmode, tr("Find Pharmacy", "Найти аптеку"), mapPendingIntent);
+        }
+
         if (manager != null) manager.notify((int)System.currentTimeMillis(), b.build());
     }
 
