@@ -1680,33 +1680,24 @@ public class MainActivity extends AppCompatActivity {
 
     private String getNextDoseForMed(Medicine m) {
         if (m.times == null || m.times.isEmpty()) return "--:--";
-        Calendar now = Calendar.getInstance();
-        int nowTotal = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
         String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        String firstUntaken = null;
+        int minUntaken = Integer.MAX_VALUE;
+        String absoluteFirst = null;
+        int minAbsolute = Integer.MAX_VALUE;
 
-        String closest = "--:--";
-        int minDiff = Integer.MAX_VALUE;
         for (String t : m.times.split(",")) {
             try {
                 String time = t.trim();
                 String[] p = time.split(":");
                 int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
-
-                // If already taken today at this specific time, skip to next occurrence
-                if (m.history != null && m.history.contains(todayStr) && m.history.contains(time)) {
-                    continue;
+                if (total < minAbsolute) { minAbsolute = total; absoluteFirst = time; }
+                if (m.history == null || !m.history.contains(todayStr + " " + time)) {
+                    if (total < minUntaken) { minUntaken = total; firstUntaken = time; }
                 }
-
-                int diff = total - nowTotal;
-                if (diff < 0) diff += 1440;
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    closest = time;
-                }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
-        return closest;
+        return firstUntaken != null ? firstUntaken : absoluteFirst;
     }
 
     private void startVoiceRecognition(ImageView micIcon) {
@@ -1896,12 +1887,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getNextUpcomingDose(List<Medicine> meds) {
-        Calendar now = Calendar.getInstance();
-        int nowTotal = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
         String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        String firstUntaken = null;
+        int minUntaken = Integer.MAX_VALUE;
+        String absoluteFirst = null;
+        int minAbsolute = Integer.MAX_VALUE;
 
-        String closest = "--:--";
-        int minDiff = Integer.MAX_VALUE;
         for (Medicine m : meds) {
             if (m.times == null || m.times.isEmpty()) continue;
             for (String t : m.times.split(",")) {
@@ -1909,23 +1900,14 @@ public class MainActivity extends AppCompatActivity {
                     String time = t.trim();
                     String[] p = time.split(":");
                     int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
-
-                    // Skip if taken today
-                    if (m.history != null && m.history.contains(todayStr) && m.history.contains(time)) {
-                        continue;
+                    if (total < minAbsolute) { minAbsolute = total; absoluteFirst = time; }
+                    if (m.history == null || !m.history.contains(todayStr + " " + time)) {
+                        if (total < minUntaken) { minUntaken = total; firstUntaken = time; }
                     }
-
-                    int diff = total - nowTotal;
-                    if (diff < 0) diff += 1440;
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closest = time;
-                    }
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
             }
         }
-        return closest;
+        return firstUntaken != null ? firstUntaken : (absoluteFirst != null ? absoluteFirst : "--:--");
     }
 
     private View createHeaderWithMenu(String text) {
