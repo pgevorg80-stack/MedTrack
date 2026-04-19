@@ -1317,13 +1317,30 @@ public class MainActivity extends AppCompatActivity {
         tvNextLabel.setGravity(Gravity.CENTER);
         rightPart.addView(tvNextLabel);
 
+        // Wrapper for Next Dose time with pill background
+        FrameLayout nextDoseWrapper = new FrameLayout(this);
+        LinearLayout.LayoutParams wrapperLp = new LinearLayout.LayoutParams(-1, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 42, getResources().getDisplayMetrics()));
+        wrapperLp.setMargins(20, 10, 20, 10);
+        nextDoseWrapper.setLayoutParams(wrapperLp);
+
+        com.google.android.material.card.MaterialCardView nextDoseBg = new com.google.android.material.card.MaterialCardView(this);
+        nextDoseBg.setRadius(100);
+        nextDoseBg.setCardBackgroundColor(Color.parseColor("#40FFFFFF"));
+        nextDoseBg.setCardElevation(0);
+        nextDoseBg.setStrokeWidth(0);
+        nextDoseBg.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+        nextDoseWrapper.addView(nextDoseBg);
+
         TextView tvNextDose = new TextView(this);
         tvNextDose.setText(globalNext != null ? globalNext : "--:--");
         tvNextDose.setTextColor(Color.WHITE);
-        tvNextDose.setTextSize(28);
+        tvNextDose.setTextSize(22);
         tvNextDose.setTypeface(null, Typeface.BOLD);
         tvNextDose.setGravity(Gravity.CENTER);
-        rightPart.addView(tvNextDose);
+        tvNextDose.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
+        nextDoseWrapper.addView(tvNextDose);
+        
+        rightPart.addView(nextDoseWrapper);
 
         com.google.android.material.card.MaterialCardView micCard = new com.google.android.material.card.MaterialCardView(this);
         micCard.setRadius(100);
