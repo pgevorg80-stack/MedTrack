@@ -1,0 +1,6 @@
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_wink_vector">
+    <target
+        android:name="right_eye_group"
+        android:animation="@animator/wink_anim" />
+</animated-vector>

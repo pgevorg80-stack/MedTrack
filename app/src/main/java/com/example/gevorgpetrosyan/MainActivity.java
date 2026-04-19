@@ -2136,6 +2136,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void showWinkAnimation() {
+        showStatusAnimation(R.drawable.ic_wink_anim, tr("Logged", "Отмечено"));
+    }
+
     private void showSuccessAnimation() {
         showStatusAnimation(R.drawable.ic_check_mark, tr("Logged", "Отмечено"));
     }
@@ -2980,7 +2984,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (triggered) {
                 runOnUiThread(() -> {
-                    showSuccessAnimation();
+                    showWinkAnimation();
                     refreshCurrentTab();
                     updateWidget();
                 });

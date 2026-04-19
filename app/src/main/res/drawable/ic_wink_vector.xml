@@ -1,0 +1,59 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Face Scanning Frame (Slightly larger and bolder) -->
+    <path
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M3,6V4c0-1.1,0.9-2,2-2h2 M17,2h2c1.1,0,2,0.9,2,2v2 M3,18v2c0,1.1,0.9,2,2,2h2 M17,22h2c1.1,0,2-0.9,2-2v-2" />
+
+    <!-- Professional Face Silhouette (Larger & Better Proportions) -->
+    <path
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,4c-3.3,0-6,2.7-6,6v4c0,3.3,2.7,6,6,6s6-2.7,6-6v-4C18,6.7,15.3,4,12,4z" />
+
+    <!-- Hair Detail -->
+    <path
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M6,10c2-2,5,1,12-1" />
+
+    <!-- Ears -->
+    <path
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M6,11.5c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5 M18,11.5c0.8,0,1.5,0.7,1.5,1.5s-0.7,1.5-1.5,1.5" />
+
+    <!-- Left Eye (Open) -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M8.5,11.5a1,1 0 1,1 2,0a1,1 0 1,1 -2,0" />
+
+    <!-- Right Eye (Animated Group for Wink) -->
+    <group
+        android:name="right_eye_group"
+        android:pivotX="14.5"
+        android:pivotY="11.5">
+        <path
+            android:name="right_eye"
+            android:fillColor="#4CAF50"
+            android:pathData="M13.5,11.5a1,1 0 1,1 2,0a1,1 0 1,1 -2,0" />
+    </group>
+
+    <!-- Smile (Wider and warmer) -->
+    <path
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M10,16.5c0.5,1,3.5,1,4,0" />
+
+</vector>
