@@ -170,8 +170,16 @@ public class MedWidget extends AppWidgetProvider {
                 List<Medicine> meds = db.medicineDao().getAllByUserId(user.getUid());
                 String nextDose = getNextUpcomingDose(meds);
                 
+                String displayDose = nextDose;
+                if (nextDose.equals("--:--")) {
+                    // Check language again inside the thread to be safe, 
+                    // though we can also use the final 'isRussian' from the outer scope.
+                    boolean isRu = context.getSharedPreferences("LangPrefs", Context.MODE_PRIVATE).getBoolean("IsRussian", false);
+                    displayDose = isRu ? "Готово" : "Done";
+                }
+                
                 RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.med_widget);
-                updateViews.setTextViewText(R.id.widget_next_dose, nextDose);
+                updateViews.setTextViewText(R.id.widget_next_dose, displayDose);
                 appWidgetManager.partiallyUpdateAppWidget(appWidgetId, updateViews);
             } catch (Exception ignored) {}
         });
@@ -180,11 +188,9 @@ public class MedWidget extends AppWidgetProvider {
     }
 
     private static String getNextUpcomingDose(List<Medicine> meds) {
-        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
         String firstUntaken = null;
         int minUntaken = Integer.MAX_VALUE;
-        String absoluteFirst = null;
-        int minAbsolute = Integer.MAX_VALUE;
 
         for (Medicine m : meds) {
             if (m.times == null || m.times.isEmpty()) continue;
@@ -193,13 +199,15 @@ public class MedWidget extends AppWidgetProvider {
                     String time = t.trim();
                     String[] p = time.split(":");
                     int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
-                    if (total < minAbsolute) { minAbsolute = total; absoluteFirst = time; }
                     if (m.history == null || !m.history.contains(todayStr + " " + time)) {
-                        if (total < minUntaken) { minUntaken = total; firstUntaken = time; }
+                        if (total < minUntaken) {
+                            minUntaken = total;
+                            firstUntaken = time;
+                        }
                     }
                 } catch (Exception ignored) {}
             }
         }
-        return firstUntaken != null ? firstUntaken : (absoluteFirst != null ? absoluteFirst : "--:--");
+        return firstUntaken != null ? firstUntaken : "--:--";
     }
 }

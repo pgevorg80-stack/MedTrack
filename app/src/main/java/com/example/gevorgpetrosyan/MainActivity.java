@@ -794,7 +794,7 @@ public class MainActivity extends AppCompatActivity {
         
         // Calculate dose counts per day
         Map<String, Integer> dailyCounts = new HashMap<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.ENGLISH);
+        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         Calendar cal = Calendar.getInstance();
         
         int totalScheduledPerDay = 0;
@@ -803,17 +803,22 @@ public class MainActivity extends AppCompatActivity {
                 totalScheduledPerDay += m.times.split(",").length;
             }
             if (m.history == null) continue;
-            String[] parts = m.history.split(",");
-            for (int i = 0; i < parts.length - 1; i += 2) {
-                String date = parts[i].trim();
-                dailyCounts.put(date, dailyCounts.getOrDefault(date, 0) + 1);
+            String[] entries = m.history.split(",");
+            for (String entry : entries) {
+                String trimmed = entry.trim();
+                if (trimmed.isEmpty()) continue;
+                int firstSpace = trimmed.indexOf(" ");
+                if (firstSpace != -1) {
+                    String date = trimmed.substring(0, firstSpace);
+                    dailyCounts.put(date, dailyCounts.getOrDefault(date, 0) + 1);
+                }
             }
         }
 
         // Draw 90 squares
         cal.add(Calendar.DAY_OF_YEAR, -90);
         for (int i = 0; i < 91; i++) {
-            String dateKey = sdf.format(cal.getTime());
+            String dateKey = sdfDate.format(cal.getTime());
             Integer countObj = dailyCounts.get(dateKey);
             int taken = (countObj == null) ? 0 : countObj;
             
@@ -1311,7 +1316,7 @@ public class MainActivity extends AppCompatActivity {
         rightPart.addView(tvNextLabel);
 
         TextView tvNextDose = new TextView(this);
-        tvNextDose.setText(globalNext);
+        tvNextDose.setText(globalNext != null ? globalNext : "--:--");
         tvNextDose.setTextColor(Color.WHITE);
         tvNextDose.setTextSize(28);
         tvNextDose.setTypeface(null, Typeface.BOLD);
@@ -1359,7 +1364,7 @@ public class MainActivity extends AppCompatActivity {
                 itemCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics()));
                 itemCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()));
                 
-                boolean isNearest = medNext.equals(globalNext) && !globalNext.equals("--:--");
+                boolean isNearest = globalNext != null && medNext != null && medNext.equals(globalNext);
                 if (isNearest) {
                     itemCard.setStrokeWidth(4);
                     itemCard.setStrokeColor(Color.parseColor(BLUE_COLOR));
@@ -1407,7 +1412,8 @@ public class MainActivity extends AppCompatActivity {
                 textInfo.addView(tvName);
 
                 TextView tvTimeInfo = new TextView(this);
-                tvTimeInfo.setText(tr("Next dose at ", "След. доза в ") + medNext);
+                String displayTime = medNext != null ? medNext : (isRussian ? "Принято" : "Taken");
+                tvTimeInfo.setText(tr("Next dose at ", "След. доза в ") + displayTime);
                 tvTimeInfo.setTextSize(13);
                 tvTimeInfo.setTextColor(getThemeColor(android.R.attr.textColorSecondary));
                 textInfo.addView(tvTimeInfo);
@@ -1679,25 +1685,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getNextDoseForMed(Medicine m) {
-        if (m.times == null || m.times.isEmpty()) return "--:--";
-        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        if (m.times == null || m.times.isEmpty()) return null;
+        String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
         String firstUntaken = null;
         int minUntaken = Integer.MAX_VALUE;
-        String absoluteFirst = null;
-        int minAbsolute = Integer.MAX_VALUE;
 
         for (String t : m.times.split(",")) {
             try {
                 String time = t.trim();
                 String[] p = time.split(":");
                 int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
-                if (total < minAbsolute) { minAbsolute = total; absoluteFirst = time; }
                 if (m.history == null || !m.history.contains(todayStr + " " + time)) {
-                    if (total < minUntaken) { minUntaken = total; firstUntaken = time; }
+                    if (total < minUntaken) {
+                        minUntaken = total;
+                        firstUntaken = time;
+                    }
                 }
             } catch (Exception ignored) {}
         }
-        return firstUntaken != null ? firstUntaken : absoluteFirst;
+        return firstUntaken;
     }
 
     private void startVoiceRecognition(ImageView micIcon) {
@@ -1887,11 +1893,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getNextUpcomingDose(List<Medicine> meds) {
-        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
         String firstUntaken = null;
         int minUntaken = Integer.MAX_VALUE;
-        String absoluteFirst = null;
-        int minAbsolute = Integer.MAX_VALUE;
 
         for (Medicine m : meds) {
             if (m.times == null || m.times.isEmpty()) continue;
@@ -1900,14 +1904,16 @@ public class MainActivity extends AppCompatActivity {
                     String time = t.trim();
                     String[] p = time.split(":");
                     int total = Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
-                    if (total < minAbsolute) { minAbsolute = total; absoluteFirst = time; }
                     if (m.history == null || !m.history.contains(todayStr + " " + time)) {
-                        if (total < minUntaken) { minUntaken = total; firstUntaken = time; }
+                        if (total < minUntaken) {
+                            minUntaken = total;
+                            firstUntaken = time;
+                        }
                     }
                 } catch (Exception ignored) {}
             }
         }
-        return firstUntaken != null ? firstUntaken : (absoluteFirst != null ? absoluteFirst : "--:--");
+        return firstUntaken;
     }
 
     private View createHeaderWithMenu(String text) {
@@ -2097,14 +2103,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void logManualIntake(Medicine m) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+            String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
             String scheduledTime = getNextDoseForMed(m);
             
             m.batches = subtractFromBatches(m.batches, m.dosage);
             if (m.history == null) m.history = "";
             
             String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-            String historyEntry = todayStr + " " + (scheduledTime.equals("--:--") ? timeStamp : scheduledTime);
+            String historyEntry = todayStr + " " + ((scheduledTime == null || scheduledTime.equals("--:--")) ? timeStamp : scheduledTime);
             
             m.history += historyEntry + (isRussian ? " - Принято," : " - Taken,");
             m.lastUpdated = System.currentTimeMillis();
@@ -2632,12 +2638,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Map<String, List<String>> dateToTimes = new LinkedHashMap<>();
-        String[] parts = m.history.split(",");
-        for (int i = 0; i < parts.length - 1; i += 2) {
-            String date = parts[i].trim();
-            String timeAndStatus = parts[i+1].trim();
-            if (!dateToTimes.containsKey(date)) dateToTimes.put(date, new ArrayList<>());
-            dateToTimes.get(date).add(timeAndStatus);
+        String[] entries = m.history.split(",");
+        for (String entry : entries) {
+            String trimmed = entry.trim();
+            if (trimmed.isEmpty()) continue;
+            
+            // Expected format: "yyyy-MM-dd HH:mm - Status"
+            int firstSpace = trimmed.indexOf(" ");
+            if (firstSpace != -1) {
+                String date = trimmed.substring(0, firstSpace);
+                String timeAndStatus = trimmed.substring(firstSpace + 1);
+                if (!dateToTimes.containsKey(date)) dateToTimes.put(date, new ArrayList<>());
+                dateToTimes.get(date).add(timeAndStatus);
+            }
         }
 
         showHistoryDatesDialog(m, dateToTimes);
@@ -2955,11 +2968,12 @@ public class MainActivity extends AppCompatActivity {
             if (meds == null || meds.isEmpty()) return;
             
             String globalNext = getNextUpcomingDose(meds);
-            if (globalNext.equals("--:--")) return;
+            if (globalNext == null || globalNext.equals("--:--")) return;
 
             boolean triggered = false;
             for (Medicine m : meds) {
-                if (getNextDoseForMed(m).equals(globalNext)) {
+                String medNext = getNextDoseForMed(m);
+                if (medNext != null && medNext.equals(globalNext)) {
                     logManualIntakeSync(m);
                     triggered = true;
                 }
@@ -2975,7 +2989,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logManualIntakeSync(Medicine m) {
-        String todayStr = new SimpleDateFormat("MMM dd", Locale.getDefault()).format(new Date());
+        String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
         
         // Determine the scheduled dose time before we log it
         String scheduledTime = getNextDoseForMed(m);
@@ -2986,7 +3000,8 @@ public class MainActivity extends AppCompatActivity {
         // Add a history entry that includes the date AND specific scheduled time
         // so getNextUpcomingDose() can identify it as "already taken today"
         String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-        String historyEntry = todayStr + " " + (scheduledTime.equals("--:--") ? timeStamp : scheduledTime);
+        String finalTime = (scheduledTime == null || scheduledTime.equals("--:--")) ? timeStamp : scheduledTime;
+        String historyEntry = todayStr + " " + finalTime;
         
         m.history += historyEntry + (isRussian ? " - Принято," : " - Taken,");
         m.lastUpdated = System.currentTimeMillis();
@@ -3058,14 +3073,20 @@ public class MainActivity extends AppCompatActivity {
             if (m.history == null || m.history.isEmpty()) continue;
             
             Map<String, List<String>> rangeData = new LinkedHashMap<>();
-            String[] parts = m.history.split(",");
-            for (int i = 0; i < parts.length - 1; i += 2) {
-                String datePart = parts[i].trim();
-                String timeAndStatus = parts[i + 1].trim();
-                
-                if (isDateAfterOrEqual(datePart, selectedDate)) {
-                    if (!rangeData.containsKey(datePart)) rangeData.put(datePart, new ArrayList<>());
-                    rangeData.get(datePart).add(timeAndStatus);
+            String[] entries = m.history.split(",");
+            for (String entry : entries) {
+                String trimmed = entry.trim();
+                if (trimmed.isEmpty()) continue;
+
+                int firstSpace = trimmed.indexOf(" ");
+                if (firstSpace != -1) {
+                    String datePart = trimmed.substring(0, firstSpace);
+                    String timeAndStatus = trimmed.substring(firstSpace + 1);
+                    
+                    if (isDateAfterOrEqual(datePart, selectedDate)) {
+                        if (!rangeData.containsKey(datePart)) rangeData.put(datePart, new ArrayList<>());
+                        rangeData.get(datePart).add(timeAndStatus);
+                    }
                 }
             }
 
@@ -3160,25 +3181,17 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isDateAfterOrEqual(String historyDateStr, Calendar selectedDate) {
         try {
-            // historyDateStr might be "MMM dd" (Apr 01) or "MMM dd, HH:mm" (Apr 01, 10:30)
-            String cleanDate = historyDateStr.split(",")[0].trim();
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.US);
-            Date hDateParsed = sdf.parse(cleanDate);
+            // historyDateStr is now strictly "yyyy-MM-dd"
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            Date hDateParsed = sdf.parse(historyDateStr);
             if (hDateParsed == null) return false;
 
             Calendar hCal = Calendar.getInstance();
-            Calendar sCal = (Calendar) selectedDate.clone();
-            Calendar now = Calendar.getInstance();
-
             hCal.setTime(hDateParsed);
-            hCal.set(Calendar.YEAR, now.get(Calendar.YEAR));
             hCal.set(Calendar.HOUR_OF_DAY, 0); hCal.set(Calendar.MINUTE, 0); hCal.set(Calendar.SECOND, 0); hCal.set(Calendar.MILLISECOND, 0);
-            
-            sCal.set(Calendar.HOUR_OF_DAY, 0); sCal.set(Calendar.MINUTE, 0); sCal.set(Calendar.SECOND, 0); sCal.set(Calendar.MILLISECOND, 0);
 
-            if (hCal.after(now)) {
-                hCal.add(Calendar.YEAR, -1);
-            }
+            Calendar sCal = (Calendar) selectedDate.clone();
+            sCal.set(Calendar.HOUR_OF_DAY, 0); sCal.set(Calendar.MINUTE, 0); sCal.set(Calendar.SECOND, 0); sCal.set(Calendar.MILLISECOND, 0);
 
             return !hCal.before(sCal);
         } catch (Exception e) {

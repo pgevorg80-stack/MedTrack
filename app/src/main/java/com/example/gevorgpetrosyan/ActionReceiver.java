@@ -34,9 +34,12 @@ public class ActionReceiver extends BroadcastReceiver {
         Executors.newSingleThreadExecutor().execute(() -> {
             Medicine m = db.medicineDao().getByNameAndUserId(medName, userId);
             if (m != null) {
-                String timeStamp = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(new Date());
+                String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+                String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+                String historyEntry = todayStr + " " + timeStamp;
+                
                 if (m.history == null) m.history = "";
-                m.history += timeStamp + " - " + status + ",";
+                m.history += historyEntry + " - " + status + ",";
 
                 if ("Taken".equals(status) && m.batches != null && !m.batches.isEmpty()) {
                     m.batches = subtractFromBatches(m.batches, m.dosage);
