@@ -11,6 +11,7 @@ public class Medicine {
     public String name;
     public String times;
     public int dosage;
+    public String dosageUnit = "pills"; // Default unit
     public int stock;
     public String expiryDate;
     public int expiryWarningDays;
@@ -28,6 +29,7 @@ public class Medicine {
         this.name = name;
         this.times = times;
         this.dosage = 1;
+        this.dosageUnit = "pills";
         this.stock = 0;
         this.expiryWarningDays = 0;
         this.history = "";

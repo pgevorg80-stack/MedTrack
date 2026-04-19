@@ -104,31 +104,48 @@
                 android:letterSpacing="0.05"
                 android:paddingStart="12dp"/>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_dialog_stock"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:boxBackgroundColor="#0A000000"
-                app:boxCornerRadiusBottomEnd="32dp"
-                app:boxCornerRadiusBottomStart="32dp"
-                app:boxCornerRadiusTopEnd="32dp"
-                app:boxCornerRadiusTopStart="32dp"
-                app:boxStrokeWidth="0dp"
-                app:boxStrokeWidthFocused="0dp"
-                app:hintEnabled="false">
+                android:orientation="horizontal">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/dialog_stock"
-                    android:layout_width="match_parent"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_dialog_stock"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:boxBackgroundColor="#0A000000"
+                    app:boxCornerRadiusBottomEnd="32dp"
+                    app:boxCornerRadiusBottomStart="32dp"
+                    app:boxCornerRadiusTopEnd="32dp"
+                    app:boxCornerRadiusTopStart="32dp"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/dialog_stock"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:hint="e.g. 30"
+                        android:inputType="number"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:textColor="?android:attr/textColorPrimary" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Spinner
+                    android:id="@+id/dialog_unit_spinner"
+                    android:layout_width="120dp"
                     android:layout_height="60dp"
-                    android:hint="e.g. 30"
-                    android:inputType="number"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:textColor="?android:attr/textColorPrimary" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/nav_pill_background"
+                    android:backgroundTint="#0A000000"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp" />
+            </LinearLayout>
 
             <!-- Warning Days -->
             <TextView

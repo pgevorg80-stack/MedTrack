@@ -94,6 +94,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import android.widget.GridLayout;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 import java.util.Set;
 
 import android.graphics.Bitmap;
@@ -1042,7 +1044,7 @@ public class MainActivity extends AppCompatActivity {
         textInfo.addView(tvName);
 
         TextView tvStock = new TextView(this);
-        tvStock.setText(tr("Stock: ", "Запас: ") + total + " " + tr("pills", "таб."));
+        tvStock.setText(tr("Stock: ", "Запас: ") + total + " " + getLocalizedUnit(m.dosageUnit));
         tvStock.setTextSize(14);
         tvStock.setTextColor(getThemeColor(R.attr.secondaryTextColor));
         textInfo.addView(tvStock);
@@ -1413,7 +1415,8 @@ public class MainActivity extends AppCompatActivity {
 
                 TextView tvTimeInfo = new TextView(this);
                 String displayTime = medNext != null ? medNext : (isRussian ? "Принято" : "Taken");
-                tvTimeInfo.setText(tr("Next dose at ", "След. доза в ") + displayTime);
+                String unitLabel = getLocalizedUnit(m.dosageUnit);
+                tvTimeInfo.setText(m.dosage + " " + unitLabel + " • " + tr("Next: ", "След: ") + displayTime);
                 tvTimeInfo.setTextSize(13);
                 tvTimeInfo.setTextColor(getThemeColor(android.R.attr.textColorSecondary));
                 textInfo.addView(tvTimeInfo);
@@ -1587,6 +1590,7 @@ public class MainActivity extends AppCompatActivity {
         EditText stockIn = v.findViewById(R.id.dialog_stock);
         EditText warnIn = v.findViewById(R.id.dialog_warn);
         MaterialButton expBtn = v.findViewById(R.id.dialog_btn_expiry);
+        Spinner unitSpinner = v.findViewById(R.id.dialog_unit_spinner);
         MaterialButton photoBtn = v.findViewById(R.id.btn_med_photo);
         MaterialButton btnCancel = v.findViewById(R.id.btn_cancel);
         MaterialButton btnSave = v.findViewById(R.id.btn_save);
@@ -1600,6 +1604,20 @@ public class MainActivity extends AppCompatActivity {
         stockIn.setHint(tr("Initial Stock", "Начальный запас"));
         warnIn.setHint(tr("Warning Days (Expiry)", "Дней до конца срока"));
         expBtn.setText(tr("Set Expiry Date", "Установить срок годности"));
+
+        String[] units = {tr("pills", "таб."), tr("ml", "мл"), tr("mg", "мг"), tr("drops", "кап."), tr("capsules", "капс."), tr("units", "ед.")};
+        String[] unitsEn = {"pills", "ml", "mg", "drops", "capsules", "units"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, units) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                ((TextView) view).setTextColor(getThemeColor(android.R.attr.textColorPrimary));
+                return view;
+            }
+        };
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        unitSpinner.setAdapter(adapter);
+
         photoBtn.setText(tr("Add Medicine Photo", "Добавить фото"));
         btnCancel.setText(tr("Cancel", "Отмена"));
         btnSave.setText(tr("Add to Inventory", "Добавить"));
@@ -1645,10 +1663,11 @@ public class MainActivity extends AppCompatActivity {
             String name = nameIn.getText().toString().trim();
             String stockStr = stockIn.getText().toString();
             String warnStr = warnIn.getText().toString();
+            String unit = unitsEn[unitSpinner.getSelectedItemPosition()];
             int stock = Integer.parseInt(stockStr.isEmpty() ? "0" : stockStr);
             int warn = Integer.parseInt(warnStr.isEmpty() ? "0" : warnStr);
             if (!name.isEmpty()) {
-                saveToWarehouse(name, stock, tempExpiryInternal, warn, tempImagePath);
+                saveToWarehouse(name, stock, tempExpiryInternal, warn, tempImagePath, unit);
                 tempImagePath = null; // reset
                 dialog.dismiss();
             }
@@ -1657,13 +1676,15 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void saveToWarehouse(String name, int stock, String exp, int warn, String imagePath) {
+    private void saveToWarehouse(String name, int stock, String exp, int warn, String imagePath, String unit) {
         Executors.newSingleThreadExecutor().execute(() -> {
             Medicine existing = db.medicineDao().getByNameAndUserId(name, currentUserId);
-            String batch = stock + " pills (Exp: " + exp + ")";
+            String localizedUnit = getLocalizedUnit(unit);
+            String batch = stock + " " + localizedUnit + " (Exp: " + exp + ")";
             if (existing != null) {
                 existing.batches = (existing.batches == null || existing.batches.isEmpty()) ? batch : existing.batches + "|" + batch;
                 existing.expiryWarningDays = warn;
+                existing.dosageUnit = unit;
                 if (imagePath != null) existing.imagePath = imagePath;
                 existing.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(existing);
@@ -1672,6 +1693,7 @@ public class MainActivity extends AppCompatActivity {
                 Medicine m = new Medicine(currentUserId, name, "");
                 m.batches = batch; m.expiryWarningDays = warn;
                 m.imagePath = imagePath;
+                m.dosageUnit = unit;
                 m.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().insert(m);
                 FirestoreHelper.uploadMedicine(m);
@@ -1682,6 +1704,18 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, tr("Warehouse Updated", "Склад обновлен"), Toast.LENGTH_SHORT).show(); 
             });
         });
+    }
+
+    private String getLocalizedUnit(String unit) {
+        switch (unit) {
+            case "pills": return tr("pills", "таб.");
+            case "ml": return tr("ml", "мл");
+            case "mg": return tr("mg", "мг");
+            case "drops": return tr("drops", "кап.");
+            case "capsules": return tr("capsules", "капс.");
+            case "units": return tr("units", "ед.");
+            default: return unit;
+        }
     }
 
     private String getNextDoseForMed(Medicine m) {
@@ -2392,8 +2426,26 @@ public class MainActivity extends AppCompatActivity {
     private void showDoseConfig(Medicine m, LinearLayout container) {
         AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setTitle(tr("Dose for ", "Дозировка для ") + m.name);
-        EditText doseIn = new EditText(this); doseIn.setHint(tr("Dosage (e.g. 2)", "Дозировка (напр. 2)")); doseIn.setInputType(2);
-        b.setView(doseIn);
+        
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setPadding(50, 40, 50, 20);
+        layout.setGravity(Gravity.CENTER_VERTICAL);
+
+        EditText doseIn = new EditText(this); 
+        doseIn.setHint(tr("Dosage (e.g. 2)", "Дозировка (напр. 2)")); 
+        doseIn.setInputType(2);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -2, 1f);
+        doseIn.setLayoutParams(lp);
+        layout.addView(doseIn);
+
+        TextView tvUnit = new TextView(this);
+        tvUnit.setText(getLocalizedUnit(m.dosageUnit));
+        tvUnit.setPadding(20, 0, 0, 0);
+        tvUnit.setTextColor(getThemeColor(android.R.attr.textColorSecondary));
+        layout.addView(tvUnit);
+
+        b.setView(layout);
         b.setPositiveButton(tr("Add", "Добавить"), (d, w) -> {
             String dStr = doseIn.getText().toString();
             m.dosage = Integer.parseInt(dStr.isEmpty() ? "1" : dStr);
@@ -2604,7 +2656,7 @@ public class MainActivity extends AppCompatActivity {
         EditText in = new EditText(this); in.setInputType(2); in.setText(count); lay.addView(in);
         b.setView(lay);
         b.setPositiveButton(tr("Save", "Сохранить"), (d, w) -> {
-            arr[index] = in.getText().toString() + " " + tr("pills", "таб.") + arr[index].substring(arr[index].indexOf(" (Exp:"));
+            arr[index] = in.getText().toString() + " " + getLocalizedUnit(m.dosageUnit) + arr[index].substring(arr[index].indexOf(" (Exp:"));
             m.batches = android.text.TextUtils.join("|", arr);
             m.lastUpdated = System.currentTimeMillis();
             executor.execute(() -> { 
@@ -2886,7 +2938,7 @@ public class MainActivity extends AppCompatActivity {
         container.removeAllViews();
         for (Medicine m : tempMedsToSchedule) {
             MaterialButton btn = new MaterialButton(this);
-            String label = m.name + " (" + m.dosage + " " + tr("pills", "таб.") + ")";
+            String label = m.name + " (" + m.dosage + " " + getLocalizedUnit(m.dosageUnit) + ")";
             btn.setText(label);
             btn.setAllCaps(false); btn.setCornerRadius(32);
             btn.setBackgroundTintList(ColorStateList.valueOf(getThemeColor(R.attr.cardBackgroundColor)));
