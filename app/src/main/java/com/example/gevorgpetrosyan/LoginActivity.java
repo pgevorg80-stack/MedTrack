@@ -75,23 +75,63 @@ public class LoginActivity extends AppCompatActivity {
         updateThemeUI(false); // Initial state without animation
 
         btnLangToggle.setOnClickListener(v -> {
+            animateClick(v);
             isRussian = !isRussian;
             getSharedPreferences("LangPrefs", MODE_PRIVATE).edit().putBoolean("IsRussian", isRussian).apply();
             updateTranslations();
         });
 
-        themeSwitcher.setOnClickListener(v -> toggleTheme());
+        themeSwitcher.setOnClickListener(v -> {
+            animateClick(v);
+            toggleTheme();
+        });
 
         TextView loginSubTitle = findViewById(R.id.login_subtitle);
 
-        findViewById(R.id.btn_login).setOnClickListener(v -> loginUser());
-        findViewById(R.id.btn_guest).setOnClickListener(v -> loginAsGuest());
+        findViewById(R.id.btn_login).setOnClickListener(v -> {
+            animateClick(v);
+            loginUser();
+        });
+        findViewById(R.id.btn_guest).setOnClickListener(v -> {
+            animateClick(v);
+            loginAsGuest();
+        });
         registerLink.setOnClickListener(v -> {
+            animateClick(v);
             Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
             startActivity(intent);
         });
 
+        logo.setOnClickListener(v -> {
+            v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).withEndAction(() -> {
+                v.animate().scaleX(1f).scaleY(1f).setDuration(200).start();
+            }).start();
+        });
+
         startEntryAnimations();
+    }
+
+    private void animateClick(View view) {
+        view.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(100).start())
+                .start();
+    }
+
+    private void shakeView(View view) {
+        view.animate()
+                .translationX(15f)
+                .setDuration(40)
+                .withEndAction(() -> view.animate().translationX(-15f).setDuration(40)
+                        .withEndAction(() -> view.animate().translationX(10f).setDuration(40)
+                                .withEndAction(() -> view.animate().translationX(-10f).setDuration(40)
+                                        .withEndAction(() -> view.animate().translationX(0f).setDuration(40).start())
+                                        .start())
+                                .start())
+                        .start())
+                .start();
     }
 
     private void updateTranslations() {
@@ -180,7 +220,7 @@ public class LoginActivity extends AppCompatActivity {
         if (tilPassword != null) { tilPassword.setAlpha(0f); tilPassword.setTranslationY(50f); }
 
         // Animate
-        logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).start();
+        logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).withEndAction(this::startFloatingAnimation).start();
         loginTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
         loginCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
         
@@ -209,6 +249,55 @@ public class LoginActivity extends AppCompatActivity {
         }
         
         registerLink.animate().alpha(1f).setDuration(800).setStartDelay(1100).start();
+
+        // Animate background blobs
+        View bgBlob = findViewById(R.id.bg_blob);
+        View bgBlob2 = findViewById(R.id.bg_blob_secondary);
+        
+        if (bgBlob != null) {
+            animateBlob(bgBlob, 1.2f, 3000);
+        }
+        if (bgBlob2 != null) {
+            animateBlob(bgBlob2, 1.3f, 4000);
+        }
+    }
+
+    private void animateBlob(View blob, float scale, int duration) {
+        blob.animate()
+                .scaleX(scale)
+                .scaleY(scale)
+                .rotation(blob.getRotation() + 45f)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        blob.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .rotation(blob.getRotation() - 45f)
+                                .setDuration(duration)
+                                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                                .withEndAction(this)
+                                .start();
+                    }
+                }).start();
+    }
+
+    private void startFloatingAnimation() {
+        logo.animate()
+                .translationY(-20f)
+                .setDuration(2000)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    logo.animate()
+                            .translationY(20f)
+                            .setDuration(2000)
+                            .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                            .withEndAction(this::startFloatingAnimation)
+                            .start();
+                })
+                .start();
     }
 
     private void requestNotificationPermission() {
@@ -225,6 +314,8 @@ public class LoginActivity extends AppCompatActivity {
 
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
             Toast.makeText(this, tr("Please fill all fields", "Пожалуйста, заполните все поля"), Toast.LENGTH_SHORT).show();
+            if (TextUtils.isEmpty(email)) shakeView(tilEmail != null ? tilEmail : etEmail);
+            if (TextUtils.isEmpty(password)) shakeView(tilPassword != null ? tilPassword : etPassword);
             return;
         }
 
