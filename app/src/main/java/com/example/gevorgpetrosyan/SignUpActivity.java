@@ -1,5 +1,7 @@
 package com.example.gevorgpetrosyan;
 
+import android.animation.ObjectAnimator;
+import android.view.animation.CycleInterpolator;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.content.Intent;
@@ -110,17 +112,10 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void shakeView(View view) {
-        view.animate()
-                .translationX(15f)
-                .setDuration(40)
-                .withEndAction(() -> view.animate().translationX(-15f).setDuration(40)
-                        .withEndAction(() -> view.animate().translationX(10f).setDuration(40)
-                                .withEndAction(() -> view.animate().translationX(-10f).setDuration(40)
-                                        .withEndAction(() -> view.animate().translationX(0f).setDuration(40).start())
-                                        .start())
-                                .start())
-                        .start())
-                .start();
+        ObjectAnimator animator = ObjectAnimator.ofFloat(view, "translationX", 0, 10f);
+        animator.setDuration(150);
+        animator.setInterpolator(new CycleInterpolator(3));
+        animator.start();
     }
 
     private void updateTranslations() {

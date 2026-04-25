@@ -397,6 +397,37 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+
+        startBackgroundAnimations();
+    }
+
+    private void startBackgroundAnimations() {
+        View blob1 = findViewById(R.id.bg_blob_main_1);
+        View blob2 = findViewById(R.id.bg_blob_main_2);
+        if (blob1 != null) animateBlob(blob1, 1.2f, 3000);
+        if (blob2 != null) animateBlob(blob2, 1.3f, 4000);
+    }
+
+    private void animateBlob(View blob, float scale, int duration) {
+        blob.animate()
+                .scaleX(scale)
+                .scaleY(scale)
+                .rotation(blob.getRotation() + 45f)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        blob.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .rotation(blob.getRotation() - 45f)
+                                .setDuration(duration)
+                                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                                .withEndAction(this)
+                                .start();
+                    }
+                }).start();
     }
 
     private void requestNotificationPermission() {

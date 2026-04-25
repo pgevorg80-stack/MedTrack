@@ -1,5 +1,8 @@
 package com.example.gevorgpetrosyan;
 
+import android.animation.ObjectAnimator;
+import android.view.View;
+import android.view.animation.CycleInterpolator;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -63,6 +66,12 @@ public class ProfileActivity extends AppCompatActivity {
         updateUI();
         animateEntrance();
 
+        // Start background animations (null-safe — only runs if views exist in layout)
+        View bg1 = findViewById(R.id.bg_blob_profile_1);
+        View bg2 = findViewById(R.id.bg_blob_profile_2);
+        if (bg1 != null) animateBlob(bg1, 1.2f, 3000);
+        if (bg2 != null) animateBlob(bg2, 1.3f, 4000);
+
         if (user != null) {
             tvUserEmail.setText(user.getEmail());
         } else {
@@ -74,11 +83,13 @@ public class ProfileActivity extends AppCompatActivity {
             String confirmPassword = etConfirmPassword.getText().toString().trim();
 
             if (TextUtils.isEmpty(newPassword) || newPassword.length() < 6) {
+                shakeView(tilNewPassword);
                 Toast.makeText(this, tr("Password must be at least 6 characters", "Пароль должен быть не менее 6 символов"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (!newPassword.equals(confirmPassword)) {
+                shakeView(tilConfirmPassword);
                 Toast.makeText(this, tr("Passwords do not match", "Пароли не совпадают"), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -111,32 +122,63 @@ public class ProfileActivity extends AppCompatActivity {
         if (tilNewPassword != null) tilNewPassword.setHint(tr("New Password", "Новый пароль"));
         if (tilConfirmPassword != null) tilConfirmPassword.setHint(tr("Confirm New Password", "Подтвердите пароль"));
         btnSavePassword.setText(tr("Save Changes", "Сохранить изменения"));
-        
+
         TextView label = findViewById(R.id.tv_label_change_pass);
         if (label != null) label.setText(tr("Change Password", "Сменить пароль"));
     }
 
     private void animateEntrance() {
-        android.view.View[] views = {
-            findViewById(R.id.iv_profile_avatar),
-            findViewById(R.id.tv_profile_email),
-            findViewById(R.id.til_password),
-            findViewById(R.id.til_password_confirm),
-            findViewById(R.id.btn_save_profile)
+        View[] views = {
+                findViewById(R.id.profile_image_container),
+                findViewById(R.id.tv_profile_email),
+                findViewById(R.id.tv_label_change_pass),
+                findViewById(R.id.til_password),
+                findViewById(R.id.til_password_confirm),
+                findViewById(R.id.btn_save_profile)
         };
-        
+
         for (int i = 0; i < views.length; i++) {
             if (views[i] != null) {
                 views[i].setAlpha(0f);
                 views[i].setTranslationY(50f);
                 views[i].animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setDuration(500)
-                    .setStartDelay(100 + (i * 100))
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                    .start();
+                        .alpha(1f)
+                        .translationY(0f)
+                        .setDuration(500)
+                        .setStartDelay(100 + (i * 100))
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .start();
             }
         }
+    }
+
+    private void animateBlob(View blob, float scale, int duration) {
+        blob.animate()
+                .scaleX(scale)
+                .scaleY(scale)
+                .rotation(blob.getRotation() + 45f)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        blob.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .rotation(blob.getRotation() - 45f)
+                                .setDuration(duration)
+                                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                                .withEndAction(this)
+                                .start();
+                    }
+                }).start();
+    }
+
+    private void shakeView(View view) {
+        if (view == null) return;
+        ObjectAnimator animator = ObjectAnimator.ofFloat(view, "translationX", 0, 10f);
+        animator.setDuration(150);
+        animator.setInterpolator(new CycleInterpolator(3));
+        animator.start();
     }
 }

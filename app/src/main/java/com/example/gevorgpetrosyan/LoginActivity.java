@@ -1,5 +1,7 @@
 package com.example.gevorgpetrosyan;
 
+import android.animation.ObjectAnimator;
+import android.view.animation.CycleInterpolator;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -121,17 +123,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void shakeView(View view) {
-        view.animate()
-                .translationX(15f)
-                .setDuration(40)
-                .withEndAction(() -> view.animate().translationX(-15f).setDuration(40)
-                        .withEndAction(() -> view.animate().translationX(10f).setDuration(40)
-                                .withEndAction(() -> view.animate().translationX(-10f).setDuration(40)
-                                        .withEndAction(() -> view.animate().translationX(0f).setDuration(40).start())
-                                        .start())
-                                .start())
-                        .start())
-                .start();
+        ObjectAnimator animator = ObjectAnimator.ofFloat(view, "translationX", 0, 10f);
+        animator.setDuration(150);
+        animator.setInterpolator(new CycleInterpolator(3));
+        animator.start();
     }
 
     private void updateTranslations() {
