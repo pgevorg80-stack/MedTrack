@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Minimalist Home with Rounded Peak and Base
+        Matches the soft aesthetic of the medicine vial.
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10.7,3.28 L4.53,8.42
+            C4.19,8.7 4,9.11 4,9.55
+            V19
+            C4,20.1 4.9,21 6,21
+            H9
+            V15
+            C9,14.45 9.45,14 10,14
+            H14
+            C14.55,14 15,14.45 15,15
+            V21
+            H18
+            C19.1,21 20,20.1 20,19
+            V9.55
+            C20,9.11 19.81,8.7 19.47,8.42
+            L13.3,3.28
+            C12.56,2.66 11.44,2.66 10.7,3.28 Z" />
+</vector>
