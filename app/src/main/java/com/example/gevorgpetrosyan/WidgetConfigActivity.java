@@ -35,7 +35,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
     private SeekBar sbBgHue, sbBgOpacity, sbTextHue;
     private CheckBox cbTextWhite;
     private boolean isRussian = false;
-    
+
     private int currentBgColor = Color.parseColor("#2196F3");
     private int currentBgOpacity = 255;
     private int currentTextColor = Color.WHITE;
@@ -81,7 +81,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
         // Apply Translations
         updateUIStrings();
 
-        // Initial state for animation
+        // Initial state for entrance animation
         findViewById(R.id.tv_config_header).setAlpha(0);
         findViewById(R.id.tv_live_preview_label).setAlpha(0);
         findViewById(R.id.preview_card).setAlpha(0);
@@ -102,10 +102,56 @@ public class WidgetConfigActivity extends AppCompatActivity {
         cbTextWhite.setOnCheckedChangeListener((v, checked) -> updatePreview());
 
         findViewById(R.id.btn_confirm).setOnClickListener(v -> handleConfirm());
-        
+
         updatePreview();
         startEntranceAnimations();
+        startBackgroundBlobAnimations();
     }
+
+    // ─── Background Blob Animations ───────────────────────────────────────────
+
+    private void startBackgroundBlobAnimations() {
+        // Three blobs at different angles compared to the login page
+        View blob1 = findViewById(R.id.bg_blob_widget_1);
+        View blob2 = findViewById(R.id.bg_blob_widget_2);
+        View blob3 = findViewById(R.id.bg_blob_widget_3);
+
+        if (blob1 != null) animateBlob(blob1, 1.25f, 3500, 60f);
+        if (blob2 != null) animateBlob(blob2, 1.35f, 4200, -75f);
+        if (blob3 != null) animateBlob(blob3, 1.20f, 2800, 90f);
+    }
+
+    /**
+     * Animate a blob by scaling and rotating it back and forth indefinitely.
+     *
+     * @param blob       the View to animate
+     * @param scale      target scale factor
+     * @param duration   half-cycle duration in ms
+     * @param angleDelta rotation angle added each direction (different per blob for variety)
+     */
+    private void animateBlob(View blob, float scale, int duration, float angleDelta) {
+        blob.animate()
+                .scaleX(scale)
+                .scaleY(scale)
+                .rotation(blob.getRotation() + angleDelta)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        blob.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .rotation(blob.getRotation() - angleDelta)
+                                .setDuration(duration)
+                                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                                .withEndAction(this)
+                                .start();
+                    }
+                }).start();
+    }
+
+    // ─── Entrance Animations ──────────────────────────────────────────────────
 
     private void startEntranceAnimations() {
         animateViewIn(findViewById(R.id.tv_config_header), 100);
@@ -127,6 +173,8 @@ public class WidgetConfigActivity extends AppCompatActivity {
                 .start();
     }
 
+    // ─── Translations ─────────────────────────────────────────────────────────
+
     private String tr(String en, String ru) {
         return isRussian ? ru : en;
     }
@@ -141,58 +189,69 @@ public class WidgetConfigActivity extends AppCompatActivity {
         ((MaterialButton) findViewById(R.id.btn_confirm)).setText(tr("ADD TO HOME SCREEN", "ДОБАВИТЬ НА ЭКРАН"));
     }
 
+    // ─── Live Preview ─────────────────────────────────────────────────────────
+
     private void updatePreview() {
         float[] bgHsv = {sbBgHue.getProgress(), 0.8f, 0.9f};
         currentBgColor = Color.HSVToColor(bgHsv);
         currentBgOpacity = sbBgOpacity.getProgress();
-        
+
         if (cbTextWhite.isChecked()) {
             currentTextColor = Color.WHITE;
             sbTextHue.setEnabled(false);
         } else {
             sbTextHue.setEnabled(true);
-            float[] textHsv = {sbTextHue.getProgress(), 0.8f, 0.4f}; 
+            float[] textHsv = {sbTextHue.getProgress(), 0.8f, 0.4f};
             currentTextColor = Color.HSVToColor(textHsv);
         }
 
         if (widgetBackgroundPreview != null) {
-            int subTextColor = Color.argb(160, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor));
-            
+            int subTextColor = Color.argb(160,
+                    Color.red(currentTextColor),
+                    Color.green(currentTextColor),
+                    Color.blue(currentTextColor));
+
             widgetBackgroundPreview.setColorFilter(currentBgColor);
             widgetBackgroundPreview.setImageAlpha(currentBgOpacity);
-            
-            ((TextView)findViewById(R.id.widget_time)).setTextColor(currentTextColor);
-            ((TextView)findViewById(R.id.widget_date)).setTextColor(subTextColor);
-            ((TextView)findViewById(R.id.widget_date)).setText(new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
-            
+
+            ((TextView) findViewById(R.id.widget_time)).setTextColor(currentTextColor);
+            ((TextView) findViewById(R.id.widget_date)).setTextColor(subTextColor);
+            ((TextView) findViewById(R.id.widget_date)).setText(
+                    new SimpleDateFormat("d MMMM", Locale.getDefault()).format(new Date()));
+
             TextView nextDoseLabel = findViewById(R.id.widget_next_dose_label);
             if (nextDoseLabel != null) {
-                nextDoseLabel.setTextColor(Color.argb(204, Color.red(currentTextColor), Color.green(currentTextColor), Color.blue(currentTextColor)));
+                nextDoseLabel.setTextColor(Color.argb(204,
+                        Color.red(currentTextColor),
+                        Color.green(currentTextColor),
+                        Color.blue(currentTextColor)));
             }
-            
-            ((TextView)findViewById(R.id.widget_next_dose)).setTextColor(currentTextColor);
-            ((ImageView)findViewById(R.id.widget_mic_icon)).setColorFilter(currentTextColor);
-            
+
+            ((TextView) findViewById(R.id.widget_next_dose)).setTextColor(currentTextColor);
+            ((ImageView) findViewById(R.id.widget_mic_icon)).setColorFilter(currentTextColor);
+
             ImageView doseBg = findViewById(R.id.widget_next_dose_bg);
             if (doseBg != null) {
                 doseBg.setColorFilter(currentTextColor);
                 doseBg.setImageAlpha(64);
             }
-            
+
             ImageView micBg = findViewById(R.id.widget_mic_bg);
             if (micBg != null) {
                 micBg.setColorFilter(currentTextColor);
                 micBg.setImageAlpha(64);
             }
-            
+
             int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
-            int[] tvIds = {R.id.tv_day_1, R.id.tv_day_2, R.id.tv_day_3, R.id.tv_day_4, R.id.tv_day_5, R.id.tv_day_6, R.id.tv_day_7};
-            int[] dotIds = {R.id.dot_day_1, R.id.dot_day_2, R.id.dot_day_3, R.id.dot_day_4, R.id.dot_day_5, R.id.dot_day_6, R.id.dot_day_7};
+            int[] tvIds  = {R.id.tv_day_1,  R.id.tv_day_2,  R.id.tv_day_3,  R.id.tv_day_4,
+                    R.id.tv_day_5,  R.id.tv_day_6,  R.id.tv_day_7};
+            int[] dotIds = {R.id.dot_day_1, R.id.dot_day_2, R.id.dot_day_3, R.id.dot_day_4,
+                    R.id.dot_day_5, R.id.dot_day_6, R.id.dot_day_7};
 
             for (int i = 1; i <= 7; i++) {
-                TextView tvDay = findViewById(tvIds[i-1]);
-                ImageView dotDay = findViewById(dotIds[i-1]);
-                
+                TextView tvDay  = findViewById(tvIds[i - 1]);
+                ImageView dotDay = findViewById(dotIds[i - 1]);
+
                 if (tvDay != null) {
                     if (i == currentDay) {
                         tvDay.setTextColor(currentTextColor);
@@ -202,7 +261,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
                         tvDay.setTypeface(null, Typeface.NORMAL);
                     }
                 }
-                
+
                 if (dotDay != null) {
                     dotDay.setColorFilter(currentTextColor);
                     dotDay.setImageAlpha(i == currentDay ? 255 : 64);
@@ -210,6 +269,8 @@ public class WidgetConfigActivity extends AppCompatActivity {
             }
         }
     }
+
+    // ─── Confirm / Save ───────────────────────────────────────────────────────
 
     private void handleConfirm() {
         if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
@@ -227,12 +288,11 @@ public class WidgetConfigActivity extends AppCompatActivity {
     }
 
     private void saveColors(int id) {
-        SharedPreferences prefs = getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
-        prefs.edit()
-            .putInt("bg_color_" + id, currentBgColor)
-            .putInt("text_color_" + id, currentTextColor)
-            .putInt("bg_opacity_" + id, currentBgOpacity)
-            .apply();
+        getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE).edit()
+                .putInt("bg_color_"  + id, currentBgColor)
+                .putInt("text_color_" + id, currentTextColor)
+                .putInt("bg_opacity_" + id, currentBgOpacity)
+                .apply();
     }
 
     private void pinWidgetToHomeScreen() {
@@ -243,24 +303,29 @@ public class WidgetConfigActivity extends AppCompatActivity {
             if (appWidgetManager.isRequestPinAppWidgetSupported()) {
                 Intent callbackIntent = new Intent(this, MedWidget.class);
                 callbackIntent.setAction("com.example.gevorgpetrosyan.WIDGET_PINNED");
-                callbackIntent.putExtra("pending_bg", currentBgColor);
-                callbackIntent.putExtra("pending_text", currentTextColor);
+                callbackIntent.putExtra("pending_bg",      currentBgColor);
+                callbackIntent.putExtra("pending_text",    currentTextColor);
                 callbackIntent.putExtra("pending_opacity", currentBgOpacity);
-                
-                PendingIntent successCallback = PendingIntent.getBroadcast(this, 0, 
-                        callbackIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
+
+                PendingIntent successCallback = PendingIntent.getBroadcast(
+                        this, 0, callbackIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
 
                 appWidgetManager.requestPinAppWidget(myProvider, null, successCallback);
-                String msg = tr("Please confirm placement on your home screen", "Пожалуйста, подтвердите размещение на главном экране");
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                Toast.makeText(this,
+                        tr("Please confirm placement on your home screen",
+                                "Пожалуйста, подтвердите размещение на главном экране"),
+                        Toast.LENGTH_LONG).show();
                 finish();
             } else {
-                String err = tr("Pinned widgets not supported", "Закрепление виджетов не поддерживается");
-                Toast.makeText(this, err, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        tr("Pinned widgets not supported", "Закрепление виджетов не поддерживается"),
+                        Toast.LENGTH_SHORT).show();
             }
         } else {
-            String err = tr("Add widget from home screen manually", "Добавьте виджет вручную с главного экрана");
-            Toast.makeText(this, err, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    tr("Add widget from home screen manually", "Добавьте виджет вручную с главного экрана"),
+                    Toast.LENGTH_SHORT).show();
         }
     }
 }
