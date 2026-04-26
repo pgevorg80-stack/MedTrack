@@ -1146,6 +1146,9 @@ public class MainActivity extends AppCompatActivity {
         btnInfo.setAllCaps(false);
         btnInfo.setIcon(getDrawable(android.R.drawable.ic_dialog_info));
         btnInfo.setIconPadding(8);
+        boolean isDark = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        btnInfo.setTextColor(isDark ? Color.WHITE : Color.WHITE);
+        btnInfo.setIconTint(ColorStateList.valueOf(Color.WHITE));
         btnInfo.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
         LinearLayout.LayoutParams infoLp = new LinearLayout.LayoutParams(-2, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics()));
         infoLp.setMargins(0, 10, 0, 0);
