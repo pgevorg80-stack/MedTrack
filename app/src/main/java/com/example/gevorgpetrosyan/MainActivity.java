@@ -1137,6 +1137,21 @@ public class MainActivity extends AppCompatActivity {
             btnFind.setOnClickListener(v1 -> openNearestPharmacy());
             textInfo.addView(btnFind);
         }
+
+        // Information Button (from Kaggle Dataset) - Moved below pharmacy button
+        MaterialButton btnInfo = new MaterialButton(this);
+        btnInfo.setText(tr("Information", "Информация"));
+        btnInfo.setTextSize(10);
+        btnInfo.setCornerRadius(20);
+        btnInfo.setAllCaps(false);
+        btnInfo.setIcon(getDrawable(android.R.drawable.ic_dialog_info));
+        btnInfo.setIconPadding(8);
+        btnInfo.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
+        LinearLayout.LayoutParams infoLp = new LinearLayout.LayoutParams(-2, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics()));
+        infoLp.setMargins(0, 10, 0, 0);
+        btnInfo.setLayoutParams(infoLp);
+        btnInfo.setOnClickListener(v1 -> MedicineInfoHelper.showMedicineInfo(this, m.name));
+        textInfo.addView(btnInfo);
         
         if (isExpired) {
             TextView tvExp = new TextView(this);

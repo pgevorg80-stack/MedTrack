@@ -47,6 +47,7 @@ dependencies {
     implementation libs.camera.view
     implementation libs.exifinterface
     implementation libs.glide
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
 
     // Local ROOM Database (This saves your medicines on the phone)
     implementation "androidx.room:room-runtime:2.6.1"
