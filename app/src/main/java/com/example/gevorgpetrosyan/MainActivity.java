@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isWinkDetectionActive = false;
     private long lastWinkTime = 0;
     private static final long WINK_COOLDOWN = 3000; // 3 seconds
+    private int winkFrameCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -243,7 +244,8 @@ public class MainActivity extends AppCompatActivity {
         winkPreviewView = findViewById(R.id.wink_preview_view);
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                .setMinFaceSize(0.35f) // Ignore small faces in the background
                 .build();
         winkDetector = FaceDetection.getClient(options);
 
@@ -3050,12 +3052,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopWinkDetection() {
         isWinkDetectionActive = false;
+        winkFrameCount = 0;
         try {
             ProcessCameraProvider.getInstance(this).get().unbindAll();
         } catch (Exception ignored) {}
     }
 
-        @androidx.annotation.OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
+    @androidx.annotation.OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
     private void processImageForWink(ImageProxy imageProxy) {
         if (imageProxy.getImage() == null) {
             imageProxy.close();
@@ -3065,20 +3068,42 @@ public class MainActivity extends AppCompatActivity {
         InputImage image = InputImage.fromMediaImage(imageProxy.getImage(), imageProxy.getImageInfo().getRotationDegrees());
         winkDetector.process(image)
                 .addOnSuccessListener(faces -> {
+                    boolean winkDetectedThisFrame = false;
                     for (Face face : faces) {
+                        // Relaxed angle slightly (from 15 to 25) to allow for some head tilt
+                        if (Math.abs(face.getHeadEulerAngleY()) > 25 || Math.abs(face.getHeadEulerAngleZ()) > 25) {
+                            continue;
+                        }
+
                         if (face.getRightEyeOpenProbability() != null && face.getLeftEyeOpenProbability() != null) {
                             float rightOpen = face.getRightEyeOpenProbability();
                             float leftOpen = face.getLeftEyeOpenProbability();
 
-                            // Thresholds: right eye closed (< 0.2), left eye open (> 0.8)
-                            if (rightOpen < 0.25f && leftOpen > 0.75f) {
-                                long currentTime = System.currentTimeMillis();
-                                if (currentTime - lastWinkTime > WINK_COOLDOWN) {
-                                    lastWinkTime = currentTime;
-                                    runOnUiThread(this::takeAllNearestMeds);
-                                }
+                            // Moderate thresholds: one eye < 0.2 (mostly closed), other > 0.7 (mostly open)
+                            // This is more reliable across different lighting and face types.
+                            boolean isRightWink = rightOpen < 0.20f && leftOpen > 0.70f;
+                            boolean isLeftWink = leftOpen < 0.20f && rightOpen > 0.70f;
+
+                            if (isRightWink || isLeftWink) {
+                                winkDetectedThisFrame = true;
+                                break;
                             }
                         }
+                    }
+
+                    if (winkDetectedThisFrame) {
+                        winkFrameCount++;
+                        // Require fewer frames (approx 150-200ms) to feel more responsive but still block blinks
+                        if (winkFrameCount >= 5) {
+                            long currentTime = System.currentTimeMillis();
+                            if (currentTime - lastWinkTime > WINK_COOLDOWN) {
+                                lastWinkTime = currentTime;
+                                winkFrameCount = 0;
+                                runOnUiThread(this::takeAllNearestMeds);
+                            }
+                        }
+                    } else {
+                        winkFrameCount = 0;
                     }
                 })
                 .addOnCompleteListener(task -> imageProxy.close());
