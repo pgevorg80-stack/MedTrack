@@ -244,8 +244,8 @@ public class MainActivity extends AppCompatActivity {
         winkPreviewView = findViewById(R.id.wink_preview_view);
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                .setMinFaceSize(0.35f) // Ignore small faces in the background
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST) // Fast is better for real-time video
+                .setMinFaceSize(0.25f) // Slightly smaller faces allowed
                 .build();
         winkDetector = FaceDetection.getClient(options);
 
@@ -3070,8 +3070,8 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(faces -> {
                     boolean winkDetectedThisFrame = false;
                     for (Face face : faces) {
-                        // Relaxed angle slightly (from 15 to 25) to allow for some head tilt
-                        if (Math.abs(face.getHeadEulerAngleY()) > 25 || Math.abs(face.getHeadEulerAngleZ()) > 25) {
+                        // Allow for more head movement/tilt (up to 35 degrees)
+                        if (Math.abs(face.getHeadEulerAngleY()) > 35 || Math.abs(face.getHeadEulerAngleZ()) > 35) {
                             continue;
                         }
 
@@ -3079,10 +3079,10 @@ public class MainActivity extends AppCompatActivity {
                             float rightOpen = face.getRightEyeOpenProbability();
                             float leftOpen = face.getLeftEyeOpenProbability();
 
-                            // Moderate thresholds: one eye < 0.2 (mostly closed), other > 0.7 (mostly open)
-                            // This is more reliable across different lighting and face types.
-                            boolean isRightWink = rightOpen < 0.20f && leftOpen > 0.70f;
-                            boolean isLeftWink = leftOpen < 0.20f && rightOpen > 0.70f;
+                            // More balanced thresholds to handle varied lighting and facial expressions
+                            // One eye must be significantly more closed than the other.
+                            boolean isRightWink = rightOpen < 0.30f && leftOpen > 0.60f;
+                            boolean isLeftWink = leftOpen < 0.30f && rightOpen > 0.60f;
 
                             if (isRightWink || isLeftWink) {
                                 winkDetectedThisFrame = true;
@@ -3093,8 +3093,8 @@ public class MainActivity extends AppCompatActivity {
 
                     if (winkDetectedThisFrame) {
                         winkFrameCount++;
-                        // Require fewer frames (approx 150-200ms) to feel more responsive but still block blinks
-                        if (winkFrameCount >= 5) {
+                        // Lower frame count (3-4 frames) ensures it triggers quickly once detected
+                        if (winkFrameCount >= 3) {
                             long currentTime = System.currentTimeMillis();
                             if (currentTime - lastWinkTime > WINK_COOLDOWN) {
                                 lastWinkTime = currentTime;
@@ -3103,7 +3103,10 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     } else {
-                        winkFrameCount = 0;
+                        // Don't reset to 0 immediately on a single missed frame (debounce)
+                        if (winkFrameCount > 0) {
+                            winkFrameCount--;
+                        }
                     }
                 })
                 .addOnCompleteListener(task -> imageProxy.close());
@@ -3130,6 +3133,10 @@ public class MainActivity extends AppCompatActivity {
                     showWinkAnimation();
                     refreshCurrentTab();
                     updateWidget();
+                });
+            } else {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, tr("Wink detected, but no meds scheduled now.", "Подмигивание обнаружено, но лекарств сейчас не запланировано."), Toast.LENGTH_SHORT).show();
                 });
             }
         });
