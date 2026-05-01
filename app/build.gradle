@@ -20,10 +20,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField "String", "GROQ_API_KEY", "\"" + (project.findProperty("groq.api.key") ?: System.getenv("GROQ_API_KEY") ?: "") + "\""
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "GROQ_API_KEY", "\"" + (project.findProperty("groq.api.key") ?: System.getenv("GROQ_API_KEY") ?: "") + "\""
         }
+    }
+    buildFeatures {
+        buildConfig true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11

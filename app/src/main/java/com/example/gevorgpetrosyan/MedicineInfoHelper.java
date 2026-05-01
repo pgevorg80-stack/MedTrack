@@ -23,8 +23,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class MedicineInfoHelper {
-    // Note: If GitHub blocks push, use the 'Unblock Secret' link in the error log.
-    private static final String API_KEY = "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";
+    private static final String API_KEY = BuildConfig.GROQ_API_KEY;
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
     private static final String MODEL = "llama-3.3-70b-versatile"; 
 
