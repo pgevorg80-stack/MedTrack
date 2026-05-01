@@ -1,6 +1,13 @@
 plugins {alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services) // Change this line
 }
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(localPropertiesFile))
+}
+
 android {
     namespace 'com.example.gevorgpetrosyan'
 
@@ -21,12 +28,12 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "GROQ_API_KEY", "\"" + (project.findProperty("groq.api.key") ?: System.getenv("GROQ_API_KEY") ?: "") + "\""
+            buildConfigField "String", "GROQ_API_KEY", "\"${localProperties.getProperty('GROQ_API_KEY', '')}\""
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "GROQ_API_KEY", "\"" + (project.findProperty("groq.api.key") ?: System.getenv("GROQ_API_KEY") ?: "") + "\""
+            buildConfigField "String", "GROQ_API_KEY", "\"${localProperties.getProperty('GROQ_API_KEY', '')}\""
         }
     }
     buildFeatures {

@@ -2312,46 +2312,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showStatusAnimation(int iconRes, String message) {
-        if (successOverlay == null) return;
-        
-        successCheckmark.setImageResource(iconRes);
-        // If it's the sync icon, use green. Otherwise, let it be default (e.g. checkmark is usually green in source or white)
-        if (iconRes == android.R.drawable.stat_notify_sync) {
-            successCheckmark.setColorFilter(Color.parseColor("#4CAF50"), PorterDuff.Mode.SRC_IN);
-        } else {
-            successCheckmark.clearColorFilter();
-        }
+        runOnUiThread(() -> {
+            if (successOverlay == null) return;
 
-        tvSuccessMsg.setText(message);
-        
-        successOverlay.setVisibility(View.VISIBLE);
-        successOverlay.setAlpha(0f);
-        successOverlay.animate().alpha(1f).setDuration(200).start();
+            successCheckmark.setImageResource(iconRes);
+            if (iconRes == android.R.drawable.stat_notify_sync) {
+                successCheckmark.setColorFilter(Color.parseColor("#4CAF50"), PorterDuff.Mode.SRC_IN);
+            } else {
+                successCheckmark.clearColorFilter();
+            }
 
-        successContent.setScaleX(0.5f);
-        successContent.setScaleY(0.5f);
-        successContent.animate()
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(400)
-                .setInterpolator(new OvershootInterpolator())
-                .start();
+            tvSuccessMsg.setText(message);
 
-        // If it's an AnimatedVectorDrawable, start it
-        Drawable d = successCheckmark.getDrawable();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && d instanceof AnimatedVectorDrawable) {
-            ((AnimatedVectorDrawable) d).start();
-        } else if (d instanceof AnimatedVectorDrawableCompat) {
-            ((AnimatedVectorDrawableCompat) d).start();
-        }
+            successOverlay.setVisibility(View.VISIBLE);
+            successOverlay.setAlpha(0f);
+            successOverlay.animate().alpha(1f).setDuration(200).start();
 
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            successOverlay.animate()
-                    .alpha(0f)
-                    .setDuration(300)
-                    .withEndAction(() -> successOverlay.setVisibility(View.GONE))
+            successContent.setScaleX(0.5f);
+            successContent.setScaleY(0.5f);
+            successContent.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(400)
+                    .setInterpolator(new OvershootInterpolator())
                     .start();
-        }, 1200);
+
+            Drawable d = successCheckmark.getDrawable();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && d instanceof AnimatedVectorDrawable) {
+                ((AnimatedVectorDrawable) d).start();
+            } else if (d instanceof AnimatedVectorDrawableCompat) {
+                ((AnimatedVectorDrawableCompat) d).start();
+            }
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                successOverlay.animate()
+                        .alpha(0f)
+                        .setDuration(300)
+                        .withEndAction(() -> successOverlay.setVisibility(View.GONE))
+                        .start();
+            }, 1200);
+        });
     }
 
     private void openNearestPharmacy() {

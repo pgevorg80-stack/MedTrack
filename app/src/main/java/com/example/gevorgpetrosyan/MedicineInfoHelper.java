@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class MedicineInfoHelper {
+    // Note: API Key is now moved to local.properties to prevent GitHub revocation.
     private static final String API_KEY = BuildConfig.GROQ_API_KEY;
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
     private static final String MODEL = "llama-3.3-70b-versatile"; 
@@ -112,6 +113,7 @@ public class MedicineInfoHelper {
         fetchAIInfo(medicineName, isRu, new AICallback() {
             @Override
             public void onSuccess(String result) {
+                Log.d("MedicineInfoHelper", "AI Success: " + result);
                 new Handler(Looper.getMainLooper()).post(() -> {
                     root.removeView(loader);
                     String cleanResult = result.trim().toLowerCase();
@@ -127,6 +129,7 @@ public class MedicineInfoHelper {
 
             @Override
             public void onError(String error) {
+                Log.e("MedicineInfoHelper", "AI Error: " + error);
                 new Handler(Looper.getMainLooper()).post(() -> {
                     root.removeView(loader);
                     infoTv.setTextColor(Color.RED);
@@ -169,17 +172,21 @@ public class MedicineInfoHelper {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                Log.e("MedicineInfoHelper", "Network Failure", e);
                 callback.onError(e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
+                    String errorBody = response.body() != null ? response.body().string() : "no body";
+                    Log.e("MedicineInfoHelper", "API Error Response: " + response.code() + " - " + errorBody);
                     callback.onError("API Error: " + response.code());
                     return;
                 }
                 try {
                     String jsonData = response.body().string();
+                    Log.d("MedicineInfoHelper", "JSON Response: " + jsonData);
                     JSONObject Jobject = new JSONObject(jsonData);
                     String content = Jobject.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content");
                     callback.onSuccess(content.trim());
