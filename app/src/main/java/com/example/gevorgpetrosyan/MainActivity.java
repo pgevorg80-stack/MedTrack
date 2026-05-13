@@ -715,6 +715,17 @@ public class MainActivity extends AppCompatActivity {
     private void populateList(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Medicine Reminders", "График приема")));
         
+        if (meds != null && !meds.isEmpty()) {
+            MaterialButton btnCheck = createActionButton(tr(" Check Drug Interactions (AI)", " Проверить взаимодействия (AI)"));
+            btnCheck.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
+            btnCheck.setOnClickListener(v -> MedicineInfoHelper.checkInteractions(this, meds));
+            LinearLayout.LayoutParams checkLp = new LinearLayout.LayoutParams(-1, -2);
+            checkLp.setMargins(0, 0, 0, 20);
+            btnCheck.setLayoutParams(checkLp);
+            layout.addView(btnCheck);
+            animateViewIn(btnCheck, 50);
+        }
+
         MaterialButton btnAdd = createActionButton(tr("+ Schedule New Dose", "+ Добавить прием"));
         btnAdd.setOnClickListener(v -> { tempTimes.clear(); tempMedsToSchedule.clear(); showScheduleDoseDialog(); });
         LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-1, -2);
@@ -1413,6 +1424,17 @@ public class MainActivity extends AppCompatActivity {
         cardContent.addView(rightPart);
         layout.addView(dashCard);
         animateViewIn(dashCard, 200);
+
+        if (meds != null && !meds.isEmpty()) {
+            MaterialButton btnCheck = createActionButton(tr("Check Safety (AI)", "Проверить безопасность (AI)"));
+            btnCheck.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
+            btnCheck.setOnClickListener(v -> MedicineInfoHelper.checkInteractions(this, meds));
+            LinearLayout.LayoutParams checkLp = new LinearLayout.LayoutParams(-1, -2);
+            checkLp.setMargins(0, 0, 0, 20);
+            btnCheck.setLayoutParams(checkLp);
+            layout.addView(btnCheck);
+            animateViewIn(btnCheck, 250);
+        }
 
         TextView tvSectionTitle = new TextView(this);
         tvSectionTitle.setText(tr("Today's Schedule", "Расписание на сегодня"));
