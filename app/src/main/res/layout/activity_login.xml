@@ -210,12 +210,23 @@
                         android:id="@+id/btn_guest"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
+                        android:layout_height="40dp"
                         android:layout_marginTop="8dp"
                         android:text="Continue as Guest"
                         android:textAllCaps="false"
                         android:textColor="?android:attr/textColorSecondary"
-                        app:cornerRadius="28dp" />
+                        app:cornerRadius="20dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_test_user"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="-4dp"
+                        android:text="Test User"
+                        android:textAllCaps="false"
+                        android:textColor="?android:attr/textColorSecondary"
+                        app:cornerRadius="20dp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

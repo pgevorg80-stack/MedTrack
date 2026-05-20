@@ -6,6 +6,7 @@
     <attr name="cardBackgroundColor" format="color" />
     <attr name="cardStrokeColor" format="color" />
     <attr name="secondaryTextColor" format="color" />
+    <attr name="loginLinkColor" format="color" />
 
     <style name="Theme.GevorgPetrosyan" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Main Brand Colors -->
@@ -24,6 +25,7 @@
         <!-- Card Colors Light -->
         <item name="cardBackgroundColor">#F8F9FA</item>
         <item name="cardStrokeColor">#E0E0E0</item>
+        <item name="loginLinkColor">#2196F3</item>
 
         <!-- NAVIGATION BAR LIGHT MODE LOGIC: Blue background with White icons -->
         <item name="navBarBackground">#2196F3</item>

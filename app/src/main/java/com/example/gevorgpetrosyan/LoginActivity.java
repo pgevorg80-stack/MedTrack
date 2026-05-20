@@ -98,6 +98,11 @@ public class LoginActivity extends AppCompatActivity {
             animateClick(v);
             loginAsGuest();
         });
+        findViewById(R.id.btn_test_user).setOnClickListener(v -> {
+            animateClick(v);
+            etEmail.setText("innovationcampus26@gmail.com");
+            etPassword.setText("Samsung2026");
+        });
         registerLink.setOnClickListener(v -> {
             animateClick(v);
             Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
@@ -133,6 +138,7 @@ public class LoginActivity extends AppCompatActivity {
         TextView loginSubTitle = findViewById(R.id.login_subtitle);
         MaterialButton btnLogin = findViewById(R.id.btn_login);
         MaterialButton btnGuest = findViewById(R.id.btn_guest);
+        MaterialButton btnTestUser = findViewById(R.id.btn_test_user);
 
         ((TextView)loginTitle).setText(tr("Welcome Back", "С возвращением"));
         if (loginSubTitle != null) loginSubTitle.setText(tr("Sign in to continue tracking", "Войдите, чтобы продолжить"));
@@ -145,6 +151,7 @@ public class LoginActivity extends AppCompatActivity {
 
         btnLogin.setText(tr("Sign In", "Войти"));
         btnGuest.setText(tr("Continue as Guest", "Продолжить как гость"));
+        if (btnTestUser != null) btnTestUser.setText(tr("Test User", "Тестовый пользователь"));
         ((TextView)registerLink).setText(tr("New here? Create Account", "Впервые здесь? Создать аккаунт"));
         btnLangToggle.setText(isRussian ? "RU" : "EN");
     }
