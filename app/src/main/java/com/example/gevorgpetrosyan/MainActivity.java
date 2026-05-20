@@ -305,6 +305,7 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.btn_profile),
                     findViewById(R.id.theme_switcher_container),
                     findViewById(R.id.language_switcher_container),
+                    findViewById(R.id.wink_switcher_container),
                     findViewById(R.id.btn_add_widget),
                     findViewById(R.id.btn_share),
                     findViewById(R.id.btn_sync),
@@ -367,6 +368,38 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 updateStaticUI();
                 refreshCurrentTab();
+            }
+        });
+
+        findViewById(R.id.wink_switcher_container).setOnClickListener(v -> {
+            SharedPreferences pref = getSharedPreferences("WinkPrefs", MODE_PRIVATE);
+            boolean isWinkEnabled = pref.getBoolean("IsWinkEnabled", false);
+            boolean nextWink = !isWinkEnabled;
+            
+            pref.edit().putBoolean("IsWinkEnabled", nextWink).apply();
+            
+            // Animate wink knob
+            View winkKnob = findViewById(R.id.iv_wink_knob);
+            if (winkKnob != null) {
+                float density = getResources().getDisplayMetrics().density;
+                float targetX = nextWink ? 26 * density : 0;
+                winkKnob.animate()
+                    .translationX(targetX)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        updateStaticUI();
+                        if (viewPager.getCurrentItem() == 3) {
+                            if (nextWink) startWinkDetection();
+                            else stopWinkDetection();
+                        }
+                    })
+                    .start();
+            } else {
+                updateStaticUI();
+                if (viewPager.getCurrentItem() == 3) {
+                    if (nextWink) startWinkDetection();
+                    else stopWinkDetection();
+                }
             }
         });
 
@@ -499,6 +532,9 @@ public class MainActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.tv_light_label)).setText(tr("Light", "День"));
         ((TextView) findViewById(R.id.tv_dark_label)).setText(tr("Dark", "Ночь"));
         
+        ((TextView) findViewById(R.id.tv_wink_off_label)).setText(tr("Off", "Выкл"));
+        ((TextView) findViewById(R.id.tv_wink_on_label)).setText(tr("On", "Вкл"));
+
         // Language labels
         TextView enLabel = findViewById(R.id.tv_lang_en_label);
         TextView ruLabel = findViewById(R.id.tv_lang_ru_label);
@@ -543,6 +579,18 @@ public class MainActivity extends AppCompatActivity {
         View darkLabel = findViewById(R.id.tv_dark_label);
         if (lightLabel != null) lightLabel.setAlpha(isDark ? 0.4f : 1.0f);
         if (darkLabel != null) darkLabel.setAlpha(isDark ? 1.0f : 0.4f);
+
+        // Wink Switcher Sync
+        boolean isWinkEnabled = getSharedPreferences("WinkPrefs", MODE_PRIVATE).getBoolean("IsWinkEnabled", false);
+        View winkKnob = findViewById(R.id.iv_wink_knob);
+        if (winkKnob != null) {
+            float density = getResources().getDisplayMetrics().density;
+            winkKnob.setTranslationX(isWinkEnabled ? 26 * density : 0);
+        }
+        View winkOffLabel = findViewById(R.id.tv_wink_off_label);
+        View winkOnLabel = findViewById(R.id.tv_wink_on_label);
+        if (winkOffLabel != null) winkOffLabel.setAlpha(isWinkEnabled ? 0.4f : 1.0f);
+        if (winkOnLabel != null) winkOnLabel.setAlpha(isWinkEnabled ? 1.0f : 0.4f);
         
         if (tvSuccessMsg != null) tvSuccessMsg.setText(tr("Logged!", "Отмечено!"));
     }
@@ -1546,6 +1594,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.btn_profile),
             findViewById(R.id.theme_switcher_container),
             findViewById(R.id.language_switcher_container),
+            findViewById(R.id.wink_switcher_container),
             findViewById(R.id.btn_add_widget),
             findViewById(R.id.btn_share),
             findViewById(R.id.btn_sync),
