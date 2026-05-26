@@ -3093,6 +3093,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void startWinkDetection() {
         if (isWinkDetectionActive) return;
+
+        SharedPreferences pref = getSharedPreferences("WinkPrefs", MODE_PRIVATE);
+        if (!pref.getBoolean("IsWinkEnabled", false)) return;
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             androidx.core.app.ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 104);
             return;
@@ -3102,6 +3106,8 @@ public class MainActivity extends AppCompatActivity {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
+                if (!isWinkDetectionActive) return; // Check if still active after async call
+
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                 
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
@@ -3141,8 +3147,8 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(faces -> {
                     boolean winkDetectedThisFrame = false;
                     for (Face face : faces) {
-                        // Allow for more head movement/tilt (up to 35 degrees)
-                        if (Math.abs(face.getHeadEulerAngleY()) > 35 || Math.abs(face.getHeadEulerAngleZ()) > 35) {
+                        // Relaxed head movement allowance (up to 45 degrees)
+                        if (Math.abs(face.getHeadEulerAngleY()) > 45 || Math.abs(face.getHeadEulerAngleZ()) > 45) {
                             continue;
                         }
 
@@ -3150,12 +3156,11 @@ public class MainActivity extends AppCompatActivity {
                             float rightOpen = face.getRightEyeOpenProbability();
                             float leftOpen = face.getLeftEyeOpenProbability();
 
-                            // More balanced thresholds to handle varied lighting and facial expressions
-                            // One eye must be significantly more closed than the other.
-                            boolean isRightWink = rightOpen < 0.30f && leftOpen > 0.60f;
-                            boolean isLeftWink = leftOpen < 0.30f && rightOpen > 0.60f;
+                            // More generous thresholds to make winking easier to detect
+                            // Left eye significantly closed, right eye reasonably open
+                            boolean isLeftWink = leftOpen < 0.50f && rightOpen > 0.55f;
 
-                            if (isRightWink || isLeftWink) {
+                            if (isLeftWink) {
                                 winkDetectedThisFrame = true;
                                 break;
                             }
@@ -3164,8 +3169,8 @@ public class MainActivity extends AppCompatActivity {
 
                     if (winkDetectedThisFrame) {
                         winkFrameCount++;
-                        // Lower frame count (3-4 frames) ensures it triggers quickly once detected
-                        if (winkFrameCount >= 3) {
+                        // Trigger faster: only 2 consecutive detections needed
+                        if (winkFrameCount >= 2) {
                             long currentTime = System.currentTimeMillis();
                             if (currentTime - lastWinkTime > WINK_COOLDOWN) {
                                 lastWinkTime = currentTime;
@@ -3174,7 +3179,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     } else {
-                        // Don't reset to 0 immediately on a single missed frame (debounce)
+                        // Debounce: allow for occasional missed frames during a wink
                         if (winkFrameCount > 0) {
                             winkFrameCount--;
                         }
@@ -3185,7 +3190,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void takeAllNearestMeds() {
         executor.execute(() -> {
-            List<Medicine> meds = db.medicineDao().getAll();
+            List<Medicine> meds = db.medicineDao().getAllByUserId(currentUserId);
             if (meds == null || meds.isEmpty()) return;
             
             String globalNext = getNextUpcomingDose(meds);
