@@ -11,7 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Animated Background Blobs -->
         <View
             android:id="@+id/bg_blob_main_1"
             android:layout_width="350dp"
@@ -42,18 +41,12 @@
             android:paddingBottom="104dp"
             android:clipToPadding="false" />
 
-        <!-- Wink-to-Log Camera Preview (Hidden but active) -->
         <androidx.camera.view.PreviewView
             android:id="@+id/wink_preview_view"
             android:layout_width="1dp"
             android:layout_height="1dp"
             android:alpha="0" />
 
-        <!-- ══════════════════════════════════════════
-             BOTTOM NAVIGATION BAR
-             Floating pill with 5 slots:
-             [Schedule] [History] [＋] [Stock] [Home]
-             ══════════════════════════════════════════ -->
         <RelativeLayout
             android:id="@+id/nav_container"
             android:layout_width="match_parent"
@@ -69,7 +62,6 @@
                 android:background="@drawable/nav_pill_background"
                 android:elevation="12dp">
 
-                <!-- Animated Selection Indicator (sliding pill highlight) -->
                 <View
                     android:id="@+id/nav_indicator"
                     android:layout_width="65dp"
@@ -88,7 +80,6 @@
                     android:paddingEnd="12dp"
                     android:weightSum="5.3">
 
-                    <!-- ① SCHEDULE — bell icon, reminders page -->
                     <LinearLayout
                         android:id="@+id/nav_list"
                         android:layout_width="0dp"
@@ -115,7 +106,6 @@
                             android:layout_marginTop="3dp" />
                     </LinearLayout>
 
-                    <!-- ② HISTORY — bar chart icon, stats page -->
                     <LinearLayout
                         android:id="@+id/nav_stats"
                         android:layout_width="0dp"
@@ -142,7 +132,6 @@
                             android:layout_marginTop="3dp" />
                     </LinearLayout>
 
-                    <!-- ③ ADD — centre elevated card with custom plus icon -->
                     <LinearLayout
                         android:id="@+id/nav_add"
                         android:layout_width="0dp"
@@ -172,7 +161,6 @@
                         </com.google.android.material.card.MaterialCardView>
                     </LinearLayout>
 
-                    <!-- ④ STOCK — pill bottle icon, inventory page -->
                     <LinearLayout
                         android:id="@+id/nav_inventory"
                         android:layout_width="0dp"
@@ -199,7 +187,6 @@
                             android:layout_marginTop="3dp" />
                     </LinearLayout>
 
-                    <!-- ⑤ HOME — house icon, dashboard page -->
                     <LinearLayout
                         android:id="@+id/nav_dashboard"
                         android:layout_width="0dp"
@@ -230,7 +217,6 @@
             </FrameLayout>
         </RelativeLayout>
 
-        <!-- SUCCESS OVERLAY -->
         <FrameLayout
             android:id="@+id/success_overlay"
             android:layout_width="match_parent"
@@ -272,9 +258,6 @@
 
     </RelativeLayout>
 
-    <!-- ══════════════════════════════════════════
-         SETTINGS DRAWER (unchanged)
-         ══════════════════════════════════════════ -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
         android:layout_width="260dp"
@@ -312,7 +295,6 @@
                 app:iconTint="#FFFFFF"
                 android:layout_marginBottom="15dp"/>
 
-            <!-- Modern Theme Switcher -->
             <LinearLayout
                 android:id="@+id/theme_switcher_container"
                 android:layout_width="match_parent"
@@ -376,7 +358,6 @@
                     android:textColor="?android:attr/textColorPrimary" />
             </LinearLayout>
 
-            <!-- Language Switcher -->
             <LinearLayout
                 android:id="@+id/language_switcher_container"
                 android:layout_width="match_parent"
@@ -440,7 +421,6 @@
                     android:textColor="?android:attr/textColorPrimary" />
             </LinearLayout>
 
-            <!-- Wink Switcher -->
             <LinearLayout
                 android:id="@+id/wink_switcher_container"
                 android:layout_width="match_parent"

@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="?android:attr/windowBackground">
 
-    <!-- Soft background decorative elements -->
     <View
         android:id="@+id/bg_blob"
         android:layout_width="400dp"
@@ -48,7 +47,6 @@
             android:textColor="?android:attr/textColorSecondary"
             android:textStyle="bold" />
 
-        <!-- Modern Theme Switcher -->
         <LinearLayout
             android:id="@+id/theme_switcher_container"
             android:layout_width="wrap_content"

@@ -23,7 +23,7 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- Medicine Name Input with modern pill background -->
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -55,7 +55,7 @@
                 app:tint="?attr/colorPrimary" />
         </LinearLayout>
 
-        <!-- Time Selector styled as a soft pill button -->
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/dialog_btn_time"
             style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
@@ -71,7 +71,7 @@
             app:iconPadding="12dp"
             app:iconTint="?attr/colorPrimary" />
 
-        <!-- Bottom Action Buttons matching VoiceLog UI -->
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

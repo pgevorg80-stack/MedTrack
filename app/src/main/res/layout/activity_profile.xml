@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="?android:attr/windowBackground">
 
-    <!-- Animated Background Blobs -->
     <View
         android:id="@+id/bg_blob_profile_1"
         android:layout_width="350dp"
@@ -55,7 +54,6 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Profile Header -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/profile_image_container"
                 android:layout_width="120dp"

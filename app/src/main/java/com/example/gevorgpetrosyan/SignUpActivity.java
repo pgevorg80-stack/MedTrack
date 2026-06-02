@@ -41,7 +41,6 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        // Hide navigation bar for immersive experience
         WindowInsetsControllerCompat windowInsetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         windowInsetsController.setSystemBarsBehavior(
@@ -51,7 +50,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        android.content.SharedPreferences prefs = getSharedPreferences("LangPrefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("LangPrefs", MODE_PRIVATE);
         isRussian = prefs.getBoolean("IsRussian", false);
 
         etEmail = findViewById(R.id.et_signup_email);
@@ -90,7 +89,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         loginLink.setOnClickListener(v -> {
             animateClick(v);
-            finish(); // Go back to LoginActivity
+            finish();
         });
 
         logo.setOnClickListener(v -> {
@@ -124,10 +123,10 @@ public class SignUpActivity extends AppCompatActivity {
 
         if (signupSubTitle != null) signupSubTitle.setText(tr("Join our health community", "Присоединяйтесь к нашему сообществу"));
         ((TextView)signupTitle).setText(tr("Create Account", "Создать аккаунт"));
-        
+
         if (tilEmail != null) tilEmail.setHint(tr("Email Address", "Электронная почта"));
         else etEmail.setHint(tr("Email Address", "Электронная почта"));
-        
+
         if (tilPassword != null) tilPassword.setHint(tr("Create Password", "Придумайте пароль"));
         else etPassword.setHint(tr("Create Password", "Придумайте пароль"));
 
@@ -182,7 +181,6 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void startEntryAnimations() {
-        // Initial state
         logo.setAlpha(0f);
         logo.setTranslationY(-50f);
         signupTitle.setAlpha(0f);
@@ -191,22 +189,18 @@ public class SignUpActivity extends AppCompatActivity {
         signupCard.setTranslationY(100f);
         loginLink.setAlpha(0f);
 
-        // Top bar items initial state
         themeSwitcher.setAlpha(0f);
         themeSwitcher.setTranslationX(-100f);
         btnLangToggle.setAlpha(0f);
         btnLangToggle.setTranslationX(100f);
 
-        // Inputs initial state
         if (tilEmail != null) { tilEmail.setAlpha(0f); tilEmail.setTranslationY(50f); }
         if (tilPassword != null) { tilPassword.setAlpha(0f); tilPassword.setTranslationY(50f); }
 
-        // Animate
         logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).withEndAction(this::startFloatingAnimation).start();
         signupTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
         signupCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
 
-        // Top bar animations
         themeSwitcher.animate()
                 .alpha(1f)
                 .translationX(0f)
@@ -232,7 +226,6 @@ public class SignUpActivity extends AppCompatActivity {
 
         loginLink.animate().alpha(1f).setDuration(800).setStartDelay(1100).start();
 
-        // Animate background blobs
         View bgBlob1 = findViewById(R.id.bg_blob_signup);
         View bgBlob2 = findViewById(R.id.bg_blob_signup_secondary);
         if (bgBlob1 != null) animateBlob(bgBlob1, 1.2f, 3500);

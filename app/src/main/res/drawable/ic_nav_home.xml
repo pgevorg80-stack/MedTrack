@@ -4,10 +4,7 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!--
-        Minimalist Home with Rounded Peak and Base
-        Matches the soft aesthetic of the medicine vial.
-    -->
+
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M10.7,3.28 L4.53,8.42

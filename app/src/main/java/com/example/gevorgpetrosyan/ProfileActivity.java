@@ -36,7 +36,6 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        // Hide navigation bar for immersive experience
         WindowInsetsControllerCompat windowInsetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         windowInsetsController.setSystemBarsBehavior(
@@ -66,7 +65,6 @@ public class ProfileActivity extends AppCompatActivity {
         updateUI();
         animateEntrance();
 
-        // Start background animations (null-safe — only runs if views exist in layout)
         View bg1 = findViewById(R.id.bg_blob_profile_1);
         View bg2 = findViewById(R.id.bg_blob_profile_2);
         if (bg1 != null) animateBlob(bg1, 1.2f, 3000);

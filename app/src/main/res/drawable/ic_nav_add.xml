@@ -4,12 +4,7 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!--
-        Premium Minimalist Add Button
-        - Increased thickness (3dp) for better visual weight
-        - Soft rounded ends to match your home and bottle icons
-        - Optically centered for a balanced look
-    -->
+
     <path
         android:fillColor="#FFFFFF"
         android:pathData="

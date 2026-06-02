@@ -28,7 +28,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <!-- Medicine Name -->
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_dialog_name"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -55,7 +55,7 @@
                     android:textColor="?android:attr/textColorPrimary" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Scan Button -->
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_scan_ocr"
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
@@ -73,7 +73,7 @@
                 app:iconPadding="12dp"
                 app:iconTint="#FFFFFF" />
 
-            <!-- Photo Button -->
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_med_photo"
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
@@ -91,7 +91,7 @@
                 app:iconPadding="12dp"
                 app:iconTint="#FFFFFF" />
 
-            <!-- Initial Stock -->
+
             <TextView
                 android:id="@+id/tv_stock_label"
                 android:layout_width="wrap_content"
@@ -147,7 +147,7 @@
                     android:paddingEnd="16dp" />
             </LinearLayout>
 
-            <!-- Warning Days -->
+
             <TextView
                 android:id="@+id/tv_warn_label"
                 android:layout_width="wrap_content"
@@ -186,7 +186,7 @@
                     android:textColor="?android:attr/textColorPrimary" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Expiry Date Button -->
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dialog_btn_expiry"
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
@@ -202,7 +202,7 @@
                 app:iconPadding="12dp"
                 app:iconTint="?attr/colorPrimary" />
 
-            <!-- Action Buttons -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

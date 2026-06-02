@@ -21,7 +21,6 @@ public class ActionReceiver extends BroadcastReceiver {
         String userId = intent.getStringExtra("user_id");
         int notificationId = intent.getIntExtra("notification_id", -1);
 
-        // 1. Dismiss the reminder notification immediately
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationId != -1 && manager != null) {
             manager.cancel(notificationId);
@@ -29,7 +28,6 @@ public class ActionReceiver extends BroadcastReceiver {
 
         if (userId == null) return;
 
-        // 2. Update Database in Background
         AppDatabase db = AppDatabase.getInstance(context);
         Executors.newSingleThreadExecutor().execute(() -> {
             Medicine m = db.medicineDao().getByNameAndUserId(medName, userId);
@@ -37,7 +35,7 @@ public class ActionReceiver extends BroadcastReceiver {
                 String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
                 String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
                 String historyEntry = todayStr + " " + timeStamp;
-                
+
                 if (m.history == null) m.history = "";
                 m.history += historyEntry + " - " + status + ",";
 
@@ -51,13 +49,11 @@ public class ActionReceiver extends BroadcastReceiver {
 
                 db.medicineDao().update(m);
                 FirestoreHelper.uploadMedicine(m);
-                
-                // Trigger Widget Update after DB change
+
                 updateWidget(context);
             }
         });
 
-        // 3. Close notification drawer
         context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
     }
 

@@ -7,11 +7,11 @@ import androidx.room.PrimaryKey;
 public class Medicine {
     @PrimaryKey(autoGenerate = true)
     public int id;
-    public String userId; // Added to separate accounts
+    public String userId;
     public String name;
     public String times;
     public int dosage;
-    public String dosageUnit = "pills"; // Default unit
+    public String dosageUnit = "pills";
     public int stock;
     public String expiryDate;
     public int expiryWarningDays;
@@ -21,7 +21,6 @@ public class Medicine {
     public String imagePath;
 
     public Medicine() {
-        // Required for Firestore toObject()
     }
 
     public Medicine(String userId, String name, String times) {

@@ -26,19 +26,19 @@ import java.util.List;
 public class MedicineInfoHelper {
     private static final String API_KEY = BuildConfig.GROQ_API_KEY;
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
-    private static final String MODEL = "llama-3.3-70b-versatile"; 
+    private static final String MODEL = "llama-3.3-70b-versatile";
 
     public static void showMedicineInfo(Context context, String medicineName) {
         if (medicineName == null || medicineName.isEmpty()) return;
         boolean isRu = isRussian(context);
-        
+
         String prompt = isRu ?
-            "Если '" + medicineName + "' не является лекарством, ответь только: 'Это не лекарство'. " +
-            "Если это лекарство, напиши простую и понятную инструкцию: как принимать, способ применения и дозировку. " +
-            "Ответь строго на русском языке, объем текста 4-5 строк." :
-            "If '" + medicineName + "' is not a medicine, reply only with: 'This is not a medicine.' " +
-            "If it is a medicine, provide simple and clear instructions on how to use it, including usage and dosage. " +
-            "Answer strictly in 4-5 lines.";
+                "Если '" + medicineName + "' не является лекарством, ответь только: 'Это не лекарство'. " +
+                        "Если это лекарство, напиши простую и понятную инструкцию: как принимать, способ применения и дозировку. " +
+                        "Ответь строго на русском языке, объем текста 4-5 строк." :
+                "If '" + medicineName + "' is not a medicine, reply only with: 'This is not a medicine.' " +
+                        "If it is a medicine, provide simple and clear instructions on how to use it, including usage and dosage. " +
+                        "Answer strictly in 4-5 lines.";
 
         showAIDialog(context, medicineName, prompt, isRu);
     }
@@ -56,14 +56,14 @@ public class MedicineInfoHelper {
 
         String title = isRu ? "Проверка безопасности" : "Safety Check";
         String prompt = isRu ?
-            "Проверь взаимодействие следующих лекарств: " + medicineNames + ". " +
-            "Если есть опасные взаимодействия, опиши их кратко и понятно. " +
-            "Если взаимодействий нет, напиши, что они совместимы. " +
-            "Ответь строго на русском языке, объем 4-6 строк." :
-            "Check the interactions between these medicines: " + medicineNames + ". " +
-            "If there are dangerous interactions, describe them briefly and clearly. " +
-            "If there are no known interactions, say they are compatible. " +
-            "Answer in 4-6 lines.";
+                "Проверь взаимодействие следующих лекарств: " + medicineNames + ". " +
+                        "Если есть опасные взаимодействия, опиши их кратко и понятно. " +
+                        "Если взаимодействий нет, напиши, что они совместимы. " +
+                        "Ответь строго на русском языке, объем 4-6 строк." :
+                "Check the interactions between these medicines: " + medicineNames + ". " +
+                        "If there are dangerous interactions, describe them briefly and clearly. " +
+                        "If there are no known interactions, say they are compatible. " +
+                        "Answer in 4-6 lines.";
 
         showAIDialog(context, title, prompt, isRu);
     }
@@ -72,14 +72,14 @@ public class MedicineInfoHelper {
         boolean isDark = (context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
         int textColor = isDark ? Color.WHITE : Color.BLACK;
         float density = context.getResources().getDisplayMetrics().density;
-        
+
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
-        
+
         LinearLayout root = new LinearLayout(context);
         root.setOrientation(LinearLayout.VERTICAL);
         int padding = (int) (24 * density);
         root.setPadding(padding, padding, padding, padding);
-        
+
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(32 * density);
         if (isDark) {
@@ -89,7 +89,7 @@ public class MedicineInfoHelper {
             bg.setColor(Color.WHITE);
         }
         root.setBackground(bg);
-        
+
         TextView titleTv = new TextView(context);
         titleTv.setText(title);
         titleTv.setTextSize(20);
@@ -112,7 +112,7 @@ public class MedicineInfoHelper {
         LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, 0, 1.0f);
         scrollLp.setMargins(0, 0, 0, (int) (24 * density));
         scrollView.setLayoutParams(scrollLp);
-        
+
         TextView infoTv = new TextView(context);
         infoTv.setText(isRu ? "AI анализирует..." : "AI is analyzing...");
         infoTv.setTextSize(16);
@@ -137,7 +137,7 @@ public class MedicineInfoHelper {
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        
+
         closeBtn.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
 

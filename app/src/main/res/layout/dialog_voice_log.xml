@@ -24,7 +24,7 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- Animated Voice Visualizer Container -->
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="120dp"
@@ -50,7 +50,7 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <!-- Scrollable Container for detected items -->
+
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -24,7 +24,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         String medTime = intent.getStringExtra("med_time");
         String userId = intent.getStringExtra("user_id");
 
-        // Fallback to current user if userId was not passed (e.g., from old alarms)
         if (userId == null) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) userId = user.getUid();
@@ -35,31 +34,26 @@ public class AlarmReceiver extends BroadcastReceiver {
         AppDatabase db = AppDatabase.getInstance(context);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // 1. Create Notification Channel (for Android 8+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID, "Medicine Reminders", NotificationManager.IMPORTANCE_HIGH);
             if (manager != null) manager.createNotificationChannel(channel);
         }
 
-        // 2. Fetch the specific medicine to check Stock and Expiry
         Medicine m = db.medicineDao().getByNameAndUserId(medName, userId);
         if (m == null) return;
 
         int totalStock = calculateTotalStock(m.batches);
         String warningPrefix = "";
 
-        // 3. Logic: Check for 0 Pills or Expired Batches
         if (totalStock <= 0) {
             warningPrefix = "[OUT OF STOCK] ";
         } else if (isMedicineExpired(m.batches)) {
             warningPrefix = "[EXPIRED!] ";
         }
 
-        // 4. Create a unique notification ID using Name and Time
         int notificationId = (userId + medName + medTime).hashCode();
 
-        // 5. Setup Action Buttons (Taken / Missed)
         Intent takenIntent = new Intent(context, ActionReceiver.class);
         takenIntent.putExtra("med_name", medName);
         takenIntent.putExtra("med_time", medTime);
@@ -76,7 +70,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         missedIntent.putExtra("notification_id", notificationId);
         PendingIntent missedPI = PendingIntent.getBroadcast(context, notificationId + 1, missedIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // 6. Build the Notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentTitle(warningPrefix + "Medicine Reminder")

@@ -4,7 +4,7 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- Scraps of paper that will fly out -->
+
     <group android:name="scrap1" android:translateX="12" android:translateY="12" android:alpha="0">
         <path android:fillColor="#F44336" android:pathData="M-1,-1 h2 v2 h-2 z" />
     </group>

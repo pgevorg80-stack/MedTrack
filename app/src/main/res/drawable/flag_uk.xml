@@ -26,7 +26,7 @@
             android:strokeWidth="2.4"
             android:pathData="M12,0v24M0,12h24" />
     </group>
-    <!-- Circular border -->
+
     <path
         android:strokeColor="#DDDDDD"
         android:strokeWidth="1"

@@ -77,7 +77,7 @@ import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-import com.google.firebase.auth.FirebaseAuth; 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.android.material.button.MaterialButton;
 
@@ -124,23 +124,19 @@ public class MainActivity extends AppCompatActivity {
     private String tempImagePath = null;
     private SpeechRecognizer speechRecognizer;
     private ImageView micIconRef;
-    
-    // OCR components
+
     private ActivityResultLauncher<Uri> takePictureLauncher;
     private EditText ocrTargetEditText;
 
-    // Image picking for Medicine
     private ActivityResultLauncher<Uri> medicinePhotoLauncher;
     private Medicine photoTargetMed;
     private Uri photoUri;
 
-    // Success Animation UI
     private FrameLayout successOverlay;
     private View successContent;
     private ImageView successCheckmark;
     private TextView tvSuccessMsg;
-    
-    // Voice Logging Dialog UI components
+
     private AlertDialog voiceDialog;
     private VoiceVisualizerView visualizer;
     private LinearLayout detectedMedsContainer;
@@ -152,12 +148,11 @@ public class MainActivity extends AppCompatActivity {
     private SectionsPagerAdapter sectionsPagerAdapter;
     private String currentUserId;
 
-    // Wink-to-Log
     private PreviewView winkPreviewView;
     private FaceDetector winkDetector;
     private boolean isWinkDetectionActive = false;
     private long lastWinkTime = 0;
-    private static final long WINK_COOLDOWN = 3000; // 3 seconds
+    private static final long WINK_COOLDOWN = 3000;
     private int winkFrameCount = 0;
 
     @Override
@@ -165,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         applySavedTheme();
         loadLanguagePreference();
         super.onCreate(savedInstanceState);
-        
+
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -173,14 +168,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         currentUserId = user.getUid();
-        
+
         db = AppDatabase.getInstance(this);
-        // Sync from Firestore on startup
         FirestoreHelper.syncFromFirestore(currentUserId, db, () -> runOnUiThread(this::refreshCurrentTab));
-        
+
         setContentView(R.layout.activity_main);
 
-        // Hide navigation bar for immersive experience
         WindowInsetsControllerCompat windowInsetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         windowInsetsController.setSystemBarsBehavior(
@@ -229,13 +222,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, tr("Camera cancelled or failed", "Камера отменена или произошла ошибка"), Toast.LENGTH_SHORT).show();
             }
         });
-        
+
 
         db = AppDatabase.getInstance(this);
         viewPager = findViewById(R.id.view_pager);
         drawerLayout = findViewById(R.id.drawer_layout);
-        
-        // Init Success Overlay ggg
+
         successOverlay = findViewById(R.id.success_overlay);
         successContent = findViewById(R.id.success_content);
         successCheckmark = findViewById(R.id.success_checkmark);
@@ -244,8 +236,8 @@ public class MainActivity extends AppCompatActivity {
         winkPreviewView = findViewById(R.id.wink_preview_view);
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST) // Fast is better for real-time video
-                .setMinFaceSize(0.25f) // Slightly smaller faces allowed
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .setMinFaceSize(0.25f)
                 .build();
         winkDetector = FaceDetection.getClient(options);
 
@@ -254,15 +246,12 @@ public class MainActivity extends AppCompatActivity {
 
         updateStaticUI();
 
-        // Check if triggered from widget
         if (getIntent().getBooleanExtra("trigger_voice", false)) {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                // We need to wait a bit for UI to be ready
                 startVoiceRecognition(null);
             }, 500);
         }
 
-        // --- Bottom Navigation Listeners ---
         findViewById(R.id.nav_list).setOnClickListener(v -> viewPager.setCurrentItem(0));
         findViewById(R.id.nav_stats).setOnClickListener(v -> viewPager.setCurrentItem(1));
         findViewById(R.id.nav_add).setOnClickListener(v -> {
@@ -286,7 +275,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // --- Settings Drawer Animation ---
         drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
             private boolean hasAnimated = false;
             @Override
@@ -299,27 +287,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDrawerClosed(@NonNull View drawerView) {
                 hasAnimated = false;
-                // Reset items for next time
                 View[] items = {
-                    findViewById(R.id.tv_settings_header),
-                    findViewById(R.id.btn_profile),
-                    findViewById(R.id.theme_switcher_container),
-                    findViewById(R.id.language_switcher_container),
-                    findViewById(R.id.wink_switcher_container),
-                    findViewById(R.id.btn_add_widget),
-                    findViewById(R.id.btn_share),
-                    findViewById(R.id.btn_sync),
-                    findViewById(R.id.btn_support),
-                    findViewById(R.id.btn_logout)
+                        findViewById(R.id.tv_settings_header),
+                        findViewById(R.id.btn_profile),
+                        findViewById(R.id.theme_switcher_container),
+                        findViewById(R.id.language_switcher_container),
+                        findViewById(R.id.wink_switcher_container),
+                        findViewById(R.id.btn_add_widget),
+                        findViewById(R.id.btn_share),
+                        findViewById(R.id.btn_sync),
+                        findViewById(R.id.btn_support),
+                        findViewById(R.id.btn_logout)
                 };
                 for (View v : items) if (v != null) v.setAlpha(0);
             }
         });
 
-        // Initialize first selection
         viewPager.post(() -> updateBottomNavSelection(viewPager.getCurrentItem()));
 
-        // --- Settings Drawer Listeners ---
         findViewById(R.id.btn_profile).setOnClickListener(v -> {
             drawerLayout.closeDrawers();
             startActivity(new Intent(this, ProfileActivity.class));
@@ -329,20 +314,19 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
             boolean isDark = pref.getBoolean("IsDarkMode", false);
             boolean nextDark = !isDark;
-            
+
             pref.edit().putBoolean("IsDarkMode", nextDark).apply();
-            
-            // Animate knob and then recreate
+
             View knob = findViewById(R.id.iv_theme_icon_knob);
             if (knob != null) {
                 float targetX = nextDark ? 26 * getResources().getDisplayMetrics().density : 0;
                 knob.animate()
-                    .translationX(targetX)
-                    .setDuration(300)
-                    .withEndAction(() -> {
-                        AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
-                    })
-                    .start();
+                        .translationX(targetX)
+                        .setDuration(300)
+                        .withEndAction(() -> {
+                            AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+                        })
+                        .start();
             } else {
                 AppCompatDelegate.setDefaultNightMode(nextDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
             }
@@ -351,20 +335,19 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.language_switcher_container).setOnClickListener(v -> {
             isRussian = !isRussian;
             getSharedPreferences("LangPrefs", MODE_PRIVATE).edit().putBoolean("IsRussian", isRussian).apply();
-            
-            // Animate language knob
+
             View langKnob = findViewById(R.id.iv_lang_knob);
             if (langKnob != null) {
                 float density = getResources().getDisplayMetrics().density;
                 float targetX = isRussian ? 26 * density : 0;
                 langKnob.animate()
-                    .translationX(targetX)
-                    .setDuration(300)
-                    .withEndAction(() -> {
-                        updateStaticUI();
-                        refreshCurrentTab();
-                    })
-                    .start();
+                        .translationX(targetX)
+                        .setDuration(300)
+                        .withEndAction(() -> {
+                            updateStaticUI();
+                            refreshCurrentTab();
+                        })
+                        .start();
             } else {
                 updateStaticUI();
                 refreshCurrentTab();
@@ -375,25 +358,24 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences pref = getSharedPreferences("WinkPrefs", MODE_PRIVATE);
             boolean isWinkEnabled = pref.getBoolean("IsWinkEnabled", false);
             boolean nextWink = !isWinkEnabled;
-            
+
             pref.edit().putBoolean("IsWinkEnabled", nextWink).apply();
-            
-            // Animate wink knob
+
             View winkKnob = findViewById(R.id.iv_wink_knob);
             if (winkKnob != null) {
                 float density = getResources().getDisplayMetrics().density;
                 float targetX = nextWink ? 26 * density : 0;
                 winkKnob.animate()
-                    .translationX(targetX)
-                    .setDuration(300)
-                    .withEndAction(() -> {
-                        updateStaticUI();
-                        if (viewPager.getCurrentItem() == 3) {
-                            if (nextWink) startWinkDetection();
-                            else stopWinkDetection();
-                        }
-                    })
-                    .start();
+                        .translationX(targetX)
+                        .setDuration(300)
+                        .withEndAction(() -> {
+                            updateStaticUI();
+                            if (viewPager.getCurrentItem() == 3) {
+                                if (nextWink) startWinkDetection();
+                                else stopWinkDetection();
+                            }
+                        })
+                        .start();
             } else {
                 updateStaticUI();
                 if (viewPager.getCurrentItem() == 3) {
@@ -492,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void syncData() {
         MaterialButton btnSync = findViewById(R.id.btn_sync);
-        
+
         String originalText = btnSync.getText().toString();
         btnSync.setText(tr("Syncing...", "Синхронизация..."));
         btnSync.setEnabled(false);
@@ -531,11 +513,10 @@ public class MainActivity extends AppCompatActivity {
         ((MaterialButton) findViewById(R.id.btn_profile)).setText(tr("My Profile", "Мой профиль"));
         ((TextView) findViewById(R.id.tv_light_label)).setText(tr("Light", "День"));
         ((TextView) findViewById(R.id.tv_dark_label)).setText(tr("Dark", "Ночь"));
-        
+
         ((TextView) findViewById(R.id.tv_wink_off_label)).setText(tr("Off", "Выкл"));
         ((TextView) findViewById(R.id.tv_wink_on_label)).setText(tr("On", "Вкл"));
 
-        // Language labels
         TextView enLabel = findViewById(R.id.tv_lang_en_label);
         TextView ruLabel = findViewById(R.id.tv_lang_ru_label);
         if (enLabel != null) {
@@ -547,13 +528,12 @@ public class MainActivity extends AppCompatActivity {
             ruLabel.setAlpha(isRussian ? 1.0f : 0.4f);
         }
 
-        // Sync Language Knob
         View langKnob = findViewById(R.id.iv_lang_knob);
         if (langKnob != null) {
             float density = getResources().getDisplayMetrics().density;
             langKnob.setTranslationX(isRussian ? 26 * density : 0);
             ((ImageView) langKnob).setImageResource(isRussian ? R.drawable.flag_russia : R.drawable.flag_uk);
-            ((ImageView) langKnob).setImageTintList(null); // Clear tint to show flag colors
+            ((ImageView) langKnob).setImageTintList(null);
         }
 
         MaterialButton btnAddWidget = findViewById(R.id.btn_add_widget);
@@ -566,7 +546,6 @@ public class MainActivity extends AppCompatActivity {
         ((MaterialButton) findViewById(R.id.btn_support)).setText(tr("Support", "Поддержка"));
         ((MaterialButton) findViewById(R.id.btn_logout)).setText(tr("Log Out", "Выйти"));
 
-        // Theme Switcher Sync
         boolean isDark = getSharedPreferences("ThemePrefs", MODE_PRIVATE).getBoolean("IsDarkMode", false);
         View knob = findViewById(R.id.iv_theme_icon_knob);
         if (knob != null) {
@@ -580,7 +559,6 @@ public class MainActivity extends AppCompatActivity {
         if (lightLabel != null) lightLabel.setAlpha(isDark ? 0.4f : 1.0f);
         if (darkLabel != null) darkLabel.setAlpha(isDark ? 1.0f : 0.4f);
 
-        // Wink Switcher Sync
         boolean isWinkEnabled = getSharedPreferences("WinkPrefs", MODE_PRIVATE).getBoolean("IsWinkEnabled", false);
         View winkKnob = findViewById(R.id.iv_wink_knob);
         if (winkKnob != null) {
@@ -591,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
         View winkOnLabel = findViewById(R.id.tv_wink_on_label);
         if (winkOffLabel != null) winkOffLabel.setAlpha(isWinkEnabled ? 0.4f : 1.0f);
         if (winkOnLabel != null) winkOnLabel.setAlpha(isWinkEnabled ? 1.0f : 0.4f);
-        
+
         if (tvSuccessMsg != null) tvSuccessMsg.setText(tr("Logged!", "Отмечено!"));
     }
 
@@ -601,7 +579,7 @@ public class MainActivity extends AppCompatActivity {
 
         View indicator = findViewById(R.id.nav_indicator);
         int navBg = getThemeColor(R.attr.navBarBackground);
-        
+
         for (int i = 0; i < ids.length; i++) {
             if (ids[i] == 0) continue;
             View v = findViewById(ids[i]);
@@ -610,12 +588,12 @@ public class MainActivity extends AppCompatActivity {
             int activeColor;
             int inactiveColor;
 
-            if (navBg == Color.parseColor(BLUE_COLOR)) { // Light Mode
-                activeColor = Color.parseColor(BLUE_COLOR); // Blue icon
-                inactiveColor = Color.argb(180, 255, 255, 255); // White icon (semi-trans)
-            } else { // Dark Mode
-                activeColor = Color.WHITE; // White icon
-                inactiveColor = Color.argb(160, 255, 255, 255); // White-ish icon
+            if (navBg == Color.parseColor(BLUE_COLOR)) {
+                activeColor = Color.parseColor(BLUE_COLOR);
+                inactiveColor = Color.argb(180, 255, 255, 255);
+            } else {
+                activeColor = Color.WHITE;
+                inactiveColor = Color.argb(160, 255, 255, 255);
             }
 
             if (isSelected && indicator != null) {
@@ -630,7 +608,7 @@ public class MainActivity extends AppCompatActivity {
 
             float targetScale = isSelected ? 1.12f : 1.0f;
             float targetTranslationY = isSelected ? -10f : 0f;
-            
+
             v.animate()
                     .scaleX(targetScale)
                     .scaleY(targetScale)
@@ -672,7 +650,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return 4; // List, Stats, Inventory, Dashboard
+            return 4;
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
@@ -762,7 +740,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateList(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Medicine Reminders", "График приема")));
-        
+
         if (meds != null && !meds.isEmpty()) {
             MaterialButton btnCheck = createActionButton(tr(" Check Drug Interactions (AI)", " Проверить взаимодействия (AI)"));
             btnCheck.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
@@ -795,9 +773,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!hasSchedules) {
-            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
-                tr("No Schedules Yet", "Нет расписания"), 
-                tr("Start by adding a dose to your reminders.", "Добавьте дозу в свои напоминания."));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds,
+                    tr("No Schedules Yet", "Нет расписания"),
+                    tr("Start by adding a dose to your reminders.", "Добавьте дозу в свои напоминания."));
             layout.addView(empty);
             animateViewIn(empty, 200);
         }
@@ -805,7 +783,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateStats(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Usage History", "История использования")));
-        
+
         MaterialButton btnPdf = createActionButton(tr("+ Export PDF Report", "+ Экспорт PDF Отчета"));
         LinearLayout.LayoutParams pdfLp = new LinearLayout.LayoutParams(-1, -2);
         pdfLp.setMargins(0, 0, 0, 30);
@@ -814,9 +792,7 @@ public class MainActivity extends AppCompatActivity {
         layout.addView(btnPdf);
         animateViewIn(btnPdf, 100);
 
-        // --- Heatmap Section (Restored Positioning) ---
         layout.addView(createHeatmapView(meds));
-        // -----------------------
 
         boolean hasHistory = false;
         int delay = 200;
@@ -825,7 +801,7 @@ public class MainActivity extends AppCompatActivity {
             if (m.history != null && !m.history.isEmpty()) {
                 taken = m.history.split(",").length / 2;
             }
-            
+
             if (taken > 0) {
                 View card = createStatsCard(m, taken);
                 layout.addView(card);
@@ -836,9 +812,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!hasHistory) {
-            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
-                tr("No History Found", "История не найдена"), 
-                tr("Log your medicine intake to see stats here.", "Записывайте прием лекарств, чтобы увидеть статистику."));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds,
+                    tr("No History Found", "История не найдена"),
+                    tr("Log your medicine intake to see stats here.", "Записывайте прием лекарств, чтобы увидеть статистику."));
             layout.addView(empty);
             animateViewIn(empty, 200);
         }
@@ -847,7 +823,7 @@ public class MainActivity extends AppCompatActivity {
     private View createHeatmapView(List<Medicine> meds) {
         SharedPreferences pref = getSharedPreferences("ThemePrefs", MODE_PRIVATE);
         boolean isDark = pref.getBoolean("IsDarkMode", false);
-        
+
         int bgColor = isDark ? Color.parseColor("#252525") : Color.WHITE;
         int strokeColor = isDark ? Color.parseColor("#444444") : Color.parseColor("#CCCCCC");
         int textColor = isDark ? Color.WHITE : Color.parseColor("#111111");
@@ -855,17 +831,17 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout container = new LinearLayout(this);
         container.setOrientation(LinearLayout.VERTICAL);
-        
+
         android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
         bg.setColor(bgColor);
         bg.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics()));
-        
+
         int strokeWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1.5f, getResources().getDisplayMetrics());
         bg.setStroke(strokeWidth, strokeColor);
-        
+
         container.setBackground(bg);
         container.setPadding(45, 45, 45, 45);
-        
+
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
         lp.setMargins(0, 0, 0, 45);
         container.setLayoutParams(lp);
@@ -878,19 +854,17 @@ public class MainActivity extends AppCompatActivity {
         title.setGravity(Gravity.START);
         container.addView(title);
 
-        // Align grid to the left
         LinearLayout gridWrapper = new LinearLayout(this);
         gridWrapper.setGravity(Gravity.START);
         gridWrapper.setPadding(0, 30, 0, 30);
-        
+
         GridLayout grid = new GridLayout(this);
-        grid.setColumnCount(13); // Approx 13 weeks
-        
-        // Calculate dose counts per day
+        grid.setColumnCount(13);
+
         Map<String, Integer> dailyCounts = new HashMap<>();
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         Calendar cal = Calendar.getInstance();
-        
+
         int totalScheduledPerDay = 0;
         for (Medicine m : meds) {
             if (m.times != null && !m.times.isEmpty()) {
@@ -909,13 +883,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Draw 90 squares
         cal.add(Calendar.DAY_OF_YEAR, -90);
         for (int i = 0; i < 91; i++) {
             String dateKey = sdfDate.format(cal.getTime());
             Integer countObj = dailyCounts.get(dateKey);
             int taken = (countObj == null) ? 0 : countObj;
-            
+
             int percentage = 0;
             if (totalScheduledPerDay > 0) {
                 percentage = (int) Math.min(100, (taken * 100.0) / totalScheduledPerDay);
@@ -930,9 +903,8 @@ public class MainActivity extends AppCompatActivity {
             slp.height = size;
             slp.setMargins(4, 4, 4, 4);
             square.setLayoutParams(slp);
-            
-            // Percentage-based color palette (Adaptive for Dark Mode)
-            String color = (isDark ? "#333333" : "#F0F0F0"); // Default Empty
+
+            String color = (isDark ? "#333333" : "#F0F0F0");
             if (percentage > 0 && percentage <= 15) color = (isDark ? "#4A1A1A" : "#FFEBEE");
             else if (percentage > 15 && percentage <= 35) color = (isDark ? "#7B1F1F" : "#FFCDD2");
             else if (percentage > 35 && percentage <= 55) color = (isDark ? "#C62828" : "#EF5350");
@@ -940,41 +912,39 @@ public class MainActivity extends AppCompatActivity {
             else if (percentage > 75 && percentage <= 90) color = (isDark ? "#2E7D32" : "#A5D6A7");
             else if (percentage > 90 && percentage < 100) color = (isDark ? "#43A047" : "#4CAF50");
             else if (percentage >= 100) color = (isDark ? "#1B5E20" : "#1B5E20");
-            
+
             android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
             shape.setCornerRadius(8);
             shape.setColor(Color.parseColor(color));
             square.setBackground(shape);
-            
+
             grid.addView(square);
             cal.add(Calendar.DAY_OF_YEAR, 1);
         }
         gridWrapper.addView(grid);
         container.addView(gridWrapper);
 
-        // Legend aligned to start
         LinearLayout legend = new LinearLayout(this);
         legend.setOrientation(LinearLayout.HORIZONTAL);
         legend.setGravity(Gravity.START);
-        
+
         TextView lblLess = new TextView(this);
         lblLess.setText(tr("0% ", "0% "));
         lblLess.setTextSize(10);
         lblLess.setTextColor(textColor);
         legend.addView(lblLess);
-        
+
         String[] colors = {emptySquareColor + "", "#FFEBEE", "#FFCDD2", "#EF5350", "#FFB74D", "#A5D6A7", "#4CAF50", "#1B5E20"};
-        // Recalculate colors for legend based on mode
         for (int j = 0; j < colors.length; j++) {
-             String c;
-             if (j == 0) c = (isDark ? "#333333" : "#F0F0F0");
-             else if (j == 1) c = (isDark ? "#4A1A1A" : "#FFEBEE");
-             else if (j == 2) c = (isDark ? "#7B1F1F" : "#FFCDD2");
-             else if (j == 3) c = (isDark ? "#C62828" : "#EF5350");
-             else if (j == 4) c = (isDark ? "#EF6C00" : "#FFB74D");
-             else if (j == 5) c = (isDark ? "#2E7D32" : "#A5D6A7");
-             else if (j == 6) c = (isDark ? "#43A047" : "#4CAF50");
-             else c = "#1B5E20";
+            String c;
+            if (j == 0) c = (isDark ? "#333333" : "#F0F0F0");
+            else if (j == 1) c = (isDark ? "#4A1A1A" : "#FFEBEE");
+            else if (j == 2) c = (isDark ? "#7B1F1F" : "#FFCDD2");
+            else if (j == 3) c = (isDark ? "#C62828" : "#EF5350");
+            else if (j == 4) c = (isDark ? "#EF6C00" : "#FFB74D");
+            else if (j == 5) c = (isDark ? "#2E7D32" : "#A5D6A7");
+            else if (j == 6) c = (isDark ? "#43A047" : "#4CAF50");
+            else c = "#1B5E20";
 
             View s = new View(this);
             int sSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics());
@@ -993,7 +963,7 @@ public class MainActivity extends AppCompatActivity {
         lblMore.setTextSize(10);
         lblMore.setTextColor(textColor);
         legend.addView(lblMore);
-        
+
         container.addView(legend);
 
         return container;
@@ -1001,7 +971,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void populateInventory(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Warehouse Stock", "Запас лекарств")));
-        
+
         MaterialButton btnAdd = createActionButton(tr("+ Register Medicine", "+ Добавить лекарство"));
         btnAdd.setOnClickListener(v -> showRegisterMedicineDialog());
         LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-1, -2);
@@ -1011,9 +981,9 @@ public class MainActivity extends AppCompatActivity {
         animateViewIn(btnAdd, 100);
 
         if (meds.isEmpty()) {
-            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
-                tr("Warehouse is Empty", "Склад пуст"), 
-                tr("Register your medicines to track stock.", "Зарегистрируйте лекарства для отслеживания запасов."));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds,
+                    tr("Warehouse is Empty", "Склад пуст"),
+                    tr("Register your medicines to track stock.", "Зарегистрируйте лекарства для отслеживания запасов."));
             layout.addView(empty);
             animateViewIn(empty, 200);
         } else {
@@ -1026,6 +996,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
     private void launchCamera() {
         File photoFile = new File(getExternalFilesDir(null), "camera_temp.jpg");
@@ -1042,7 +1013,7 @@ public class MainActivity extends AppCompatActivity {
     private View createInventoryCard(Medicine m) {
         int total = calculateTotalStock(m.batches);
         boolean isExpired = isMedicineExpired(m.batches);
-        
+
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(Gravity.CENTER_VERTICAL);
@@ -1055,57 +1026,52 @@ public class MainActivity extends AppCompatActivity {
         card.setFocusable(true);
         TypedValue outValue = new TypedValue();
         getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             card.setForeground(getDrawable(outValue.resourceId));
         }
 
-        // Status Container (Icon + Progress Circle)
         FrameLayout statusContainer = new FrameLayout(this);
         LinearLayout.LayoutParams scP = new LinearLayout.LayoutParams(90, 90);
         scP.setMargins(0, 0, 35, 0);
         statusContainer.setLayoutParams(scP);
 
-        // Progress Circle
         View progressCircle = new View(this) {
             private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            
+
             @Override
             protected void onDraw(Canvas canvas) {
                 super.onDraw(canvas);
                 float width = getWidth();
                 float height = getHeight();
                 float radius = Math.min(width, height) / 2f - 4f;
-                
+
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(6f);
                 paint.setStrokeCap(Paint.Cap.ROUND);
 
-                // Background track
                 paint.setColor(Color.parseColor("#15000000"));
                 canvas.drawCircle(width / 2f, height / 2f, radius, paint);
 
-                // Progress
                 float progress = getExpiryProgress(m);
                 if (progress > 0) {
                     if (progress < 0.2f) paint.setColor(Color.parseColor("#F44336"));
                     else if (progress < 0.5f) paint.setColor(Color.parseColor("#FF9800"));
                     else paint.setColor(Color.parseColor("#4CAF50"));
-                    
-                    canvas.drawArc(width / 2f - radius, height / 2f - radius, 
-                                 width / 2f + radius, height / 2f + radius, 
-                                 -90, 360 * progress, false, paint);
+
+                    canvas.drawArc(width / 2f - radius, height / 2f - radius,
+                            width / 2f + radius, height / 2f + radius,
+                            -90, 360 * progress, false, paint);
                 }
             }
         };
         progressCircle.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
         statusContainer.addView(progressCircle);
 
-        // Status Icon
         ImageView ivStatus = new ImageView(this);
         int iconRes = android.R.drawable.ic_dialog_info;
         int iconColor = Color.parseColor(BLUE_COLOR);
-        
+
         if (total <= 0) {
             iconRes = android.R.drawable.ic_dialog_alert;
             iconColor = Color.parseColor("#F44336");
@@ -1113,7 +1079,7 @@ public class MainActivity extends AppCompatActivity {
             iconRes = android.R.drawable.ic_menu_today;
             iconColor = Color.parseColor("#FF9800");
         }
-        
+
         ivStatus.setImageResource(iconRes);
         ivStatus.setColorFilter(iconColor);
         FrameLayout.LayoutParams iconP = new FrameLayout.LayoutParams(55, 55);
@@ -1123,7 +1089,6 @@ public class MainActivity extends AppCompatActivity {
 
         card.addView(statusContainer);
 
-        // Text Info
         LinearLayout textInfo = new LinearLayout(this);
         textInfo.setOrientation(LinearLayout.VERTICAL);
         textInfo.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
@@ -1141,7 +1106,6 @@ public class MainActivity extends AppCompatActivity {
         tvStock.setTextColor(getThemeColor(R.attr.secondaryTextColor));
         textInfo.addView(tvStock);
 
-        // Refill Prediction
         if (total > 0 && m.dosage > 0) {
             int dailyDose = 0;
             if (m.times != null && !m.times.isEmpty()) {
@@ -1199,7 +1163,6 @@ public class MainActivity extends AppCompatActivity {
             textInfo.addView(btnFind);
         }
 
-        // Information Button (from Kaggle Dataset) - Moved below pharmacy button
         MaterialButton btnInfo = new MaterialButton(this);
         btnInfo.setText(tr("Information", "Информация"));
         btnInfo.setTextSize(10);
@@ -1216,7 +1179,7 @@ public class MainActivity extends AppCompatActivity {
         btnInfo.setLayoutParams(infoLp);
         btnInfo.setOnClickListener(v1 -> MedicineInfoHelper.showMedicineInfo(this, m.name));
         textInfo.addView(btnInfo);
-        
+
         if (isExpired) {
             TextView tvExp = new TextView(this);
             tvExp.setText(tr("Some batches expired!", "Есть просроченные партии!"));
@@ -1228,11 +1191,10 @@ public class MainActivity extends AppCompatActivity {
 
         card.addView(textInfo);
 
-        // Medicine Photo and Camera Button
         LinearLayout photoBox = new LinearLayout(this);
         photoBox.setOrientation(LinearLayout.HORIZONTAL);
         photoBox.setGravity(Gravity.CENTER_VERTICAL);
-        
+
         if (m.imagePath != null && !m.imagePath.isEmpty() && new File(m.imagePath).exists()) {
             com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
             imgCard.setRadius(15);
@@ -1263,10 +1225,9 @@ public class MainActivity extends AppCompatActivity {
             launchCamera();
         });
         photoBox.addView(ivCamera);
-        
+
         card.addView(photoBox);
 
-        // Arrow
         ImageView ivArrow = new ImageView(this);
         ivArrow.setImageResource(androidx.appcompat.R.drawable.abc_ic_arrow_drop_right_black_24dp);
         ivArrow.setColorFilter(getThemeColor(R.attr.secondaryTextColor));
@@ -1279,7 +1240,6 @@ public class MainActivity extends AppCompatActivity {
     private void populateDashboard(LinearLayout layout, List<Medicine> meds) {
         layout.addView(createHeaderWithMenu(tr("Dashboard", "Панель")));
 
-        // Greeting based on time
         TextView tvGreeting = new TextView(this);
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         String greeting;
@@ -1321,13 +1281,12 @@ public class MainActivity extends AppCompatActivity {
         tvDate.setPadding(5, 0, 0, 0);
         leftPart.addView(tvDate);
 
-        // REAL-TIME CLOCK FOR DASHBOARD
         TextView tvTime = new TextView(this);
         tvTime.setTextSize(64);
         tvTime.setTextColor(Color.WHITE);
         tvTime.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         tvTime.setLetterSpacing(-0.02f);
-        
+
         final Handler clockHandler = new Handler(Looper.getMainLooper());
         Runnable clockRunnable = new Runnable() {
             @Override
@@ -1348,7 +1307,6 @@ public class MainActivity extends AppCompatActivity {
         String[] dayLetters = isRussian ? dayLettersRu : dayLettersEn;
         int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
 
-        // Pre-calculate which days have intakes in the current week
         Set<String> intakeDays = new HashSet<>();
         SimpleDateFormat sdfIntake = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         for (Medicine m : meds) {
@@ -1382,7 +1340,7 @@ public class MainActivity extends AppCompatActivity {
             com.google.android.material.card.MaterialCardView dot = new com.google.android.material.card.MaterialCardView(this);
             int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
             int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, i == currentDay ? 18 : 8, getResources().getDisplayMetrics());
-            
+
             LinearLayout.LayoutParams dotP = new LinearLayout.LayoutParams(width, height);
             dotP.setMargins(0, 10, 0, 0);
             dot.setLayoutParams(dotP);
@@ -1394,19 +1352,19 @@ public class MainActivity extends AppCompatActivity {
                 dot.setCardElevation(6);
             } else if (i < currentDay) {
                 if (hasIntake) {
-                    dot.setCardBackgroundColor(Color.WHITE); // Solid for taken
+                    dot.setCardBackgroundColor(Color.WHITE);
                     dot.setAlpha(0.9f);
                 } else {
                     dot.setStrokeWidth(3);
-                    dot.setStrokeColor(Color.parseColor("#60FFFFFF")); // Ring for missed
+                    dot.setStrokeColor(Color.parseColor("#60FFFFFF"));
                     dot.setCardBackgroundColor(Color.TRANSPARENT);
                     dot.setCardElevation(0);
                 }
             } else {
-                dot.setCardBackgroundColor(Color.parseColor("#40FFFFFF")); // Future
+                dot.setCardBackgroundColor(Color.parseColor("#40FFFFFF"));
                 dot.setCardElevation(0);
             }
-            
+
             col.addView(dot);
             weekGrid.addView(col);
             cal.add(Calendar.DAY_OF_YEAR, 1);
@@ -1427,7 +1385,6 @@ public class MainActivity extends AppCompatActivity {
         tvNextLabel.setGravity(Gravity.CENTER);
         rightPart.addView(tvNextLabel);
 
-        // Wrapper for Next Dose time with pill background
         FrameLayout nextDoseWrapper = new FrameLayout(this);
         LinearLayout.LayoutParams wrapperLp = new LinearLayout.LayoutParams(-1, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 42, getResources().getDisplayMetrics()));
         wrapperLp.setMargins(20, 10, 20, 10);
@@ -1449,7 +1406,7 @@ public class MainActivity extends AppCompatActivity {
         tvNextDose.setGravity(Gravity.CENTER);
         tvNextDose.setLayoutParams(new FrameLayout.LayoutParams(-1, -1));
         nextDoseWrapper.addView(tvNextDose);
-        
+
         rightPart.addView(nextDoseWrapper);
 
         com.google.android.material.card.MaterialCardView micCard = new com.google.android.material.card.MaterialCardView(this);
@@ -1459,7 +1416,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout.LayoutParams micLp = new LinearLayout.LayoutParams(110, 110);
         micLp.setMargins(0, 30, 0, 0);
         micCard.setLayoutParams(micLp);
-        
+
         ImageView mic = new ImageView(this);
         mic.setImageResource(android.R.drawable.ic_btn_speak_now);
         mic.setColorFilter(Color.WHITE);
@@ -1499,11 +1456,11 @@ public class MainActivity extends AppCompatActivity {
             if (m.times != null && !m.times.isEmpty()) {
                 hasMeds = true;
                 String medNext = getNextDoseForMed(m);
-                
+
                 com.google.android.material.card.MaterialCardView itemCard = new com.google.android.material.card.MaterialCardView(this);
                 itemCard.setRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics()));
                 itemCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()));
-                
+
                 boolean isNearest = globalNext != null && medNext != null && medNext.equals(globalNext);
                 if (isNearest) {
                     itemCard.setStrokeWidth(4);
@@ -1513,19 +1470,19 @@ public class MainActivity extends AppCompatActivity {
                     itemCard.setStrokeColor(getThemeColor(R.attr.cardStrokeColor));
                 }
                 itemCard.setCardBackgroundColor(getThemeColor(R.attr.cardBackgroundColor));
-                
+
                 LinearLayout itemContent = new LinearLayout(this);
                 itemContent.setOrientation(LinearLayout.HORIZONTAL);
                 itemContent.setGravity(Gravity.CENTER_VERTICAL);
                 itemContent.setPadding(40, 35, 40, 35);
-                
+
                 com.google.android.material.card.MaterialCardView imgCard = new com.google.android.material.card.MaterialCardView(this);
                 imgCard.setRadius(25);
                 imgCard.setCardElevation(0);
                 imgCard.setStrokeWidth(0);
                 LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(110, 110);
                 imgCard.setLayoutParams(imgLp);
-                
+
                 ImageView icon = new ImageView(this);
                 icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 if (m.imagePath != null) {
@@ -1558,7 +1515,7 @@ public class MainActivity extends AppCompatActivity {
                 tvTimeInfo.setTextSize(13);
                 tvTimeInfo.setTextColor(getThemeColor(android.R.attr.textColorSecondary));
                 textInfo.addView(tvTimeInfo);
-                
+
                 itemContent.addView(textInfo);
 
                 ImageView arrow = new ImageView(this);
@@ -1569,37 +1526,37 @@ public class MainActivity extends AppCompatActivity {
 
                 itemCard.addView(itemContent);
                 itemCard.setOnClickListener(v -> logManualIntake(m));
-                
+
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
                 p.setMargins(0, 10, 0, 15);
                 itemCard.setLayoutParams(p);
-                
+
                 layout.addView(itemCard);
                 animateViewIn(itemCard, delay);
                 delay += 100;
             }
         }
-        
+
         if (!hasMeds) {
-            View empty = createEmptyStateView(R.drawable.ic_empty_meds, 
-                tr("Nothing for Today", "На сегодня ничего нет"), 
-                tr("Relax! No doses are scheduled for now.", "Отдыхайте! На данный момент приемов не запланировано."));
+            View empty = createEmptyStateView(R.drawable.ic_empty_meds,
+                    tr("Nothing for Today", "На сегодня ничего нет"),
+                    tr("Relax! No doses are scheduled for now.", "Отдыхайте! На данный момент приемов не запланировано."));
             layout.addView(empty);
         }
     }
 
     private void animateSettingsItems() {
         View[] items = {
-            findViewById(R.id.tv_settings_header),
-            findViewById(R.id.btn_profile),
-            findViewById(R.id.theme_switcher_container),
-            findViewById(R.id.language_switcher_container),
-            findViewById(R.id.wink_switcher_container),
-            findViewById(R.id.btn_add_widget),
-            findViewById(R.id.btn_share),
-            findViewById(R.id.btn_sync),
-            findViewById(R.id.btn_support),
-            findViewById(R.id.btn_logout)
+                findViewById(R.id.tv_settings_header),
+                findViewById(R.id.btn_profile),
+                findViewById(R.id.theme_switcher_container),
+                findViewById(R.id.language_switcher_container),
+                findViewById(R.id.wink_switcher_container),
+                findViewById(R.id.btn_add_widget),
+                findViewById(R.id.btn_share),
+                findViewById(R.id.btn_sync),
+                findViewById(R.id.btn_support),
+                findViewById(R.id.btn_logout)
         };
         int delay = 50;
         for (View v : items) {
@@ -1662,18 +1619,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override public void onBufferReceived(byte[] buffer) {}
-            @Override public void onEndOfSpeech() { 
+            @Override public void onEndOfSpeech() {
                 isListening = false;
                 if (micIconRef != null) micIconRef.clearAnimation();
-                // Removed restartListening from here to avoid double-triggering with onResults/onError
             }
-            @Override public void onError(int error) { 
+            @Override public void onError(int error) {
                 isListening = false;
                 if (micIconRef != null) micIconRef.clearAnimation();
                 if (voiceDialogShowing && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || error == 5)) {
                     restartListening();
                 } else if (error != 5) {
-                   // Toast.makeText(MainActivity.this, "Voice error: " + error, Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -1682,7 +1637,7 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (matches != null && !matches.isEmpty()) {
                     String topMatch = matches.get(0);
-                        processVoiceCommand(matches);
+                    processVoiceCommand(matches);
                 }
                 if (voiceDialogShowing) restartListening();
             }
@@ -1690,7 +1645,7 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<String> partialMatches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (partialMatches != null && !partialMatches.isEmpty()) {
                     String partial = partialMatches.get(0);
-                    }
+                }
             }
             @Override public void onEvent(int eventType, Bundle params) {}
         });
@@ -1773,7 +1728,7 @@ public class MainActivity extends AppCompatActivity {
 
         photoBtn.setOnClickListener(view -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                photoTargetMed = null; // Signal it's for new medicine
+                photoTargetMed = null;
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, 101);
             } else {
                 photoTargetMed = null;
@@ -1807,7 +1762,7 @@ public class MainActivity extends AppCompatActivity {
             int warn = Integer.parseInt(warnStr.isEmpty() ? "0" : warnStr);
             if (!name.isEmpty()) {
                 saveToWarehouse(name, stock, tempExpiryInternal, warn, tempImagePath, unit);
-                tempImagePath = null; // reset
+                tempImagePath = null;
                 dialog.dismiss();
             }
         });
@@ -1837,10 +1792,10 @@ public class MainActivity extends AppCompatActivity {
                 db.medicineDao().insert(m);
                 FirestoreHelper.uploadMedicine(m);
             }
-            runOnUiThread(() -> { 
-                refreshCurrentTab(); 
+            runOnUiThread(() -> {
+                refreshCurrentTab();
                 updateWidget();
-                Toast.makeText(this, tr("Warehouse Updated", "Склад обновлен"), Toast.LENGTH_SHORT).show(); 
+                Toast.makeText(this, tr("Warehouse Updated", "Склад обновлен"), Toast.LENGTH_SHORT).show();
             });
         });
     }
@@ -1886,14 +1841,13 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
-        
+
         if (isListening) return;
 
         this.micIconRef = micIcon;
         detectedMeds.clear();
         voiceDialogShowing = true;
-        
-        // Setup Dialog
+
         View v = getLayoutInflater().inflate(R.layout.dialog_voice_log, null);
         visualizer = v.findViewById(R.id.voice_visualizer);
         detectedMedsContainer = v.findViewById(R.id.detected_meds_container);
@@ -1901,7 +1855,7 @@ public class MainActivity extends AppCompatActivity {
         MaterialButton btnOk = v.findViewById(R.id.btn_voice_ok);
         TextView tvStatus = v.findViewById(R.id.tv_voice_status);
         TextView tvDetectedTitle = v.findViewById(R.id.tv_detected_title);
-        
+
         if (tvStatus != null) tvStatus.setText(tr("Listening for Medicine Names...", "Слушаю названия лекарств..."));
         if (tvDetectedTitle != null) tvDetectedTitle.setText(tr("Detected Medicines:", "Обнаруженные лекарства:"));
         btnCancel.setText(tr("Cancel", "Отмена"));
@@ -1911,14 +1865,14 @@ public class MainActivity extends AppCompatActivity {
                 .setView(v)
                 .setCancelable(false)
                 .create();
-        
+
         btnCancel.setOnClickListener(view -> {
             voiceDialogShowing = false;
             if (speechRecognizer != null) speechRecognizer.cancel();
             isListening = false;
             voiceDialog.dismiss();
         });
-        
+
         btnOk.setOnClickListener(view -> {
             voiceDialogShowing = false;
             if (speechRecognizer != null) speechRecognizer.stopListening();
@@ -1928,15 +1882,15 @@ public class MainActivity extends AppCompatActivity {
             }
             voiceDialog.dismiss();
         });
-        
+
         if (voiceDialog.getWindow() != null) {
             voiceDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
-        
+
         voiceDialog.show();
-        
+
         initSpeechRecognizer();
-        
+
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isRussian ? "ru-RU" : "en-US");
@@ -1946,7 +1900,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("android.speech.extra.BILINGUAL_MODE", true);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
-        
+
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             try {
                 speechRecognizer.startListening(intent);
@@ -1958,21 +1912,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void processVoiceCommand(List<String> matches) {
         if (matches == null || matches.isEmpty()) return;
-        
+
         Executors.newSingleThreadExecutor().execute(() -> {
             List<Medicine> meds = db.medicineDao().getAllByUserId(currentUserId);
             boolean addedNew = false;
 
-            // Use only the top match to avoid over-logging from similar-sounding alternatives
             String topResult = matches.get(0);
-            // Pad with spaces for whole-phrase matching
             String rClean = " " + normalizeForVoice(topResult) + " ";
 
             for (Medicine m : meds) {
                 String mClean = normalizeForVoice(m.name);
                 if (mClean.length() < 2) continue;
 
-                // Match if the recognized speech contains the medicine name as a whole phrase/word
                 if (rClean.contains(" " + mClean + " ")) {
                     if (!detectedMeds.contains(m)) {
                         detectedMeds.add(m);
@@ -1989,7 +1940,6 @@ public class MainActivity extends AppCompatActivity {
 
     private String normalizeForVoice(String s) {
         if (s == null) return "";
-        // Lowercase and replace punctuation/symbols with spaces
         s = s.toLowerCase().replaceAll("[^a-zа-я0-9]", " ").trim();
         StringBuilder sb = new StringBuilder();
         for (char c : s.toCharArray()) {
@@ -2021,10 +1971,9 @@ public class MainActivity extends AppCompatActivity {
             else if (c == 'я') sb.append("ya");
             else sb.append(c);
         }
-        // Normalize multiple spaces to a single space for consistent phrase matching
         return sb.toString().replaceAll("\\s+", " ").trim();
     }
-    
+
     private void updateDetectedMedsUI() {
         if (detectedMedsContainer == null) return;
         detectedMedsContainer.removeAllViews();
@@ -2045,7 +1994,7 @@ public class MainActivity extends AppCompatActivity {
             tv.setTextColor(Color.BLACK);
             tv.setTextSize(17);
             tv.setTypeface(null, Typeface.BOLD);
-            
+
             ImageView ivRemove = new ImageView(this);
             ivRemove.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
             ivRemove.setColorFilter(Color.RED);
@@ -2058,7 +2007,7 @@ public class MainActivity extends AppCompatActivity {
             row.addView(tv);
             row.addView(ivRemove);
             detectedMedsContainer.addView(row);
-            
+
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(400);
             row.startAnimation(anim);
@@ -2147,7 +2096,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout.LayoutParams imgLp = new LinearLayout.LayoutParams(90, 90);
         imgLp.setMargins(0, 0, 25, 0);
         imgCard.setLayoutParams(imgLp);
-        
+
         ImageView ivMed = new ImageView(this);
         ivMed.setScaleType(ImageView.ScaleType.CENTER_CROP);
         if (m.imagePath != null && !m.imagePath.isEmpty() && new File(m.imagePath).exists()) {
@@ -2157,7 +2106,6 @@ public class MainActivity extends AppCompatActivity {
             ivMed.setImageResource(android.R.drawable.ic_dialog_info);
             ivMed.setPadding(20, 20, 20, 20);
             ivMed.setColorFilter(Color.parseColor(BLUE_COLOR));
-            // Don't set click listener if no image
         }
         imgCard.addView(ivMed);
 
@@ -2187,7 +2135,7 @@ public class MainActivity extends AppCompatActivity {
             tvTime.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
             tvTime.setTextSize(16);
             tvTime.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
-            
+
             LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics()));
             btnLp.setMargins(10, 0, 0, 0);
 
@@ -2202,7 +2150,7 @@ public class MainActivity extends AppCompatActivity {
             btnTake.setIconPadding(4);
             btnTake.setLayoutParams(btnLp);
             btnTake.setOnClickListener(v -> logManualIntake(m));
-            
+
             MaterialButton btnDel = new MaterialButton(this);
             btnDel.setText(tr("Delete", "Удалить"));
             btnDel.setTextSize(10);
@@ -2215,7 +2163,7 @@ public class MainActivity extends AppCompatActivity {
             btnDel.setIconPadding(4);
             btnDel.setLayoutParams(btnLp);
             btnDel.setOnClickListener(v -> deleteSpecific_dose(m, t));
-            
+
             row.addView(tvTime);
             row.addView(btnTake);
             row.addView(btnDel);
@@ -2250,7 +2198,6 @@ public class MainActivity extends AppCompatActivity {
         TypedValue outValue = new TypedValue();
         getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
         card.setBackgroundResource(outValue.resourceId);
-        // Important: reset background after setting selectable background
         card.setBackground(getDrawable(R.drawable.card_background));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             card.setForeground(getDrawable(outValue.resourceId));
@@ -2278,13 +2225,13 @@ public class MainActivity extends AppCompatActivity {
         Executors.newSingleThreadExecutor().execute(() -> {
             String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
             String scheduledTime = getNextDoseForMed(m);
-            
+
             m.batches = subtractFromBatches(m.batches, m.dosage);
             if (m.history == null) m.history = "";
-            
+
             String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
             String historyEntry = todayStr + " " + ((scheduledTime == null || scheduledTime.equals("--:--")) ? timeStamp : scheduledTime);
-            
+
             m.history += historyEntry + (isRussian ? " - Принято," : " - Taken,");
             m.lastUpdated = System.currentTimeMillis();
             int totalStock = calculateTotalStock(m.batches);
@@ -2301,7 +2248,7 @@ public class MainActivity extends AppCompatActivity {
             }
             db.medicineDao().update(m);
             FirestoreHelper.uploadMedicine(m);
-            runOnUiThread(() -> { 
+            runOnUiThread(() -> {
                 showSuccessAnimation();
                 refreshCurrentTab();
                 updateWidget();
@@ -2362,7 +2309,7 @@ public class MainActivity extends AppCompatActivity {
                 m.lastUpdated = System.currentTimeMillis();
                 db.medicineDao().update(m);
                 FirestoreHelper.uploadMedicine(m);
-                bitmap.recycle(); // Free memory
+                bitmap.recycle();
                 runOnUiThread(this::refreshCurrentTab);
             } catch (Exception e) { e.printStackTrace(); }
         });
@@ -2376,7 +2323,7 @@ public class MainActivity extends AppCompatActivity {
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
                 tempImagePath = file.getAbsolutePath();
-                bitmap.recycle(); // Free memory
+                bitmap.recycle();
                 runOnUiThread(() -> Toast.makeText(this, tr("Photo attached", "Фото прикреплено"), Toast.LENGTH_SHORT).show());
             } catch (Exception e) { e.printStackTrace(); }
         });
@@ -2529,7 +2476,7 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(tr("Schedule New Dose", "Новое назначение"));
                 LinearLayout layout = new LinearLayout(this); layout.setOrientation(LinearLayout.VERTICAL); layout.setPadding(50, 40, 50, 20);
-                
+
                 layout.addView(createSectionLabel(tr("1. Intake Times", "1. Время приема")));
                 LinearLayout timePreview = new LinearLayout(this); timePreview.setOrientation(LinearLayout.VERTICAL);
                 layout.addView(timePreview); refreshTimePreview(timePreview);
@@ -2542,7 +2489,7 @@ public class MainActivity extends AppCompatActivity {
                     }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true).show();
                 });
                 layout.addView(btnTime);
-                
+
                 layout.addView(createSectionLabel("\n" + tr("2. Select Pills", "2. Выбор лекарств")));
                 LinearLayout medPreview = new LinearLayout(this); medPreview.setOrientation(LinearLayout.VERTICAL);
                 layout.addView(medPreview); refreshMedPreview(medPreview);
@@ -2553,7 +2500,7 @@ public class MainActivity extends AppCompatActivity {
                     new AlertDialog.Builder(this).setItems(names, (d, which) -> showDoseConfig(warehouseMeds.get(which), medPreview)).show();
                 });
                 layout.addView(btnPick);
-                
+
                 ScrollView sc = new ScrollView(this); sc.addView(layout);
                 builder.setView(sc);
                 builder.setPositiveButton(tr("Save All", "Сохранить все"), (d, w) -> saveScheduledDoses());
@@ -2565,14 +2512,14 @@ public class MainActivity extends AppCompatActivity {
     private void showDoseConfig(Medicine m, LinearLayout container) {
         AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setTitle(tr("Dose for ", "Дозировка для ") + m.name);
-        
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setPadding(50, 40, 50, 20);
         layout.setGravity(Gravity.CENTER_VERTICAL);
 
-        EditText doseIn = new EditText(this); 
-        doseIn.setHint(tr("Dosage (e.g. 2)", "Дозировка (напр. 2)")); 
+        EditText doseIn = new EditText(this);
+        doseIn.setHint(tr("Dosage (e.g. 2)", "Дозировка (напр. 2)"));
         doseIn.setInputType(2);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -2, 1f);
         doseIn.setLayoutParams(lp);
@@ -2608,10 +2555,10 @@ public class MainActivity extends AppCompatActivity {
                 FirestoreHelper.uploadMedicine(m);
                 setupAlarms(m.name, tempTimes);
             }
-            runOnUiThread(() -> { 
-                refreshCurrentTab(); 
+            runOnUiThread(() -> {
+                refreshCurrentTab();
                 updateWidget();
-                Toast.makeText(this, tr("Schedule Updated", "Расписание обновлено"), Toast.LENGTH_SHORT).show(); 
+                Toast.makeText(this, tr("Schedule Updated", "Расписание обновлено"), Toast.LENGTH_SHORT).show();
             });
         });
     }
@@ -2679,7 +2626,7 @@ public class MainActivity extends AppCompatActivity {
         btnClose.setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
         LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(-1, (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, getResources().getDisplayMetrics()));
         btnClose.setLayoutParams(btnLp);
-        
+
         layout.addView(btnClose);
 
         MaterialButton btnDeleteImg = new MaterialButton(this);
@@ -2709,24 +2656,24 @@ public class MainActivity extends AppCompatActivity {
         btnClose.setOnClickListener(v -> dialog.dismiss());
         btnDeleteImg.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                .setTitle(tr("Delete Photo", "Удалить фото"))
-                .setMessage(tr("Are you sure you want to delete this medicine photo?", "Вы уверены, что хотите удалить фото этого лекарства?"))
-                .setPositiveButton(tr("Delete", "Удалить"), (d, w) -> {
-                    diskExecutor.execute(() -> {
-                        if (file.exists()) file.delete();
-                        m.imagePath = null;
-                        m.lastUpdated = System.currentTimeMillis();
-                        db.medicineDao().update(m);
-                        FirestoreHelper.uploadMedicine(m);
-                        runOnUiThread(() -> {
-                            dialog.dismiss();
-                            refreshCurrentTab();
-                            Toast.makeText(this, tr("Photo deleted", "Фото удалено"), Toast.LENGTH_SHORT).show();
+                    .setTitle(tr("Delete Photo", "Удалить фото"))
+                    .setMessage(tr("Are you sure you want to delete this medicine photo?", "Вы уверены, что хотите удалить фото этого лекарства?"))
+                    .setPositiveButton(tr("Delete", "Удалить"), (d, w) -> {
+                        diskExecutor.execute(() -> {
+                            if (file.exists()) file.delete();
+                            m.imagePath = null;
+                            m.lastUpdated = System.currentTimeMillis();
+                            db.medicineDao().update(m);
+                            FirestoreHelper.uploadMedicine(m);
+                            runOnUiThread(() -> {
+                                dialog.dismiss();
+                                refreshCurrentTab();
+                                Toast.makeText(this, tr("Photo deleted", "Фото удалено"), Toast.LENGTH_SHORT).show();
+                            });
                         });
-                    });
-                })
-                .setNegativeButton(tr("Cancel", "Отмена"), null)
-                .show();
+                    })
+                    .setNegativeButton(tr("Cancel", "Отмена"), null)
+                    .show();
         });
         dialog.show();
     }
@@ -2744,7 +2691,7 @@ public class MainActivity extends AppCompatActivity {
                 l.addView(btn);
             }
         }
-        
+
         MaterialButton btnDeleteMed = new MaterialButton(this);
         btnDeleteMed.setText(tr("Delete Medicine Entirely", "Полностью удалить лекарство"));
         btnDeleteMed.setAllCaps(false);
@@ -2763,22 +2710,22 @@ public class MainActivity extends AppCompatActivity {
 
         btnDeleteMed.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                .setTitle(tr("Delete Medicine", "Удалить лекарство"))
-                .setMessage(tr("Are you sure you want to delete ", "Вы уверены, что хотите удалить ") + m.name + tr(" and all its history?", " и всю историю?"))
-                .setPositiveButton(tr("Delete", "Удалить"), (dialog, which) -> {
-                    executor.execute(() -> { 
-                        db.medicineDao().delete(m); 
-                        FirestoreHelper.deleteMedicine(m);
-                        runOnUiThread(() -> {
-                            showDeleteAnimation();
-                            refreshCurrentTab();
-                            updateWidget();
-                            parentDialog.dismiss();
-                        }); 
-                    });
-                })
-                .setNegativeButton(tr("Cancel", "Отмена"), null)
-                .show();
+                    .setTitle(tr("Delete Medicine", "Удалить лекарство"))
+                    .setMessage(tr("Are you sure you want to delete ", "Вы уверены, что хотите удалить ") + m.name + tr(" and all its history?", " и всю историю?"))
+                    .setPositiveButton(tr("Delete", "Удалить"), (dialog, which) -> {
+                        executor.execute(() -> {
+                            db.medicineDao().delete(m);
+                            FirestoreHelper.deleteMedicine(m);
+                            runOnUiThread(() -> {
+                                showDeleteAnimation();
+                                refreshCurrentTab();
+                                updateWidget();
+                                parentDialog.dismiss();
+                            });
+                        });
+                    })
+                    .setNegativeButton(tr("Cancel", "Отмена"), null)
+                    .show();
         });
         l.addView(btnDeleteMed);
 
@@ -2798,27 +2745,27 @@ public class MainActivity extends AppCompatActivity {
             arr[index] = in.getText().toString() + " " + getLocalizedUnit(m.dosageUnit) + arr[index].substring(arr[index].indexOf(" (Exp:"));
             m.batches = android.text.TextUtils.join("|", arr);
             m.lastUpdated = System.currentTimeMillis();
-            executor.execute(() -> { 
-                db.medicineDao().update(m); 
+            executor.execute(() -> {
+                db.medicineDao().update(m);
                 FirestoreHelper.uploadMedicine(m);
                 runOnUiThread(() -> {
                     refreshCurrentTab();
                     updateWidget();
-                }); 
+                });
             });
         });
         b.setNegativeButton(tr("Delete Batch", "Удалить партию"), (d, w) -> {
             ArrayList<String> list = new ArrayList<>(Arrays.asList(arr)); list.remove(index);
             m.batches = android.text.TextUtils.join("|", list);
             m.lastUpdated = System.currentTimeMillis();
-            executor.execute(() -> { 
-                db.medicineDao().update(m); 
+            executor.execute(() -> {
+                db.medicineDao().update(m);
                 FirestoreHelper.uploadMedicine(m);
                 runOnUiThread(() -> {
                     showDeleteAnimation();
                     refreshCurrentTab();
                     updateWidget();
-                }); 
+                });
             });
         });
         b.show();
@@ -2837,8 +2784,7 @@ public class MainActivity extends AppCompatActivity {
         for (String entry : entries) {
             String trimmed = entry.trim();
             if (trimmed.isEmpty()) continue;
-            
-            // Expected format: "yyyy-MM-dd HH:mm - Status"
+
             int firstSpace = trimmed.indexOf(" ");
             if (firstSpace != -1) {
                 String date = trimmed.substring(0, firstSpace);
@@ -2873,7 +2819,7 @@ public class MainActivity extends AppCompatActivity {
             btnDate.setStrokeWidth(2);
             btnDate.setStrokeColor(ColorStateList.valueOf(getThemeColor(R.attr.cardStrokeColor)));
             btnDate.setOnClickListener(v -> showHistoryTimesDialog(m, date, dateToTimes.get(date)));
-            
+
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
             lp.setMargins(0, 15, 0, 15);
             btnDate.setLayoutParams(lp);
@@ -2885,18 +2831,18 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton(tr("Close", "Закрыть"), null);
         builder.setNeutralButton(tr("Clear History", "Очистить всё"), (d, w) -> {
             new AlertDialog.Builder(this).setMessage(tr("Clear all history?", "Очистить всю историю?"))
-                .setPositiveButton(tr("Yes", "Да"), (d2, w2) -> {
-                    m.history = "";
-                    m.lastUpdated = System.currentTimeMillis();
-                    executor.execute(() -> {
-                        db.medicineDao().update(m); 
-                        FirestoreHelper.uploadMedicine(m);
-                        runOnUiThread(() -> {
-                            refreshCurrentTab();
-                            updateWidget();
-                        }); 
-                    });
-                }).setNegativeButton(tr("No", "Нет"), null).show();
+                    .setPositiveButton(tr("Yes", "Да"), (d2, w2) -> {
+                        m.history = "";
+                        m.lastUpdated = System.currentTimeMillis();
+                        executor.execute(() -> {
+                            db.medicineDao().update(m);
+                            FirestoreHelper.uploadMedicine(m);
+                            runOnUiThread(() -> {
+                                refreshCurrentTab();
+                                updateWidget();
+                            });
+                        });
+                    }).setNegativeButton(tr("No", "Нет"), null).show();
         });
         builder.show();
     }
@@ -2991,18 +2937,16 @@ public class MainActivity extends AppCompatActivity {
         int total = calculateTotalStock(m.batches);
         if (total <= 0) return 0f;
 
-        // Calculate daily dosage
         int dailyDose = 0;
         if (m.dosage > 0 && m.times != null && !m.times.isEmpty()) {
             dailyDose = m.times.split(",").length * m.dosage;
         }
-        if (dailyDose <= 0) return 1f; // Cannot calculate usage time
+        if (dailyDose <= 0) return 1f;
 
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy", Locale.getDefault());
             long now = System.currentTimeMillis();
-            
-            // Find the earliest expiry date
+
             long earliestExpiry = Long.MAX_VALUE;
             for (String batch : m.batches.split("\\|")) {
                 if (batch.contains("(Exp: ")) {
@@ -3013,16 +2957,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (earliestExpiry == Long.MAX_VALUE) return 1f;
-            
+
             long msLeftUntilExpiry = earliestExpiry - now;
             if (msLeftUntilExpiry <= 0) return 0.01f;
 
-            // Usage time in milliseconds: how long the stock will actually last
-            // total is count of pills, dailyDose is pills per day
             double daysOfStock = (double) total / dailyDose;
             long msOfStock = (long) (daysOfStock * 24.0 * 60.0 * 60.0 * 1000.0);
 
-            // Progress is based on: (Time left until expiry) / (Time it takes to use the stock)
             float progress = (float) ((double) msLeftUntilExpiry / msOfStock);
             return Math.min(1f, progress);
 
@@ -3106,10 +3047,10 @@ public class MainActivity extends AppCompatActivity {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
-                if (!isWinkDetectionActive) return; // Check if still active after async call
+                if (!isWinkDetectionActive) return;
 
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                
+
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
@@ -3147,7 +3088,6 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(faces -> {
                     boolean winkDetectedThisFrame = false;
                     for (Face face : faces) {
-                        // Relaxed head movement allowance (up to 45 degrees)
                         if (Math.abs(face.getHeadEulerAngleY()) > 45 || Math.abs(face.getHeadEulerAngleZ()) > 45) {
                             continue;
                         }
@@ -3156,8 +3096,6 @@ public class MainActivity extends AppCompatActivity {
                             float rightOpen = face.getRightEyeOpenProbability();
                             float leftOpen = face.getLeftEyeOpenProbability();
 
-                            // More generous thresholds to make winking easier to detect
-                            // Left eye significantly closed, right eye reasonably open
                             boolean isLeftWink = leftOpen < 0.50f && rightOpen > 0.55f;
 
                             if (isLeftWink) {
@@ -3169,7 +3107,6 @@ public class MainActivity extends AppCompatActivity {
 
                     if (winkDetectedThisFrame) {
                         winkFrameCount++;
-                        // Trigger faster: only 2 consecutive detections needed
                         if (winkFrameCount >= 2) {
                             long currentTime = System.currentTimeMillis();
                             if (currentTime - lastWinkTime > WINK_COOLDOWN) {
@@ -3179,7 +3116,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     } else {
-                        // Debounce: allow for occasional missed frames during a wink
                         if (winkFrameCount > 0) {
                             winkFrameCount--;
                         }
@@ -3192,7 +3128,7 @@ public class MainActivity extends AppCompatActivity {
         executor.execute(() -> {
             List<Medicine> meds = db.medicineDao().getAllByUserId(currentUserId);
             if (meds == null || meds.isEmpty()) return;
-            
+
             String globalNext = getNextUpcomingDose(meds);
             if (globalNext == null || globalNext.equals("--:--")) return;
 
@@ -3220,19 +3156,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void logManualIntakeSync(Medicine m) {
         String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
-        
-        // Determine the scheduled dose time before we log it
+
         String scheduledTime = getNextDoseForMed(m);
-        
+
         m.batches = subtractFromBatches(m.batches, m.dosage);
         if (m.history == null) m.history = "";
-        
-        // Add a history entry that includes the date AND specific scheduled time
-        // so getNextUpcomingDose() can identify it as "already taken today"
+
         String timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
         String finalTime = (scheduledTime == null || scheduledTime.equals("--:--")) ? timeStamp : scheduledTime;
         String historyEntry = todayStr + " " + finalTime;
-        
+
         m.history += historyEntry + (isRussian ? " - Принято," : " - Taken,");
         m.lastUpdated = System.currentTimeMillis();
 
@@ -3288,7 +3221,7 @@ public class MainActivity extends AppCompatActivity {
         paint.setTextSize(22);
         paint.setFakeBoldText(true);
         canvas.drawText(tr("Medicine Usage Report", "Отчет об использовании лекарств"), 50, 60, paint);
-        
+
         paint.setTextSize(14);
         paint.setFakeBoldText(false);
         canvas.drawText(tr("From: ", "С: ") + startStr + tr(" To: ", " По: ") + endStr, 50, 95, paint);
@@ -3301,7 +3234,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (Medicine m : meds) {
             if (m.history == null || m.history.isEmpty()) continue;
-            
+
             Map<String, List<String>> rangeData = new LinkedHashMap<>();
             String[] entries = m.history.split(",");
             for (String entry : entries) {
@@ -3312,7 +3245,7 @@ public class MainActivity extends AppCompatActivity {
                 if (firstSpace != -1) {
                     String datePart = trimmed.substring(0, firstSpace);
                     String timeAndStatus = trimmed.substring(firstSpace + 1);
-                    
+
                     if (isDateAfterOrEqual(datePart, selectedDate)) {
                         if (!rangeData.containsKey(datePart)) rangeData.put(datePart, new ArrayList<>());
                         rangeData.get(datePart).add(timeAndStatus);
@@ -3330,12 +3263,12 @@ public class MainActivity extends AppCompatActivity {
                     canvas = page.getCanvas();
                     y = 60;
                 }
-                
+
                 paint.setTextSize(16);
                 paint.setFakeBoldText(true);
                 canvas.drawText(m.name + ":", 50, y, paint);
                 y += 25;
-                
+
                 paint.setTextSize(14);
                 paint.setFakeBoldText(false);
                 for (String dKey : rangeData.keySet()) {
@@ -3351,7 +3284,7 @@ public class MainActivity extends AppCompatActivity {
                     canvas.drawText(dKey + ":", 60, y, paint);
                     paint.setFakeBoldText(false);
                     y += 20;
-                    
+
                     for (String status : rangeData.get(dKey)) {
                         if (y > 800) {
                             document.finishPage(page);
@@ -3378,11 +3311,11 @@ public class MainActivity extends AppCompatActivity {
         document.finishPage(page);
 
         String fileName = "Medicine_Report_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(selectedDate.getTime()) + ".pdf";
-        
+
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
-        
+
         Uri collection;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/");
@@ -3396,7 +3329,7 @@ public class MainActivity extends AppCompatActivity {
             try (OutputStream outputStream = getContentResolver().openOutputStream(uri)) {
                 document.writeTo(outputStream);
                 Toast.makeText(this, tr("PDF saved to Downloads", "PDF сохранен в Загрузки"), Toast.LENGTH_LONG).show();
-                
+
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setDataAndType(uri, "application/pdf");
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -3411,7 +3344,6 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isDateAfterOrEqual(String historyDateStr, Calendar selectedDate) {
         try {
-            // historyDateStr is now strictly "yyyy-MM-dd"
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
             Date hDateParsed = sdf.parse(historyDateStr);
             if (hDateParsed == null) return false;
@@ -3430,28 +3362,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private LinearLayout createBaseLayout() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(30, 20, 30, 20); return l; }
-    private TextView createSectionLabel(String txt) { 
-        TextView tv = new TextView(this); 
-        tv.setText(txt); 
-        tv.setTypeface(null, Typeface.BOLD); 
+    private TextView createSectionLabel(String txt) {
+        TextView tv = new TextView(this);
+        tv.setText(txt);
+        tv.setTypeface(null, Typeface.BOLD);
         tv.setTextColor(getThemeColor(android.R.attr.textColorPrimary));
-        return tv; 
+        return tv;
     }
-    private MaterialButton createActionButton(String text) { 
-        MaterialButton b = new MaterialButton(this); 
-        b.setText(text); 
-        b.setAllCaps(false); 
-        b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR))); 
-        b.setTextColor(Color.WHITE); 
+    private MaterialButton createActionButton(String text) {
+        MaterialButton b = new MaterialButton(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(BLUE_COLOR)));
+        b.setTextColor(Color.WHITE);
         b.setCornerRadius(32);
-        b.setPadding(40, 30, 40, 30); 
-        return b; 
+        b.setPadding(40, 30, 40, 30);
+        return b;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 104) { // Camera
+        if (requestCode == 104) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (viewPager.getCurrentItem() == 3) {
                     startWinkDetection();

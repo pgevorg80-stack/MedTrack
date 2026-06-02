@@ -29,7 +29,6 @@ public class VoiceVisualizerView extends View {
     }
 
     public void updateRms(float rms) {
-        // Smoothly transition the RMS value
         this.currentRms = (this.currentRms * 0.4f) + (Math.max(0.1f, rms) * 0.6f);
         invalidate();
     }
@@ -41,35 +40,30 @@ public class VoiceVisualizerView extends View {
         float height = getHeight();
         float centerY = height / 2;
         float spacing = width / MAX_BARS;
-        
+
         animationOffset += 0.15f;
 
-        // Shift heights and add new one
         heights.remove(0);
-        float normalizedRms = (currentRms + 2f) / 10f; 
+        float normalizedRms = (currentRms + 2f) / 10f;
         if (normalizedRms < 0.15f) {
-            // Idle "breathing" animation
             normalizedRms = 0.15f + (float) Math.sin(animationOffset) * 0.05f;
         }
         heights.add(normalizedRms);
 
         for (int i = 0; i < MAX_BARS; i++) {
-            // Add a wave effect to the bars
             float wave = (float) Math.sin(animationOffset + (i * 0.3f)) * 0.1f;
             float barHeight = (heights.get(i) + wave) * height * 0.7f;
-            
-            // Ensure minimum visible bar
+
             barHeight = Math.max(15f, barHeight);
-            
+
             float x = i * spacing + spacing / 2;
-            
-            // Gradient effect: middle bars are taller and brighter
+
             int alpha = (int) (255 * (0.4f + 0.6f * (1f - Math.abs(i - MAX_BARS/2f) / (MAX_BARS/2f))));
             paint.setAlpha(alpha);
-            
+
             canvas.drawLine(x, centerY - barHeight / 2, x, centerY + barHeight / 2, paint);
         }
-        
+
         postInvalidateOnAnimation();
     }
 }

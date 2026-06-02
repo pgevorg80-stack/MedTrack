@@ -45,7 +45,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setResult(RESULT_CANCELED);
 
-        // Load language preference
         isRussian = getSharedPreferences("LangPrefs", MODE_PRIVATE).getBoolean("IsRussian", false);
 
         Intent intent = getIntent();
@@ -56,7 +55,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_widget_config);
 
-        // Hide navigation bar for immersive experience
         WindowInsetsControllerCompat windowInsetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         windowInsetsController.setSystemBarsBehavior(
@@ -78,10 +76,8 @@ public class WidgetConfigActivity extends AppCompatActivity {
         sbTextHue = findViewById(R.id.sb_text_hue);
         cbTextWhite = findViewById(R.id.cb_text_white);
 
-        // Apply Translations
         updateUIStrings();
 
-        // Initial state for entrance animation
         findViewById(R.id.tv_config_header).setAlpha(0);
         findViewById(R.id.tv_live_preview_label).setAlpha(0);
         findViewById(R.id.preview_card).setAlpha(0);
@@ -108,10 +104,7 @@ public class WidgetConfigActivity extends AppCompatActivity {
         startBackgroundBlobAnimations();
     }
 
-    // ─── Background Blob Animations ───────────────────────────────────────────
-
     private void startBackgroundBlobAnimations() {
-        // Three blobs at different angles compared to the login page
         View blob1 = findViewById(R.id.bg_blob_widget_1);
         View blob2 = findViewById(R.id.bg_blob_widget_2);
         View blob3 = findViewById(R.id.bg_blob_widget_3);
@@ -121,14 +114,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
         if (blob3 != null) animateBlob(blob3, 1.20f, 2800, 90f);
     }
 
-    /**
-     * Animate a blob by scaling and rotating it back and forth indefinitely.
-     *
-     * @param blob       the View to animate
-     * @param scale      target scale factor
-     * @param duration   half-cycle duration in ms
-     * @param angleDelta rotation angle added each direction (different per blob for variety)
-     */
     private void animateBlob(View blob, float scale, int duration, float angleDelta) {
         blob.animate()
                 .scaleX(scale)
@@ -151,8 +136,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
                 }).start();
     }
 
-    // ─── Entrance Animations ──────────────────────────────────────────────────
-
     private void startEntranceAnimations() {
         animateViewIn(findViewById(R.id.tv_config_header), 100);
         animateViewIn(findViewById(R.id.tv_live_preview_label), 200);
@@ -173,8 +156,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
                 .start();
     }
 
-    // ─── Translations ─────────────────────────────────────────────────────────
-
     private String tr(String en, String ru) {
         return isRussian ? ru : en;
     }
@@ -188,8 +169,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
         cbTextWhite.setText(tr("Keep text white (Better contrast)", "Белый текст (лучший контраст)"));
         ((MaterialButton) findViewById(R.id.btn_confirm)).setText(tr("ADD TO HOME SCREEN", "ДОБАВИТЬ НА ЭКРАН"));
     }
-
-    // ─── Live Preview ─────────────────────────────────────────────────────────
 
     private void updatePreview() {
         float[] bgHsv = {sbBgHue.getProgress(), 0.8f, 0.9f};
@@ -269,8 +248,6 @@ public class WidgetConfigActivity extends AppCompatActivity {
             }
         }
     }
-
-    // ─── Confirm / Save ───────────────────────────────────────────────────────
 
     private void handleConfirm() {
         if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {

@@ -52,36 +52,35 @@ public class MedWidget extends AppWidgetProvider {
     @Override
     public void onEnabled(Context context) {
         super.onEnabled(context);
-        // Start ticking when first widget is added
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-        
+
         if (ACTION_WIDGET_PINNED.equals(intent.getAction())) {
             int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
                 int bgColor = intent.getIntExtra("pending_bg", Color.parseColor("#2196F3"));
                 int textColor = intent.getIntExtra("pending_text", Color.WHITE);
                 int opacity = intent.getIntExtra("pending_opacity", 255);
-                
+
                 SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
                 prefs.edit()
-                    .putInt("bg_color_" + appWidgetId, bgColor)
-                    .putInt("text_color_" + appWidgetId, textColor)
-                    .putInt("bg_opacity_" + appWidgetId, opacity)
-                    .apply();
-                    
+                        .putInt("bg_color_" + appWidgetId, bgColor)
+                        .putInt("text_color_" + appWidgetId, textColor)
+                        .putInt("bg_opacity_" + appWidgetId, opacity)
+                        .apply();
+
                 updateAppWidget(context, appWidgetManager, appWidgetId);
             }
-        } else if (ACTION_AUTO_UPDATE.equals(intent.getAction()) || 
-            Intent.ACTION_TIME_TICK.equals(intent.getAction()) || 
-            Intent.ACTION_TIME_CHANGED.equals(intent.getAction()) ||
-            Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction()) ||
-            Intent.ACTION_DATE_CHANGED.equals(intent.getAction())) {
-            
+        } else if (ACTION_AUTO_UPDATE.equals(intent.getAction()) ||
+                Intent.ACTION_TIME_TICK.equals(intent.getAction()) ||
+                Intent.ACTION_TIME_CHANGED.equals(intent.getAction()) ||
+                Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction()) ||
+                Intent.ACTION_DATE_CHANGED.equals(intent.getAction())) {
+
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, MedWidget.class));
             for (int appWidgetId : appWidgetIds) {
                 updateAppWidget(context, appWidgetManager, appWidgetId);
@@ -92,21 +91,17 @@ public class MedWidget extends AppWidgetProvider {
     public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.med_widget);
 
-        // Load Configured Colors
         SharedPreferences prefs = context.getSharedPreferences("WidgetPrefs", Context.MODE_PRIVATE);
         int bgColor = prefs.getInt("bg_color_" + appWidgetId, Color.parseColor("#2196F3"));
         int textColor = prefs.getInt("text_color_" + appWidgetId, Color.WHITE);
         int opacity = prefs.getInt("bg_opacity_" + appWidgetId, 255);
         int subTextColor = Color.argb(160, Color.red(textColor), Color.green(textColor), Color.blue(textColor));
 
-        // Apply background tint and opacity
         views.setInt(R.id.widget_background_img, "setColorFilter", bgColor);
         views.setInt(R.id.widget_background_img, "setImageAlpha", opacity);
 
-        // Update Time
         views.setTextColor(R.id.widget_time, textColor);
 
-        // Update Week Grid
         boolean isRussian = context.getSharedPreferences("LangPrefs", Context.MODE_PRIVATE).getBoolean("IsRussian", false);
         String[] dayLettersEn = {"S", "M", "T", "W", "T", "F", "S"};
         String[] dayLettersRu = {"В", "П", "В", "С", "Ч", "П", "С"};
@@ -139,8 +134,7 @@ public class MedWidget extends AppWidgetProvider {
 
         views.setInt(R.id.widget_mic_icon, "setColorFilter", textColor);
         views.setTextColor(R.id.widget_next_dose, textColor);
-        
-        // Apply colors to new elements (Labels and pill backgrounds)
+
         views.setTextViewText(R.id.widget_next_dose_label, isRussian ? "СЛЕД. ДОЗА" : "NEXT DOSE");
         views.setTextColor(R.id.widget_next_dose_label, Color.argb(204, Color.red(textColor), Color.green(textColor), Color.blue(textColor)));
         views.setInt(R.id.widget_next_dose_bg, "setColorFilter", textColor);
@@ -148,14 +142,12 @@ public class MedWidget extends AppWidgetProvider {
         views.setInt(R.id.widget_mic_bg, "setColorFilter", textColor);
         views.setInt(R.id.widget_mic_bg, "setImageAlpha", 64);
 
-        // Setup Mic Click
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra("trigger_voice", true);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widget_mic_btn, pendingIntent);
 
-        // Fetch Data and Update Next Dose
         executor.execute(() -> {
             try {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -165,19 +157,17 @@ public class MedWidget extends AppWidgetProvider {
                     appWidgetManager.partiallyUpdateAppWidget(appWidgetId, updateViews);
                     return;
                 }
-                
+
                 AppDatabase db = AppDatabase.getInstance(context);
                 List<Medicine> meds = db.medicineDao().getAllByUserId(user.getUid());
                 String nextDose = getNextUpcomingDose(meds);
-                
+
                 String displayDose = nextDose;
                 if (nextDose.equals("--:--")) {
-                    // Check language again inside the thread to be safe, 
-                    // though we can also use the final 'isRussian' from the outer scope.
                     boolean isRu = context.getSharedPreferences("LangPrefs", Context.MODE_PRIVATE).getBoolean("IsRussian", false);
                     displayDose = isRu ? "Готово" : "Done";
                 }
-                
+
                 RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.med_widget);
                 updateViews.setTextViewText(R.id.widget_next_dose, displayDose);
                 appWidgetManager.partiallyUpdateAppWidget(appWidgetId, updateViews);

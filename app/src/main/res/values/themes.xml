@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Custom attributes for better theme support -->
+
     <attr name="navBarBackground" format="color" />
     <attr name="navBarContentColor" format="color" />
     <attr name="cardBackgroundColor" format="color" />
@@ -9,11 +9,11 @@
     <attr name="loginLinkColor" format="color" />
 
     <style name="Theme.GevorgPetrosyan" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Main Brand Colors -->
+
         <item name="colorPrimary">#2196F3</item>
         <item name="colorAccent">#2196F3</item>
 
-        <!-- General UI Colors -->
+
         <item name="android:windowBackground">#FFFFFF</item>
         <item name="android:textColorPrimary">#000000</item>
         <item name="secondaryTextColor">#757575</item>
@@ -22,16 +22,16 @@
         <item name="colorOnPrimaryContainer">#1976D2</item>
         <item name="colorOutline">#2196F3</item>
 
-        <!-- Card Colors Light -->
+
         <item name="cardBackgroundColor">#F8F9FA</item>
         <item name="cardStrokeColor">#E0E0E0</item>
         <item name="loginLinkColor">#2196F3</item>
 
-        <!-- NAVIGATION BAR LIGHT MODE LOGIC: Blue background with White icons -->
+
         <item name="navBarBackground">#2196F3</item>
         <item name="navBarContentColor">#FFFFFF</item>
 
-        <!-- Dialog Buttons -->
+
         <item name="android:buttonBarButtonStyle">@style/BlueButtonStyle</item>
     </style>
 

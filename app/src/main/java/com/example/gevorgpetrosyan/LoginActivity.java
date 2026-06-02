@@ -46,7 +46,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Hide navigation bar for immersive experience
         WindowInsetsControllerCompat windowInsetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         windowInsetsController.setSystemBarsBehavior(
@@ -74,7 +73,7 @@ public class LoginActivity extends AppCompatActivity {
         ivThemeKnob = findViewById(R.id.iv_theme_icon_knob);
 
         updateTranslations();
-        updateThemeUI(false); // Initial state without animation
+        updateThemeUI(false);
 
         btnLangToggle.setOnClickListener(v -> {
             animateClick(v);
@@ -142,10 +141,10 @@ public class LoginActivity extends AppCompatActivity {
 
         ((TextView)loginTitle).setText(tr("Welcome Back", "С возвращением"));
         if (loginSubTitle != null) loginSubTitle.setText(tr("Sign in to continue tracking", "Войдите, чтобы продолжить"));
-        
+
         if (tilEmail != null) tilEmail.setHint(tr("Email Address", "Электронная почта"));
         else etEmail.setHint(tr("Email Address", "Электронная почта"));
-        
+
         if (tilPassword != null) tilPassword.setHint(tr("Password", "Пароль"));
         else etPassword.setHint(tr("Password", "Пароль"));
 
@@ -202,7 +201,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void startEntryAnimations() {
-        // Initial state
         logo.setAlpha(0f);
         logo.setTranslationY(-50f);
         loginTitle.setAlpha(0f);
@@ -211,22 +209,18 @@ public class LoginActivity extends AppCompatActivity {
         loginCard.setTranslationY(100f);
         registerLink.setAlpha(0f);
 
-        // Top bar items initial state
         themeSwitcher.setAlpha(0f);
         themeSwitcher.setTranslationX(-100f);
         btnLangToggle.setAlpha(0f);
         btnLangToggle.setTranslationX(100f);
 
-        // Inputs initial state
         if (tilEmail != null) { tilEmail.setAlpha(0f); tilEmail.setTranslationY(50f); }
         if (tilPassword != null) { tilPassword.setAlpha(0f); tilPassword.setTranslationY(50f); }
 
-        // Animate
         logo.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(200).withEndAction(this::startFloatingAnimation).start();
         loginTitle.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(400).start();
         loginCard.animate().alpha(1f).translationY(0f).setDuration(800).setStartDelay(600).start();
-        
-        // Top bar animations (similar to settings drawer items)
+
         themeSwitcher.animate()
                 .alpha(1f)
                 .translationX(0f)
@@ -249,13 +243,12 @@ public class LoginActivity extends AppCompatActivity {
         if (tilPassword != null) {
             tilPassword.animate().alpha(1f).translationY(0f).setDuration(500).setStartDelay(900).start();
         }
-        
+
         registerLink.animate().alpha(1f).setDuration(800).setStartDelay(1100).start();
 
-        // Animate background blobs
         View bgBlob = findViewById(R.id.bg_blob);
         View bgBlob2 = findViewById(R.id.bg_blob_secondary);
-        
+
         if (bgBlob != null) {
             animateBlob(bgBlob, 1.2f, 3000);
         }
