@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "576975781589",
+    "project_id": "gevorgpetrosyan-80442",
+    "storage_bucket": "gevorgpetrosyan-80442.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576975781589:android:370500cadfa476e0756c5c",
+        "android_client_info": {
+          "package_name": "com.example.gevorgpetrosyan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXoIoSdkityFyvjzOf4kiw6kvuBmXA3cU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
